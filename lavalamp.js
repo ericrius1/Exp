@@ -74,26 +74,29 @@ top = Entities.addEntity(
 })
 
 function update(deltaTime) { 
-  ball = balls[0];
-  totalTime += deltaTime;
-  properties = Entities.getEntityProperties(ball);
-  newPosition = properties.position;
-  relativeBallY = Math.abs(newPosition.y - midHeight);
-  if(newPosition.y + BALL_SIZE > topHeight){
-    direction *=-1;
-    print('switch direction');
+  for(var i = 0; i < balls.length; i++){  
+    ball = balls[i];
+    totalTime += deltaTime;
+    properties = Entities.getEntityProperties(ball);
+    newPosition = properties.position;
+    relativeBallY = Math.abs(newPosition.y - midHeight);
+    if(newPosition.y + BALL_SIZE/2 > topHeight){
+      direction = -1;
+    }
+    if(newPosition.y - BALL_SIZE/2 < baseHeight){
+      direction = 1;
+    }
+    ball.velocity.y = map(relativeBallY, 0, 0.5, .005, 0.0001) * direction;
+    newDimensions = properties.dimensions;
+    newPosition.y += ball.velocity.y;
+    newDimensions.y = map(relativeBallY, 0.5, 0, BALL_SIZE/2, BALL_SIZE * 2);
+    newProperties = {
+      position: newPosition,
+      dimensions: newDimensions
+    }
+    Entities.editEntity(ball, newProperties);
+    Entities.editEntity(ball.light, {position: newPosition});
   }
-  ball.velocity.y = map(relativeBallY, 0, 0.5, .005, 0.001) * direction;
-  print(ball.velocity.y);
-  newDimensions = properties.dimensions;
-  newPosition.y += ball.velocity.y;
-  newDimensions.y = map(relativeBallY, 0.5, 0, BALL_SIZE, BALL_SIZE * 2);
-  newProperties = {
-    position: newPosition,
-    dimensions: newDimensions
-  }
-  Entities.editEntity(ball, newProperties);
-  Entities.editEntity(ball.light, {position: newPosition});
 
 
 }
