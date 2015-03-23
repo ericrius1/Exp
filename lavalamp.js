@@ -13,12 +13,11 @@
 //
 
 
-
+HIFI_PUBLIC_BUCKET = "http://s3.amazonaws.com/hifi-public/";
 
 var center = Vec3.sum(MyAvatar.position, Vec3.multiply(3.0, Quat.getFront(Camera.getOrientation())));
 
 var totalTime = 0;
-var direction = 1;
 var BALL_SIZE = 0.07;
 var NUM_BALLS = 3; 
 var properties, newPosition, newDimensions, newProperties;
@@ -31,11 +30,18 @@ var baseHeight = center.y;
 var topHeight = center.y + 1;
 var midHeight = (baseHeight + topHeight)/2;
 var wallColor = {red:20, green: 150, blue: 50};
+
+var lamp = Entities.addEntity({
+  type: "Model",
+  modelURL: "https://hifi-public.s3.amazonaws.com/ryan/lava2.fbx",
+  position: {x: center.x, y: center.y, z: center.z},
+  dimensions: {x: .17, y: .40, z: .17}
+});
 for (var i = 0; i < NUM_BALLS; i++) {
   ball = Entities.addEntity(
         { type: "Sphere",
           position: { x: randFloat (center.x- baseSize/2, center.x + baseSize/2), 
-                y: baseHeight, 
+                y: randFloat(baseHeight, topHeight), 
                 z: randFloat(center.z - baseSize/2, center.z + baseSize/2)},  
           dimensions: { x: BALL_SIZE, y: BALL_SIZE, z: BALL_SIZE }, 
           color: { red: 120, green: 20, blue: 130},
@@ -81,12 +87,11 @@ function update(deltaTime) {
     newPosition = properties.position;
     relativeBallY = Math.abs(newPosition.y - midHeight);
     if(newPosition.y + BALL_SIZE/2 > topHeight){
-      direction = -1;
+      ball.velocity.y *= -1;;
     }
     if(newPosition.y - BALL_SIZE/2 < baseHeight){
-      direction = 1;
+      ball.velocity.y *= -1;
     }
-    ball.velocity.y = map(relativeBallY, 0, 0.5, .005, 0.0001) * direction;
     newDimensions = properties.dimensions;
     newPosition.y += ball.velocity.y;
     newDimensions.y = map(relativeBallY, 0.5, 0, BALL_SIZE/2, BALL_SIZE * 2);
