@@ -23,24 +23,26 @@ var properties, newPosition, newDimensions, newProperties;
 var relativeBallY;
 var ball, light;
 balls = [];
-var SCALE = 2;
-var bottomHeight = center.y - (0.4 * SCALE);
+var SCALE = 1;
+var bottomHeight = center.y - (0.04 * SCALE);
 var topHeight = center.y + (.16 * SCALE);
-var BALL_SIZE = 0.02 * SCALE;
+var lampRadius = 0.033
+var BALL_SIZE = 0.01 * SCALE;
+var lampDimensions = {x : 0.17 * SCALE, y: 0.4 * SCALE, z: 0.17 * SCALE};
 
 
 var lamp = Entities.addEntity({
   type: "Model",
   modelURL: "https://hifi-public.s3.amazonaws.com/ryan/lava2.fbx",
   position: {x: center.x, y: center.y, z: center.z},
-  dimensions: {x: .17 * SCALE, y: .40 * SCALE, z: .17 * SCALE}
+  dimensions: lampDimensions
 });
 for (var i = 0; i < NUM_BALLS; i++) {
   ball = Entities.addEntity(
         { type: "Sphere",
-          position: { x: randFloat (center.x- .17/6, center.x + .17/6), 
-                y: topHeight, 
-                z: randFloat(center.z - .17/6, center.z + .17/6)},  
+          position: { x: center.x + lampRadius - BALL_SIZE/2, 
+                y: bottomHeight, 
+                z: center.z},  
           dimensions: { x: BALL_SIZE, y: BALL_SIZE, z: BALL_SIZE }, 
           color: { red: 120, green: 20, blue: 130},
     });
