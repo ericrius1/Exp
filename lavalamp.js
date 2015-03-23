@@ -2,7 +2,7 @@
 //  lavalamp.js
 //  examples
 //
-//  Created by Eric Levin on March 23, 2015
+//  Created by Eric Levin on March 23, 2015wwwwwww
 //  Copyright 2015 High Fidelity, Inc.
 //
 //  Creates some spheres with lights attached, that move and stretch slowly 
@@ -22,10 +22,11 @@ var totalTime = 0;
 var BALL_SIZE = 0.07;
 var NUM_BALLS = 3; 
 var properties, newPosition, newDimensions, newProperties;
+var relativeBallY;
 var ball;
 balls = [];
-var base;
-var baseSize = 2;
+var base, top;
+var baseSize = 0.5;
 var baseHeight = center.y;
 var topHeight = center.y + 1;
 var midHeight = (baseHeight + topHeight)/2;
@@ -34,10 +35,10 @@ var ballYScaleFactor = (topHeight - baseHeight)/2; //scale factor for moving bal
 for (var i = 0; i < NUM_BALLS; i++) {
   ball = Entities.addEntity(
         { type: "Sphere",
-          position: { x: randFloat (center.x-1, center.x +1), 
+          position: { x: randFloat (center.x- baseSize/2, center.x + baseSize/2), 
                 y: midHeight, 
-                z: randFloat(center.z - 1, center.z + 1)},  
-      dimensions: { x: BALL_SIZE, y: BALL_SIZE, z: BALL_SIZE }, 
+                z: randFloat(center.z - baseSize/2, center.z + baseSize/2)},  
+          dimensions: { x: BALL_SIZE, y: BALL_SIZE, z: BALL_SIZE }, 
           color: { red: 120, green: 20, blue: 130},
     });
   ball.originalPosition = Entities.getEntityProperties(ball).position;
@@ -50,8 +51,16 @@ base = Entities.addEntity(
   type: "Box",
   position: {x: center.x, y: baseHeight, z: center.z},
   dimensions: {x: baseSize, y: .01, z: baseSize},
-  color: {red: 100, green: 1, blue: 10}
+  color: {red: 50, green: 1, blue: 50}
 });
+
+top = Entities.addEntity(
+{
+  type: "Box",
+  position: {x : center.x, y: topHeight, z: center.z},
+  dimensions: { x: baseSize, y: 0.01, z:baseSize},
+  color: {red: 50, green: 1, blue: 50}
+})
 
 function update(deltaTime) { 
   ball = balls[0];
@@ -59,9 +68,9 @@ function update(deltaTime) {
   properties = Entities.getEntityProperties(ball);
   newPosition = properties.position;
   newDimensions = properties.dimensions
-  newPosition.y = ball.originalPosition.y + Math.sin(totalTime) * ballYScaleFactor;
-  newDimensions.y = map(newPosition.y, baseHeight, midHeight, BALL_SIZE, BALL_SIZE * 2 );
-
+  newPosition.y = ball.originalPosition.y + Math.sin(totalTime * .1) * ballYScaleFactor;
+  relativeBallY = Math.abs(newPosition.y - midHeight);
+  newDimensions.y = map(relativeBallY, 0.5, 0, BALL_SIZE, BALL_SIZE * 2);
   newProperties = {
     position: newPosition,
     dimensions: newDimensions
@@ -71,7 +80,8 @@ function update(deltaTime) {
  
 
 function scriptEnding() {
-   Entities.deleteEntity(base);
+  Entities.deleteEntity(base);
+  Entities.deleteEntity(top);
   for (var i = 0; i < NUM_BALLS; i++) {
     Entities.deleteEntity(balls[i]);
   }
