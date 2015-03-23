@@ -23,15 +23,14 @@ var BALL_SIZE = 0.07;
 var NUM_BALLS = 3; 
 var properties, newPosition, newDimensions, newProperties;
 var relativeBallY;
-var ball;
+var ball, light;
 balls = [];
 var base, top;
 var baseSize = 0.5;
 var baseHeight = center.y;
 var topHeight = center.y + 1;
 var midHeight = (baseHeight + topHeight)/2;
-var ballYScaleFactor = (topHeight - baseHeight)/2; //scale factor for moving ball up and down
-
+var wallColor = {red:20, green: 150, blue: 50};
 for (var i = 0; i < NUM_BALLS; i++) {
   ball = Entities.addEntity(
         { type: "Sphere",
@@ -41,6 +40,19 @@ for (var i = 0; i < NUM_BALLS; i++) {
           dimensions: { x: BALL_SIZE, y: BALL_SIZE, z: BALL_SIZE }, 
           color: { red: 120, green: 20, blue: 130},
     });
+  var velocity = {x: 0, y: .01, z: 0};
+
+
+  light = Entities.addEntity({
+    type : "Light",
+    position: Entities.getEntityProperties(ball).position,
+    dimensions: {x: 2, y: 2, z: 2},
+    isSpotlight: false,
+    color: {red: 120, green: 20, blue: 130},
+    intensity: 5,
+    quadraticAttenuation: 1
+  });
+  ball.light = light;
   ball.originalPosition = Entities.getEntityProperties(ball).position;
   balls.push(ball);
 }
@@ -51,7 +63,7 @@ base = Entities.addEntity(
   type: "Box",
   position: {x: center.x, y: baseHeight, z: center.z},
   dimensions: {x: baseSize, y: .01, z: baseSize},
-  color: {red: 50, green: 1, blue: 50}
+  color: wallColor
 });
 
 top = Entities.addEntity(
@@ -59,7 +71,7 @@ top = Entities.addEntity(
   type: "Box",
   position: {x : center.x, y: topHeight, z: center.z},
   dimensions: { x: baseSize, y: 0.01, z:baseSize},
-  color: {red: 50, green: 1, blue: 50}
+  color: wallColor
 })
 
 function update(deltaTime) { 
@@ -68,7 +80,7 @@ function update(deltaTime) {
   properties = Entities.getEntityProperties(ball);
   newPosition = properties.position;
   newDimensions = properties.dimensions
-  newPosition.y = ball.originalPosition.y + Math.sin(totalTime * .1) * ballYScaleFactor;
+  newPosition.y = ball.originalPosition.y + .01;
   relativeBallY = Math.abs(newPosition.y - midHeight);
   newDimensions.y = map(relativeBallY, 0.5, 0, BALL_SIZE, BALL_SIZE * 2);
   newProperties = {
@@ -76,6 +88,7 @@ function update(deltaTime) {
     dimensions: newDimensions
   }
   Entities.editEntity(ball, newProperties);
+  Entities.editEntity(ball.light, {position: newPosition});
 }
  
 

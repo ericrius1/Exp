@@ -23,20 +23,18 @@ var sphereID = Entities.addEntity({
 var lightID = Entities.addEntity({
     type: "Light",  
     position: position,
-    dimensions: { x: 100, y: 100, z: 100 },
+    dimensions: { x: 5, y: 5, z:5 },
     angularVelocity: { x: 0, y: 0, z: 0 },
     angularDamping: 0,
 
     isSpotlight: false,
-    diffuseColor: { red: 255, green: 255, blue: 0 },
-    ambientColor: { red: 0, green: 0, blue: 0 },
-    specularColor: { red: 255, green: 255, blue: 255 },
+    color: { red: 255, green: 255, blue: 0 },
+    intensity: 10,
 
-    constantAttenuation: 0,
-    linearAttenuation: 1,
-    quadraticAttenuation: 0,
-    exponent: 0,
-    cutoff: 90, // in degrees
+    // constantAttenuation: 0,
+    // linearAttenuation: 1,
+    // quadraticAttenuation: 0,
+    // exponent: 0,
 });
 
 Script.scriptEnding.connect(function() {
