@@ -18,7 +18,7 @@
 var center = Vec3.sum(MyAvatar.position, Vec3.multiply(3.0, Quat.getFront(Camera.getOrientation())));
 
 var totalTime = 0;
-
+var direction = 1;
 var BALL_SIZE = 0.07;
 var NUM_BALLS = 3; 
 var properties, newPosition, newDimensions, newProperties;
@@ -35,15 +35,15 @@ for (var i = 0; i < NUM_BALLS; i++) {
   ball = Entities.addEntity(
         { type: "Sphere",
           position: { x: randFloat (center.x- baseSize/2, center.x + baseSize/2), 
-                y: midHeight, 
+                y: baseHeight, 
                 z: randFloat(center.z - baseSize/2, center.z + baseSize/2)},  
           dimensions: { x: BALL_SIZE, y: BALL_SIZE, z: BALL_SIZE }, 
           color: { red: 120, green: 20, blue: 130},
     });
-  var velocity = {x: 0, y: .01, z: 0};
+  ball.velocity = {x: 0, y: .01, z: 0};
 
 
-  light = Entities.addEntity({
+  ball.light = Entities.addEntity({
     type : "Light",
     position: Entities.getEntityProperties(ball).position,
     dimensions: {x: 2, y: 2, z: 2},
@@ -52,7 +52,6 @@ for (var i = 0; i < NUM_BALLS; i++) {
     intensity: 5,
     quadraticAttenuation: 1
   });
-  ball.light = light;
   ball.originalPosition = Entities.getEntityProperties(ball).position;
   balls.push(ball);
 }
@@ -79,9 +78,15 @@ function update(deltaTime) {
   totalTime += deltaTime;
   properties = Entities.getEntityProperties(ball);
   newPosition = properties.position;
-  newDimensions = properties.dimensions
-  newPosition.y = ball.originalPosition.y + .01;
   relativeBallY = Math.abs(newPosition.y - midHeight);
+  if(newPosition.y + BALL_SIZE > topHeight){
+    direction *=-1;
+    print('switch direction');
+  }
+  ball.velocity.y = map(relativeBallY, 0, 0.5, .005, 0.001) * direction;
+  print(ball.velocity.y);
+  newDimensions = properties.dimensions;
+  newPosition.y += ball.velocity.y;
   newDimensions.y = map(relativeBallY, 0.5, 0, BALL_SIZE, BALL_SIZE * 2);
   newProperties = {
     position: newPosition,
@@ -89,6 +94,8 @@ function update(deltaTime) {
   }
   Entities.editEntity(ball, newProperties);
   Entities.editEntity(ball.light, {position: newPosition});
+
+
 }
  
 
