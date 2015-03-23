@@ -44,9 +44,9 @@ for (var i = 0; i < NUM_BALLS; i++) {
 function update(deltaTime) { 
 
   var newPosition = Entities.getEntityProperties(balls[0]).position;
-  newPosition.y+= 0.001;
+  newPosition.y+= 0.01;
   var newProperties = {
-    position: {x: newPosition.x, y:newPosition.y, z: newPosition.z}
+    position: newPosition
   }
   Entities.editEntity(balls[0], newProperties);
 }
