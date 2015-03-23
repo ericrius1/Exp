@@ -1,0 +1,22 @@
+  for(var i = 0; i < balls.length; i++){  
+    ball = balls[i];
+    totalTime += deltaTime;
+    properties = Entities.getEntityProperties(ball);
+    newPosition = properties.position;
+    relativeBallY = Math.abs(newPosition.y - midHeight);
+    if(newPosition.y + BALL_SIZE/2 > topHeight){
+      ball.velocity.y *= -1;;
+    }
+    if(newPosition.y - BALL_SIZE/2 < baseHeight){
+      ball.velocity.y *= -1;
+    }
+    newDimensions = properties.dimensions;
+    newPosition.y += ball.velocity.y;
+    newDimensions.y = map(relativeBallY, 0.5, 0, BALL_SIZE/2, BALL_SIZE * 2);
+    newProperties = {
+      position: newPosition,
+      dimensions: newDimensions
+    }
+    Entities.editEntity(ball, newProperties);
+    Entities.editEntity(ball.light, {position: newPosition});
+  }

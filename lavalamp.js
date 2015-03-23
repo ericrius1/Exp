@@ -18,31 +18,29 @@ HIFI_PUBLIC_BUCKET = "http://s3.amazonaws.com/hifi-public/";
 var center = Vec3.sum(MyAvatar.position, Vec3.multiply(3.0, Quat.getFront(Camera.getOrientation())));
 
 var totalTime = 0;
-var BALL_SIZE = 0.07;
-var NUM_BALLS = 3; 
+var NUM_BALLS = 1; 
 var properties, newPosition, newDimensions, newProperties;
 var relativeBallY;
 var ball, light;
 balls = [];
-var base, top;
-var baseSize = 0.5;
-var baseHeight = center.y;
-var topHeight = center.y + 1;
-var midHeight = (baseHeight + topHeight)/2;
-var wallColor = {red:20, green: 150, blue: 50};
+var SCALE = 2;
+var bottomHeight = center.y - (0.4 * SCALE);
+var topHeight = center.y + (.16 * SCALE);
+var BALL_SIZE = 0.02 * SCALE;
+
 
 var lamp = Entities.addEntity({
   type: "Model",
   modelURL: "https://hifi-public.s3.amazonaws.com/ryan/lava2.fbx",
   position: {x: center.x, y: center.y, z: center.z},
-  dimensions: {x: .17, y: .40, z: .17}
+  dimensions: {x: .17 * SCALE, y: .40 * SCALE, z: .17 * SCALE}
 });
 for (var i = 0; i < NUM_BALLS; i++) {
   ball = Entities.addEntity(
         { type: "Sphere",
-          position: { x: randFloat (center.x- baseSize/2, center.x + baseSize/2), 
-                y: randFloat(baseHeight, topHeight), 
-                z: randFloat(center.z - baseSize/2, center.z + baseSize/2)},  
+          position: { x: randFloat (center.x- .17/6, center.x + .17/6), 
+                y: topHeight, 
+                z: randFloat(center.z - .17/6, center.z + .17/6)},  
           dimensions: { x: BALL_SIZE, y: BALL_SIZE, z: BALL_SIZE }, 
           color: { red: 120, green: 20, blue: 130},
     });
@@ -62,54 +60,23 @@ for (var i = 0; i < NUM_BALLS; i++) {
   balls.push(ball);
 }
 
-//add wall
-base = Entities.addEntity(
-{
-  type: "Box",
-  position: {x: center.x, y: baseHeight, z: center.z},
-  dimensions: {x: baseSize, y: .01, z: baseSize},
-  color: wallColor
-});
 
-top = Entities.addEntity(
-{
-  type: "Box",
-  position: {x : center.x, y: topHeight, z: center.z},
-  dimensions: { x: baseSize, y: 0.01, z:baseSize},
-  color: wallColor
-})
 
 function update(deltaTime) { 
-  for(var i = 0; i < balls.length; i++){  
-    ball = balls[i];
-    totalTime += deltaTime;
-    properties = Entities.getEntityProperties(ball);
-    newPosition = properties.position;
-    relativeBallY = Math.abs(newPosition.y - midHeight);
-    if(newPosition.y + BALL_SIZE/2 > topHeight){
-      ball.velocity.y *= -1;;
-    }
-    if(newPosition.y - BALL_SIZE/2 < baseHeight){
-      ball.velocity.y *= -1;
-    }
-    newDimensions = properties.dimensions;
-    newPosition.y += ball.velocity.y;
-    newDimensions.y = map(relativeBallY, 0.5, 0, BALL_SIZE/2, BALL_SIZE * 2);
-    newProperties = {
-      position: newPosition,
-      dimensions: newDimensions
-    }
-    Entities.editEntity(ball, newProperties);
-    Entities.editEntity(ball.light, {position: newPosition});
-  }
+  ball = balls[0];
+  position = Entities.getEntityProperties(ball).position;
+  // position.y += 0.0001;
+  Entities.editEntity(ball, {position: position});
+  print(position.y);
+
+
 
 
 }
  
 
 function scriptEnding() {
-  Entities.deleteEntity(base);
-  Entities.deleteEntity(top);
+  Entities.deleteEntity(lamp);
   for (var i = 0; i < NUM_BALLS; i++) {
     Entities.deleteEntity(balls[i]);
   }
