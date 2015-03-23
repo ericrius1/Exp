@@ -26,7 +26,7 @@ var center = Vec3.sum(MyAvatar.position, Vec3.multiply(SCALE * 3.0, Quat.getFron
 
 
 
-var NUM_BALLS = 2; 
+var NUM_BALLS = 3; 
 
 balls = [];
 
@@ -43,9 +43,12 @@ for (var i = 0; i < NUM_BALLS; i++) {
 
 function update(deltaTime) { 
 
-  
-
-
+  var newPosition = Entities.getEntityProperties(balls[0]).position;
+  newPosition.y+= 0.001;
+  var newProperties = {
+    position: {x: newPosition.x, y:newPosition.y, z: newPosition.z}
+  }
+  Entities.editEntity(balls[0], newProperties);
 }
  
 
