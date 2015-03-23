@@ -17,50 +17,61 @@
 
 var center = Vec3.sum(MyAvatar.position, Vec3.multiply(3.0, Quat.getFront(Camera.getOrientation())));
 
+var totalTime = 0;
 
 var BALL_SIZE = 0.07;
 var NUM_BALLS = 3; 
-
+var properties, newPosition, newDimensions, newProperties;
 balls = [];
-var wall;
+var base;
+var baseSize = 2;
+var baseHeight = center.y;
 
 for (var i = 0; i < NUM_BALLS; i++) {
   balls.push(Entities.addEntity(
         { type: "Sphere",
-          position: { x: center.x + Math.random() - 0.5, 
-                y: center.y + Math.random() - 0.5 , 
-                z: center.z + Math.random() + 1},  
+          position: { x: randFloat (center.x-1, center.x +1), 
+                y: baseHeight, 
+                z: randFloat(center.z - 1, center.z + 1)},  
       dimensions: { x: BALL_SIZE, y: BALL_SIZE, z: BALL_SIZE }, 
-          color: { red: Math.random() * 255, green: Math.random() * 255, blue: Math.random() * 255 },
+          color: { red: 120, green: 20, blue: 130},
     })); 
 }
 
 //add wall
-wall = Entities.addEntity(
+base = Entities.addEntity(
 {
   type: "Box",
-  position: {x: center.x, y:center.y, z: center.z + 3},
-  dimensions: {x: 1, y: 1, z: .01},
+  position: {x: center.x, y: baseHeight, z: center.z},
+  dimensions: {x: baseSize, y: .01, z: baseSize},
   color: {red: 100, green: 1, blue: 10}
 });
 
 function update(deltaTime) { 
+  totalTime += deltaTime;
+  properties = Entities.getEntityProperties(balls[0]);
+  newPosition = properties.position;
+  newDimensions = properties.dimensions
+  // newPosition.y+= 0.01;
+  newDimensions.y = Math.sin(totalTime* 0.1);
 
-  var newPosition = Entities.getEntityProperties(balls[0]).position;
-  newPosition.y+= 0.01;
-  var newProperties = {
-    position: newPosition
+  newProperties = {
+    position: newPosition,
+    dimensions: newDimensions
   }
   Entities.editEntity(balls[0], newProperties);
 }
  
 
 function scriptEnding() {
-  print(wall);
-   Entities.deleteEntity(wall);
+   Entities.deleteEntity(base);
   for (var i = 0; i < NUM_BALLS; i++) {
     Entities.deleteEntity(balls[i]);
   }
+}
+
+function randFloat ( low, high ) {
+    return low + Math.random() * ( high - low );
 }
 
 Script.scriptEnding.connect(scriptEnding);
