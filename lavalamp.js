@@ -22,20 +22,26 @@ var totalTime = 0;
 var BALL_SIZE = 0.07;
 var NUM_BALLS = 3; 
 var properties, newPosition, newDimensions, newProperties;
+var ball;
 balls = [];
 var base;
 var baseSize = 2;
 var baseHeight = center.y;
+var topHeight = center.y + 1;
+var midHeight = (baseHeight + topHeight)/2;
+var ballYScaleFactor = (topHeight - baseHeight)/2; //scale factor for moving ball up and down
 
 for (var i = 0; i < NUM_BALLS; i++) {
-  balls.push(Entities.addEntity(
+  ball = Entities.addEntity(
         { type: "Sphere",
           position: { x: randFloat (center.x-1, center.x +1), 
-                y: baseHeight, 
+                y: midHeight, 
                 z: randFloat(center.z - 1, center.z + 1)},  
       dimensions: { x: BALL_SIZE, y: BALL_SIZE, z: BALL_SIZE }, 
           color: { red: 120, green: 20, blue: 130},
-    })); 
+    });
+  ball.originalPosition = Entities.getEntityProperties(ball).position;
+  balls.push(ball);
 }
 
 //add wall
@@ -48,18 +54,19 @@ base = Entities.addEntity(
 });
 
 function update(deltaTime) { 
+  ball = balls[0];
   totalTime += deltaTime;
-  properties = Entities.getEntityProperties(balls[0]);
+  properties = Entities.getEntityProperties(ball);
   newPosition = properties.position;
   newDimensions = properties.dimensions
-  // newPosition.y+= 0.01;
-  newDimensions.y = Math.sin(totalTime* 0.1);
+  newPosition.y = ball.originalPosition.y + Math.sin(totalTime) * ballYScaleFactor;
+  newDimensions.y = map(newPosition.y, baseHeight, midHeight, BALL_SIZE, BALL_SIZE * 2 );
 
   newProperties = {
     position: newPosition,
     dimensions: newDimensions
   }
-  Entities.editEntity(balls[0], newProperties);
+  Entities.editEntity(ball, newProperties);
 }
  
 
@@ -72,6 +79,10 @@ function scriptEnding() {
 
 function randFloat ( low, high ) {
     return low + Math.random() * ( high - low );
+}
+
+function map(value, min1, max1, min2, max2) {
+  return min2 + (max2 - min2) * ((value - min1) / (max1 - min1));
 }
 
 Script.scriptEnding.connect(scriptEnding);
