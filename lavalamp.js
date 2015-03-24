@@ -51,7 +51,7 @@
       var colliderWidth = 0.001;
       var topProperties = {
         type: 'Box',
-        position: Vec3.sum(this.lampPosition, {x: 0, y: .17, z: 0}),
+        position: Vec3.sum(this.lampPosition, {x: 0, y: .15, z: 0}),
         dimensions: {x: this.lampRadius * 2, y: colliderWidth, z: this.lampRadius * 2},
         color: {red: 200, green: 10, blue: 10}
       }
@@ -60,7 +60,7 @@
       
       var bottomProperties = {
         type: 'Box',
-        position: Vec3.sum(this.lampPosition, {x: 0, y: -.03, z: 0}),
+        position: Vec3.sum(this.lampPosition, {x: 0, y: -.04, z: 0}),
         dimensions: {x: this.lampRadius * 2, y: colliderWidth, z: this.lampRadius * 2},
         color: {red: 200, green: 10, blue: 10}
       }
