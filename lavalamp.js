@@ -27,8 +27,14 @@
         color: {red: 100, blue : 20, green: 100},
         dimensions: {x : this.globSize, y: this.globSize, z: this.globSize }
       };
-      var glob = Entities.addEntity(globProperties);
-      this.globs.push(glob);
+
+      for( var i = 0; i < this.numGlobs; i++){
+        globProperties.position.x += randFloat(-.01, .01);
+        globProperties.position.y += randFloat(-.01, .01);
+        globProperties.position.z += randFloat(-.01, .01);
+        var glob = Entities.addEntity(globProperties);
+        this.globs.push(glob);
+      }
 
     }
 
@@ -47,4 +53,9 @@
         }
      
     };
+
+  function randFloat ( low, high ) {
+    return low + Math.random() * ( high - low );
+  }
+
 })
