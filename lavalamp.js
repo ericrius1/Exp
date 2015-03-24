@@ -4,9 +4,12 @@
     this.numGlobs = 1;
     this.globSize = 0.02;
     this.globs = [];
-    this.lampRadius = .033;
+    this.lampRadius = .043;
     var self = this;
     this.colliders = [];
+    this.chanceOfVelocityBoost = 0.01;
+    this.lampHeight = .5;
+    this.wallSpace = 0.03;
 
     
     this.toggleLamp = function(){
@@ -29,7 +32,8 @@
         color: {red: 100, blue : 20, green: 100},
         dimensions: {x : this.globSize, y: this.globSize, z: this.globSize },
         collisionsWillMove: true,
-        velocity: {x : 0, y: 0.1, z: 0}
+        velocity: {x : 0, y: 0.1, z: 0},
+        damping: 0
       };
 
 
@@ -44,16 +48,21 @@
 
       this.createColliders();
 
+
     }
+
 
     this.createColliders = function(){
       //create a top and bottom
-      var colliderWidth = 0.001;
+      var colliderWidth = 0.03;
+      var isVisible = false;
+      var color = {red: 200, green: 10, blue: 10};
       var topProperties = {
         type: 'Box',
         position: Vec3.sum(this.lampPosition, {x: 0, y: .15, z: 0}),
         dimensions: {x: this.lampRadius * 2, y: colliderWidth, z: this.lampRadius * 2},
-        color: {red: 200, green: 10, blue: 10}
+        color: color,
+        visible: isVisible
       }
       var collider = Entities.addEntity(topProperties);
       this.colliders.push(collider);
@@ -62,11 +71,51 @@
         type: 'Box',
         position: Vec3.sum(this.lampPosition, {x: 0, y: -.04, z: 0}),
         dimensions: {x: this.lampRadius * 2, y: colliderWidth, z: this.lampRadius * 2},
-        color: {red: 200, green: 10, blue: 10}
+        color: color,
+        visible: isVisible
       }
       collider = Entities.addEntity(bottomProperties);
       this.colliders.push(collider);
       
+      //SIDE WALLS
+       var wall = Entities.addEntity(
+        { type: "Box",
+          position: Vec3.sum(this.lampPosition, { x:this.wallSpace, y: 0, z: 0 }), 
+          dimensions: { x: colliderWidth, y: this.lampHeight, z: this.wallSpace * 2 }, 
+          color: { red: 0, green: 255, blue: 0 },
+          ignoreCollisions: false,
+          visible: isVisible,
+        });
+        this.colliders.push(wall);
+
+       wall = Entities.addEntity(
+        { type: "Box",
+          position: Vec3.subtract(this.lampPosition, { x: this.wallSpace, y: 0, z: 0 }), 
+          dimensions: { x: colliderWidth, y: this.lampHeight, z: this.wallSpace * 2 }, 
+          color: { red: 0, green: 255, blue: 0 },
+          ignoreCollisions: false,
+          visible: isVisible,
+        });
+       this.colliders.push(wall);
+       wall = Entities.addEntity(
+        { type: "Box",
+          position: Vec3.subtract(this.lampPosition, { x: 0, y: 0, z: this.wallSpace}), 
+          dimensions: { x: this.wallSpace * 2, y: this.lampHeight, z: colliderWidth }, 
+          color: { red: 0, green: 255, blue: 0 },
+          ignoreCollisions: false,
+          visible: isVisible,
+         }); 
+        this.colliders.push(wall);
+
+      wall = Entities.addEntity(
+        { type: "Box",
+          position: Vec3.sum(this.lampPosition, { x: 0, y: 0, z: this.wallSpace}), 
+          dimensions: { x: this.wallSpace * 2, y: this.lampHeight, z: colliderWidth }, 
+          color: { red: 0, green: 255, blue: 0 },
+          ignoreCollisions: false,
+          visible: isVisible,
+        });
+      this.colliders.push(wall);
     }
 
     this.turnLampOff = function() {
@@ -80,10 +129,26 @@
         }
     };
 
+
+
     this.update = function(deltaTime){
       if(!self.lampOn){
         return;
       }
+
+      for(var i = 0; i < self.globs.length; i++){
+        var glob = self.globs[0];
+        var velocity = Entities.getEntityProperties(glob).velocity;
+
+        //Physics engine deactivates objects moving below 0.05 m/s after ~2 sec, 
+        //so give those objects a boost before that happens
+        if(Vec3.length(velocity) < 0.05){
+          // var newVelocity = Vec3.multiply(2, velocity);
+          var direction = velocity.y > 0 ? 1 : -1;
+          Entities.editEntity(glob, {velocity: {x: 0, y: .1 * direction, z: 0}});
+        }
+      }
+
 
     }
 
