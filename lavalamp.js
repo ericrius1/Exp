@@ -25,7 +25,9 @@
         type: 'Sphere',
         position: position,
         color: {red: 100, blue : 20, green: 100},
-        dimensions: {x : this.globSize, y: this.globSize, z: this.globSize }
+        dimensions: {x : this.globSize, y: this.globSize, z: this.globSize },
+        collisionsWillMove: true,
+        velocity: {x : 0, y: 0.1, z: 0}
       };
 
       for( var i = 0; i < this.numGlobs; i++){
