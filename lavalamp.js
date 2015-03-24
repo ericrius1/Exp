@@ -3,19 +3,21 @@
     this.lampOn = false;
     this.numGlobs = 3;
     this.globSize = 0.02;
+    this.globs = [];
 
     
     this.toggleLamp = function(){
       if(!this.lampOn){
         this.turnLampOn();
-      } else{
+      } 
+      else if(this.lampOn){
         this.turnLampOff();
       }
 
       this.lampOn = !this.lampOn;
     }
 
-    this.turnLampOn = function(){
+    this.turnLampOn = function() {
       //create blobs
       print("BLOBS");
       var position = Entities.getEntityProperties(this.entityID).position;
@@ -25,7 +27,15 @@
         color: {red: 100, blue : 20, green: 100},
         dimensions: {x : this.globSize, y: this.globSize, z: this.globSize }
       };
-      Entities.addEntity(globProperties);
+      var glob = Entities.addEntity(globProperties);
+      this.globs.push(glob);
+
+    }
+
+    this.turnLampOff = function() {
+      for( var i = 0; i < this.globs.length; i++){
+        Entities.deleteEntity(this.globs[i]);
+      }
 
 
     }
