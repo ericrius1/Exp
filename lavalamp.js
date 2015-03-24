@@ -170,6 +170,7 @@
     }
 
     this.preload = function(entityID) {
+        print("I JUST LOADED YAAAAAAHHHH")
         this.entityID = entityID;
         this.maybeDownloadSound();  
     };
