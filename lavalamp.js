@@ -29,6 +29,7 @@ var topHeight = center.y + (.16 * SCALE);
 var lampRadius = 0.033
 var BALL_SIZE = 0.01 * SCALE;
 var lampDimensions = {x : 0.17 * SCALE, y: 0.4 * SCALE, z: 0.17 * SCALE};
+var lavaColor = {red: 120, green: 20, blue: 130};
 
 
 var lamp = Entities.addEntity({
@@ -37,6 +38,15 @@ var lamp = Entities.addEntity({
   position: {x: center.x, y: center.y, z: center.z},
   dimensions: lampDimensions
 });
+
+var dimensions = {x: lampRadius * 2, y: .01, z: lampRadius * 2}
+var baseGlob = Entities.addEntity({
+  type: 'Sphere',
+  position: {x: center.x, y: bottomHeight, z: center.z},
+  dimensions: dimensions,
+  color: lavaColor
+});
+baseGlob.dimensions = dimensions;
 for (var i = 0; i < NUM_BALLS; i++) {
   ball = Entities.addEntity(
         { type: "Sphere",
@@ -44,7 +54,7 @@ for (var i = 0; i < NUM_BALLS; i++) {
                 y: bottomHeight, 
                 z: center.z},  
           dimensions: { x: BALL_SIZE, y: BALL_SIZE, z: BALL_SIZE }, 
-          color: { red: 120, green: 20, blue: 130},
+          color: lavaColor,
     });
   ball.velocity = {x: 0, y: .01, z: 0};
 
@@ -69,9 +79,9 @@ function update(deltaTime) {
   position = Entities.getEntityProperties(ball).position;
   // position.y += 0.0001;
   Entities.editEntity(ball, {position: position});
-  print(position.y);
 
-
+  baseGlob.dimensions.y+= 0.0001;
+  Entities.editEntity(baseGlob, {dimensions: baseGlob.dimensions});
 
 
 }
@@ -79,6 +89,7 @@ function update(deltaTime) {
 
 function scriptEnding() {
   Entities.deleteEntity(lamp);
+  Entities.deleteEntity(baseGlob);
   for (var i = 0; i < NUM_BALLS; i++) {
     Entities.deleteEntity(balls[i]);
   }
