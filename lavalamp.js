@@ -1,10 +1,10 @@
 (function() {
     this.entityID = null;
     this.lampOn = false;
-    this.numGlobs = 3;
+    this.numGlobs = 1;
     this.globSize = 0.02;
     this.globs = [];
-    this.lampRadius = .133;
+    this.lampRadius = .033;
     var self = this;
     this.colliders = [];
 
@@ -48,20 +48,29 @@
 
     this.createColliders = function(){
       //create a top and bottom
+      var colliderWidth = 0.001;
       var topProperties = {
         type: 'Box',
-        position: Vec3.sum(this.lampPosition, {x: 0, y: .2, z: 0}),
-        dimensions: {x: this.lampRadius * 2, y: 0.01, z: this.lampRadius * 2},
+        position: Vec3.sum(this.lampPosition, {x: 0, y: .17, z: 0}),
+        dimensions: {x: this.lampRadius * 2, y: colliderWidth, z: this.lampRadius * 2},
         color: {red: 200, green: 10, blue: 10}
       }
       var collider = Entities.addEntity(topProperties);
       this.colliders.push(collider);
+      
+      var bottomProperties = {
+        type: 'Box',
+        position: Vec3.sum(this.lampPosition, {x: 0, y: -.03, z: 0}),
+        dimensions: {x: this.lampRadius * 2, y: colliderWidth, z: this.lampRadius * 2},
+        color: {red: 200, green: 10, blue: 10}
+      }
+      collider = Entities.addEntity(bottomProperties);
+      this.colliders.push(collider);
+      
     }
 
     this.turnLampOff = function() {
       this.cleanUp();
-
-
     }
 
     this.clickReleaseOnEntity = function(entityID, mouseEvent) {
@@ -69,7 +78,6 @@
         if(mouseEvent.isLeftButton) {
           this.toggleLamp();
         }
-     
     };
 
     this.update = function(deltaTime){
@@ -87,8 +95,9 @@
       for( var i = 0; i < this.globs.length; i++){
         Entities.deleteEntity(this.globs[i]);
       }
-
-
+      for(var i = 0; i < this.colliders.length; i++){
+        Entities.deleteEntity(this.colliders[i]);
+      }
     }
 
   function randFloat ( low, high ) {
