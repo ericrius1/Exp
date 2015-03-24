@@ -56,8 +56,14 @@
      
     };
 
+    this.update = function(deltaTime){
+      print("UPDATE");
+
+    }
+
   function randFloat ( low, high ) {
     return low + Math.random() * ( high - low );
   }
+  Script.update.connect(this.update);
 
 })
