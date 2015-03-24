@@ -6,6 +6,7 @@
     this.globs = [];
     this.lampRadius = .133;
     var self = this;
+    this.colliders = [];
 
     
     this.toggleLamp = function(){
@@ -21,7 +22,6 @@
 
     this.turnLampOn = function() {
       //create blobs
-      print("BLOBS");
       this.lampPosition = Entities.getEntityProperties(this.entityID).position;
       var globProperties = {
         type: 'Sphere',
@@ -32,6 +32,8 @@
         velocity: {x : 0, y: 0.1, z: 0}
       };
 
+
+      //create blobs
       for( var i = 0; i < this.numGlobs; i++){
         globProperties.position.x += randFloat(-.01, .01);
         globProperties.position.y += randFloat(-.01, .01);
@@ -40,12 +42,24 @@
         this.globs.push(glob);
       }
 
+      this.createColliders();
+
+    }
+
+    this.createColliders = function(){
+      //create a top and bottom
+      var topProperties = {
+        type: 'Box',
+        position: Vec3.sum(this.lampPosition, {x: 0, y: .2, z: 0}),
+        dimensions: {x: this.lampRadius * 2, y: 0.01, z: this.lampRadius * 2},
+        color: {red: 200, green: 10, blue: 10}
+      }
+      var collider = Entities.addEntity(topProperties);
+      this.colliders.push(collider);
     }
 
     this.turnLampOff = function() {
-      for( var i = 0; i < this.globs.length; i++){
-        Entities.deleteEntity(this.globs[i]);
-      }
+      this.cleanUp();
 
 
     }
@@ -66,9 +80,14 @@
     }
 
     this.scriptEnding = function(){
+      this.cleanUp();
+    }
+
+    this.cleanUp = function(){
       for( var i = 0; i < this.globs.length; i++){
         Entities.deleteEntity(this.globs[i]);
       }
+
 
     }
 
