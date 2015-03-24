@@ -4,6 +4,8 @@
     this.numGlobs = 3;
     this.globSize = 0.02;
     this.globs = [];
+    this.lampRadius = .133;
+    var self = this;
 
     
     this.toggleLamp = function(){
@@ -20,10 +22,10 @@
     this.turnLampOn = function() {
       //create blobs
       print("BLOBS");
-      var position = Entities.getEntityProperties(this.entityID).position;
+      this.lampPosition = Entities.getEntityProperties(this.entityID).position;
       var globProperties = {
         type: 'Sphere',
-        position: position,
+        position: this.lampPosition,
         color: {red: 100, blue : 20, green: 100},
         dimensions: {x : this.globSize, y: this.globSize, z: this.globSize },
         collisionsWillMove: true,
@@ -57,7 +59,16 @@
     };
 
     this.update = function(deltaTime){
-      print("UPDATE");
+      if(!self.lampOn){
+        return;
+      }
+
+    }
+
+    this.scriptEnding = function(){
+      for( var i = 0; i < this.globs.length; i++){
+        Entities.deleteEntity(this.globs[i]);
+      }
 
     }
 
@@ -65,5 +76,6 @@
     return low + Math.random() * ( high - low );
   }
   Script.update.connect(this.update);
+  Script.scriptEnding.connect(this.scriptEnding);
 
 })
