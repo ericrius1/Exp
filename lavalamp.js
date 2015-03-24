@@ -178,7 +178,7 @@
     this.clickReleaseOnEntity = function(entityID, mouseEvent) {
         this.entityID = entityID;
         this.maybeDownloadSound();
-        
+        print('CLICK ON ENEITYT PRITNRNRNRNRNRNRN')
         if (mouseEvent.isLeftButton) {
             this.updateLightID();
             this.maybeMoveLight();
