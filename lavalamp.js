@@ -1,7 +1,7 @@
 (function() {
     this.entityID = null;
     this.lampOn = false;
-    this.numGlobs = 1;
+    this.numGlobs = 2;
     this.globSize = 0.02;
     this.globs = [];
     this.lampRadius = .043;
