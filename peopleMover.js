@@ -1,6 +1,6 @@
 (function(){
 	this.moverOn = false
-	this.MAX_RANGE = 10;
+	this.MAX_RANGE = 7;
 	this.MIN_RANGE = 1;
 	this.velocity = {x: 0, y: 0, z: 0};
 	this.acceleration = {x: 0, y: 0, z: 0};
@@ -13,6 +13,8 @@
 	this.motorTimescale = 0.2;
 	this.isMoving = false;
 	this.largeTimescale = 1000000;
+	this.velocityFactor = 3;
+	MyAvatar.motorReferenceFrame = "world";
 	
 
 	this.toggleMover = function(){
@@ -23,7 +25,6 @@
 			this.turnMoverOff();
 		}
 
-		this.moverOn = !this.moverOn;
 	}
 
 	this.clickReleaseOnEntity = function(entityId, mouseEvent){
@@ -60,10 +61,10 @@
 
 		//first normalize, then scale velocity; (Eventually based on user data)
 		this.velocity = Vec3.normalize(this.rotatedDir);
-		this.velocity = Vec3.multiply(this.velocity, 3);
+		this.velocity = Vec3.multiply(this.velocity, this.velocityFactor);
 
 		print("VELOCITY!!!" + JSON.stringify(this.velocity));
-
+		this.moverOn = true;
 
 
 		// this.debugMesh = Entities.addEntity({
@@ -79,6 +80,7 @@
 	this.turnMoverOff = function(){
 		Entities.editEntity(this.entityId, {color: this.offColor});
 		this.cleanUp();
+		this.moverOn = false;
 	}
 
 	this.scriptEnding = function(){
@@ -104,6 +106,10 @@
 		    if(!self.isMoving){
 		    	self.startAvatar();
 		    }
+
+		    //uncomment here to use manual velocity systemsw
+		    // position = Vec3.sum(MyAvatar.position, self.velocity);
+		    // MyAvatar.position = position;
 
 		}
 		else if(self.isMoving){
