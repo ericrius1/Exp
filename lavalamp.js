@@ -1,3 +1,5 @@
+var myLight;
+
 (function() {
     this.entityID = null;
     this.lampOn = false;
@@ -26,16 +28,18 @@
     this.turnLampOn = function() {
       //create blobs
       this.lampPosition = Entities.getEntityProperties(this.entityID).position;
+      var globColor = {red: 200, blue : 20, green: 200}
       var globProperties = {
         type: 'Sphere',
         position: this.lampPosition,
-        color: {red: 100, blue : 20, green: 100},
+        color: globColor,
         dimensions: {x : this.globSize, y: this.globSize, z: this.globSize },
         collisionsWillMove: true,
         velocity: {x : 0, y: 0.1, z: 0},
         damping: 0
       };
 
+     
 
       //create blobs
       for( var i = 0; i < this.numGlobs; i++){
@@ -43,6 +47,17 @@
         globProperties.position.y += randFloat(-.01, .01);
         globProperties.position.z += randFloat(-.01, .01);
         var glob = Entities.addEntity(globProperties);
+
+        glob.light = Entities.addEntity({
+          type: "Light",
+          position: globProperties.position,
+          dimensions: {x:10, y:10, z: 10},
+          isSpotlight: false,
+          color: globColor,
+          intensity: 5,
+        })
+
+
         this.globs.push(glob);
       }
 
@@ -139,6 +154,7 @@
       for(var i = 0; i < self.globs.length; i++){
         var glob = self.globs[0];
         var velocity = Entities.getEntityProperties(glob).velocity;
+        var position = Entities.getEntityProperties(glob).position;
 
         //Physics engine deactivates objects moving below 0.05 m/s after ~2 sec, 
         //so give those objects a boost before that happens
@@ -147,6 +163,8 @@
           var direction = velocity.y > 0 ? 1 : -1;
           Entities.editEntity(glob, {velocity: {x: 0, y: .1 * direction, z: 0}});
         }
+        Entities.editEntity(glob.light, {position: position});
+
       }
 
 
@@ -159,6 +177,7 @@
     this.cleanUp = function(){
       for( var i = 0; i < this.globs.length; i++){
         Entities.deleteEntity(this.globs[i]);
+        Entities.deleteEntity(this.globs[i].light);
       }
       for(var i = 0; i < this.colliders.length; i++){
         Entities.deleteEntity(this.colliders[i]);
