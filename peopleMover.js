@@ -1,6 +1,9 @@
 (function(){
 	this.moverOn = false
 	this.MAX_RANGE = 10;
+	this.MIN_RANGE = 1;
+	this.velocity = {x: 0, y: 0, z: 0};
+	this.acceleration = {x: 0, y: 0, z: 0}
 	var self = this;
 	this.toggleMover = function(){
 		if(!this.moverOn){
@@ -55,8 +58,12 @@
 			return;
 		}
 		print(Vec3.distance(MyAvatar.position, self.moverPosition));
-		if(Vec3.distance(MyAvatar.position, self.moverPosition) < self.MAX_RANGE){
-			print("WITHIN RANGE!");
+		self.distance = Vec3.distance(MyAvatar.position, self.moverPosition);
+		if(self.distance < self.MAX_RANGE && self.distance > self.MIN_RANGE){
+			self.direction = Vec3.subtract(self.moverPosition, MyAvatar.position);
+			self.direction = Vec3.multiply(.01, Vec3.normalize(self.direction));
+			MyAvatar.position = Vec3.sum(MyAvatar.position, self.direction);
+
 		}
 
 	}
