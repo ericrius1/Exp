@@ -1,7 +1,6 @@
 (function(){
 	this.moverOn = false
-	this.MAX_RANGE = 3;
-	this.MIN_RANGE = 1;
+	this.defaultMaxRange=3;
 	this.velocity = {x: 0, y: 0, z: 0};
 	this.acceleration = {x: 0, y: 0, z: 0};
 	this.onColor = {red: 10, green: 200, blue: 10};
@@ -15,6 +14,19 @@
 	this.largeTimescale = 1000000;
 	this.velocityFactor = 3;
 	MyAvatar.motorReferenceFrame = "world";
+
+	function getUserData(entityId) {
+		var properties = Entities.getEntityProperties(entityId);
+		if(properties.userData){
+			return JSON.parse(properties.userData);
+		} else {
+			return null;
+		}
+	}
+
+	function updateUserData(entityId, userData){
+		Entities.editEntity(entityId, {userData: JSON.stringify(userData) });
+	}
 	
 
 	this.toggleMover = function(){
@@ -28,7 +40,7 @@
 	}
 
 	this.clickReleaseOnEntity = function(entityId, mouseEvent){
-		this.entityId = entityId;
+		this.entityId = entityId
 		if(mouseEvent.isLeftButton) {
 			this.toggleMover();
 		}
@@ -36,7 +48,10 @@
 
 	this.turnMoverOn = function(){
 		//activate a light at the movers position
-		var props = Entities.getEntityProperties(this.entityId)
+		var props = Entities.getEntityProperties(this.entityId);
+		this.userData = getUserData(this.entityId);
+		this.setUserProperties();
+
 		this.moverPosition = props.position;
 		this.moverRotation = props.rotation;
 		this.light = Entities.addEntity({
@@ -76,11 +91,27 @@
 
 	}
 
+	this.setUserProperties = function(){
+		if(!this.userData){
+			this.userData = {}
+		}
+		if(this.userData.ability !== "mover"){
+			this.userData.ability = "mover";
+		}
+		if(!this.userData.maxRange){
+			this.userData.maxRange = this.defaultMaxRange;
+			this.maxRange = this.defaultMaxRange
+		} else if (this.userData.maxRange) {
+			this.maxRange = this.userData.maxRange;
+		}
+		updateUserData(this.entityId, this.userData)
+	}
+
 	this.turnMoverOff = function(){
 		Entities.editEntity(this.entityId, {color: this.offColor});
 		this.cleanUp();
 		this.moverOn = false;
-		this.stopAvatar();
+		this.maybeStopAvatar();
 	}
 
 	this.scriptEnding = function(){
@@ -92,9 +123,8 @@
 			return;
 		}
 
-		print('UPDATE');
 		self.distance = Vec3.distance(MyAvatar.position, self.moverPosition);
-		if(self.distance < self.MAX_RANGE){
+		if(self.distance < self.maxRange){
 		// 	self.direction = Vec3.subtract(self.moverPosition, MyAvatar.position);
 		// 	self.direction = Vec3.multiply(.01, Vec3.normalize(self.direction));
 		// 	MyAvatar.position = Vec3.sum(MyAvatar.position, self.direction);
@@ -107,13 +137,10 @@
 		    	self.startAvatar();
 		    }
 
-		    //uncomment here to use manual velocity systemsw
-		    // position = Vec3.sum(MyAvatar.position, self.velocity);
-		    // MyAvatar.position = position;
 
 		}
 		else if(self.isMoving){
-			self.stopAvatar();
+			self.maybeStopAvatar();
 		}
 
 	}
@@ -127,10 +154,20 @@
 
 	this.unload = function(){
 		Script.update.disconnect(this.update);
+		this.cleanUp();
 	}
 
-	//PROBLEM: avatar stops when it leaves field of first mover, even if it has entered field of second mover
-	this.stopAvatar = function(){
+	//PROBLEM: Only stop avatar if it is not in the field of any nearby movers
+	this.maybeStopAvatar = function(){
+		var nearbyMoverEntities = Entities.findEntities(MyAvatar.position, 100);
+		nearbyEntities = nearbyMoverEntities.filter(function(entity){
+			var props = Entities.getEntityProperties(entity);
+			if(props.userData){
+				var userData = JSON.parse(props.userData);
+				return userData.ability === "mover";
+			}
+		});
+		print("NEARBY ENTITIES " + JSON.stringify(nearbyEntities));
 		MyAvatar.motorVelocity = 0;
 		MyAvatar.motorTimescale = this.largeTimescale;
 		this.isMoving = false;
