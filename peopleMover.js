@@ -10,7 +10,7 @@
 	this.isMoving = false;
 	this.velocity = {x: 0, y: 0, z: 0};
 	this.maxThrustStrength = 500;
-	this.minThrustStrength = this.maxThrustStrength * .5;
+	this.minThrustStrength = this.maxThrustStrength * .2;
 
 	function getUserData(entityId) {
 		var properties = Entities.getEntityProperties(entityId);
