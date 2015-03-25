@@ -1,6 +1,6 @@
 (function(){
 	this.moverOn = false
-	this.MAX_RANGE = 3;
+	this.MAX_RANGE = 10;
 	this.MIN_RANGE = 1;
 	this.velocity = {x: 0, y: 0, z: 0};
 	this.acceleration = {x: 0, y: 0, z: 0};
@@ -8,6 +8,13 @@
 	this.offColor = {red: 200, green: 0, blue: 0};
 	this.rotationMixVal = 0.01;
 	var self = this;
+	this.defaultRotation = {x: 0, y: 0, z: -1};
+	this.velocity = {x: 0, y: 0, z: 0};
+	this.motorTimescale = 0.2;
+	this.isMoving = false;
+	this.largeTimescale = 1000000;
+	
+
 	this.toggleMover = function(){
 		if(!this.moverOn){
 			this.turnMoverOn();
@@ -45,8 +52,19 @@
 		Entities.editEntity(this.entityId, {
 			color: this.onColor, 
 			dimensions: {x: .1, y: .1, z: 1},
-			// rotation: Quat.fromPitchYawRollDegrees(45, 0, 0)
+			// rotation: Quat.fromPitchYawRollDegrees(45, 0, 0)ssss
 		});
+
+		this.rotatedDir = {x: this.defaultRotation.x, y: this.defaultRotation.y, z: this.defaultRotation.z};
+		this.rotatedDir = Vec3.multiplyQbyV(this.moverRotation, this.rotatedDir);
+
+		//first normalize, then scale velocity; (Eventually based on user data)
+		this.velocity = Vec3.normalize(this.rotatedDir);
+		this.velocity = Vec3.multiply(this.velocity, 3);
+
+		print("VELOCITY!!!" + JSON.stringify(this.velocity));
+
+
 
 		// this.debugMesh = Entities.addEntity({
 		// 	type: "Sphere",
@@ -71,8 +89,9 @@
 		if(!self.moverOn){
 			return;
 		}
-		self.distance = Vec3.distance(MyAvatar.position, self.moverPosition);
 
+
+		self.distance = Vec3.distance(MyAvatar.position, self.moverPosition);
 		if(self.distance < self.MAX_RANGE && self.distance > self.MIN_RANGE){
 		// 	self.direction = Vec3.subtract(self.moverPosition, MyAvatar.position);
 		// 	self.direction = Vec3.multiply(.01, Vec3.normalize(self.direction));
@@ -80,8 +99,30 @@
 
 		    var newOrientation = Quat.mix(MyAvatar.orientation, self.moverRotation, self.rotationMixVal);
 		    MyAvatar.orientation = newOrientation;
+
+		    //now start moving avatar with a velocity that mathes orientation of object
+		    if(!self.isMoving){
+		    	self.startAvatar();
+		    }
+
+		}
+		else if(self.isMoving){
+			self.stopAvatar();
 		}
 
+	}
+
+	this.startAvatar = function(){
+
+	  MyAvatar.motorVelocity =  this.velocity;
+	  MyAvatar.motorTimescale = this.motorTimescale;
+	  this.isMoving = true;
+	}
+
+	this.stopAvatar = function(){
+		MyAvatar.motorVelocity = 0;
+		MyAvatar.motorTimescale = this.largeTimescale;
+		this.isMoving = false;
 	}
 
 	this.cleanUp = function(){
