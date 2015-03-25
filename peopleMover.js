@@ -1,6 +1,6 @@
 (function(){
 	this.moverOn = false
-	this.MAX_RANGE = 7;
+	this.MAX_RANGE = 3;
 	this.MIN_RANGE = 1;
 	this.velocity = {x: 0, y: 0, z: 0};
 	this.acceleration = {x: 0, y: 0, z: 0};
@@ -52,7 +52,7 @@
 		//change color
 		Entities.editEntity(this.entityId, {
 			color: this.onColor, 
-			dimensions: {x: .1, y: .1, z: 1},
+			dimensions: {x: .1, y: .1, z: 0.5},
 			// rotation: Quat.fromPitchYawRollDegrees(45, 0, 0)ssss
 		});
 
@@ -63,7 +63,6 @@
 		this.velocity = Vec3.normalize(this.rotatedDir);
 		this.velocity = Vec3.multiply(this.velocity, this.velocityFactor);
 
-		print("VELOCITY!!!" + JSON.stringify(this.velocity));
 		this.moverOn = true;
 
 
@@ -81,6 +80,7 @@
 		Entities.editEntity(this.entityId, {color: this.offColor});
 		this.cleanUp();
 		this.moverOn = false;
+		this.stopAvatar();
 	}
 
 	this.scriptEnding = function(){
@@ -92,9 +92,9 @@
 			return;
 		}
 
-
+		print('UPDATE');
 		self.distance = Vec3.distance(MyAvatar.position, self.moverPosition);
-		if(self.distance < self.MAX_RANGE && self.distance > self.MIN_RANGE){
+		if(self.distance < self.MAX_RANGE){
 		// 	self.direction = Vec3.subtract(self.moverPosition, MyAvatar.position);
 		// 	self.direction = Vec3.multiply(.01, Vec3.normalize(self.direction));
 		// 	MyAvatar.position = Vec3.sum(MyAvatar.position, self.direction);
@@ -125,6 +125,11 @@
 	  this.isMoving = true;
 	}
 
+	this.unload = function(){
+		Script.update.disconnect(this.update);
+	}
+
+	//PROBLEM: avatar stops when it leaves field of first mover, even if it has entered field of second mover
 	this.stopAvatar = function(){
 		MyAvatar.motorVelocity = 0;
 		MyAvatar.motorTimescale = this.largeTimescale;
