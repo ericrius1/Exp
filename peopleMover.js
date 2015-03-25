@@ -1,9 +1,12 @@
 (function(){
 	this.moverOn = false
-	this.MAX_RANGE = 10;
+	this.MAX_RANGE = 3;
 	this.MIN_RANGE = 1;
 	this.velocity = {x: 0, y: 0, z: 0};
-	this.acceleration = {x: 0, y: 0, z: 0}
+	this.acceleration = {x: 0, y: 0, z: 0};
+	this.onColor = {red: 10, green: 200, blue: 10};
+	this.offColor = {red: 200, green: 0, blue: 0};
+	this.rotationMixVal = 0.01;
 	var self = this;
 	this.toggleMover = function(){
 		if(!this.moverOn){
@@ -25,15 +28,25 @@
 
 	this.turnMoverOn = function(){
 		//activate a light at the movers position
-		this.moverPosition = Entities.getEntityProperties(this.entityId).position;
+		var props = Entities.getEntityProperties(this.entityId)
+		this.moverPosition = props.position;
+		this.moverRotation = props.rotation;
 		this.light = Entities.addEntity({
 			type: "Light",
 			position: this.moverPosition,
 			isSpotlight: false,
 			dimensions: {x: 10, y:10, z:10},
 			color: {red: 200, green: 10, blue: 200},
-			intensity: 5
+			intensity: 5,
+			// rotation: {x : 0, y: Math.PI/2, z: 0}
 		})
+
+		//change color
+		Entities.editEntity(this.entityId, {
+			color: this.onColor, 
+			dimensions: {x: .1, y: .1, z: 1},
+			// rotation: Quat.fromPitchYawRollDegrees(45, 0, 0)
+		});
 
 		// this.debugMesh = Entities.addEntity({
 		// 	type: "Sphere",
@@ -46,6 +59,7 @@
 	}
 
 	this.turnMoverOff = function(){
+		Entities.editEntity(this.entityId, {color: this.offColor});
 		this.cleanUp();
 	}
 
@@ -57,13 +71,15 @@
 		if(!self.moverOn){
 			return;
 		}
-		print(Vec3.distance(MyAvatar.position, self.moverPosition));
 		self.distance = Vec3.distance(MyAvatar.position, self.moverPosition);
-		if(self.distance < self.MAX_RANGE && self.distance > self.MIN_RANGE){
-			self.direction = Vec3.subtract(self.moverPosition, MyAvatar.position);
-			self.direction = Vec3.multiply(.01, Vec3.normalize(self.direction));
-			MyAvatar.position = Vec3.sum(MyAvatar.position, self.direction);
 
+		if(self.distance < self.MAX_RANGE && self.distance > self.MIN_RANGE){
+		// 	self.direction = Vec3.subtract(self.moverPosition, MyAvatar.position);
+		// 	self.direction = Vec3.multiply(.01, Vec3.normalize(self.direction));
+		// 	MyAvatar.position = Vec3.sum(MyAvatar.position, self.direction);
+
+		    var newOrientation = Quat.mix(MyAvatar.orientation, self.moverRotation, self.rotationMixVal);
+		    MyAvatar.orientation = newOrientation;
 		}
 
 	}
