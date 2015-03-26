@@ -11,6 +11,7 @@
 	this.defaultThrust = 500;
 	this.maxRotMixVal = 0.01;
 	this.minRotMixVal = this.maxRotMixVal * 0.5;
+	this.minThrustPercentage = 0.2;
 	this.userData = {};
 
 
@@ -74,7 +75,6 @@
 		this.userData.active = this.userData.active || false;
 
 		
-		this.maxRange = this.userData.maxRange;
 		this.maxThrust = this.userData.thrust;
 		this.minThrust = this.maxThrust * 0.2;
 		
@@ -97,22 +97,24 @@
 	this.update = function(deltaTime){
 		self.properties = Entities.getEntityProperties(self.entityId);
 		self.getUserData();
-		self.userData.randShit = Math.floor(Math.random() * 10);
+		self.userData.randNums = Math.floor(Math.random() * 10);
 		self.updateUserData();
 		if(!self.userData.active){
 			return;
 		}
-		print('WTF WTF WTF')
 		self.distance = Vec3.distance(MyAvatar.position, self.properties.position);
-		if(self.distance < self.maxRange){
-			self.rotationMixVal = map(self.distance, 0, self.maxRange, self.maxRotMixVal, self.minRotMixVal);
+		print("DISTANCE" + self.distance )
+		print("MAX RANGE" + self.userData.maxRange )
+		if(self.distance < self.userData.maxRange){
+		    print('RUN')
+			self.rotationMixVal = map(self.distance, 0, self.userData.maxRange, self.maxRotMixVal, self.minRotMixVal);
 		    self.newOrientation = Quat.mix(MyAvatar.orientation, self.properties.rotation, self.rotationMixVal);
 		    MyAvatar.orientation = self.newOrientation;
 
 		    self.rotatedDir = {x: self.forward.x, y: self.forward.y, z: self.forward.z};
 		    self.rotatedDir = Vec3.multiplyQbyV(self.properties.rotation, self.rotatedDir);
 
-		    self.thrust= map(self.distance, 0, self.maxRange, self.maxThrust, self.minThrust);
+		    self.thrust= map(self.distance, 0, self.userData.maxRange, self.userData.maxThrust, self.userData.maxThrust * self.minThrustPercentage);
 		    self.direction = Vec3.normalize(self.rotatedDir);
 		    self.velocity = Vec3.multiply(self.direction, self.thrust);
 		    MyAvatar.addThrust(Vec3.multiply(self.velocity, deltaTime));
