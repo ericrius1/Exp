@@ -90,13 +90,12 @@
 	this.update = function(deltaTime){
 		self.properties = Entities.getEntityProperties(self.entityId);
 		self.getUserData();
-		self.userData.randNums = Math.floor(Math.random() * 10);
-		self.updateUserData();
 		if(!self.userData.active){
 			return;
 		}
 		self.distance = Vec3.distance(MyAvatar.position, self.properties.position);
 		if(self.distance < self.userData.range){
+			print("MOVE");
 			self.rotationMixVal = map(self.distance, 0, self.userData.range, self.maxRotMixVal, self.minRotMixVal);
 		    self.newOrientation = Quat.mix(MyAvatar.orientation, self.properties.rotation, self.rotationMixVal);
 		    MyAvatar.orientation = self.newOrientation;
