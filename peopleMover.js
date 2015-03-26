@@ -11,6 +11,7 @@
 	this.defaultThrust = 500;
 	this.maxRotMixVal = 0.01;
 	this.minRotMixVal = this.maxRotMixVal * 0.5;
+	this.userData = {};
 
 	function getUserData(entityId) {
 		var properties = Entities.getEntityProperties(entityId);
@@ -27,10 +28,10 @@
 	
 
 	this.toggleMover = function(){
-		if(!this.active){
+		if(!this.userData.active){
 			this.activate();
 		}
-		else if(this.active){
+		else if(this.userData.active){
 			this.deactivate();
 		}
 
@@ -74,28 +75,24 @@
 	this.setUserProperties = function(){
 		this.userData = getUserData(this.entityId);
 		if(!this.userData){
-			this.userData = {
-				maxRange: this.defaultMaxRange,
-				thrust: this.defaultThrust,
-				active: true
-
-			}
-		} else {
-			this.userData.maxRange = this.userData.maxRange || this.defaultMaxRange;
-			this.userData.thrust = this.userData.thrust || this.defaultThrust;
-			this.userData.active = this.userData.active || true;
-
+			this.userData = {};
 		}
+		
+		this.userData.maxRange = this.userData.maxRange || this.defaultMaxRange;
+		this.userData.thrust = this.userData.thrust || this.defaultThrust;
+		this.userData.active = this.userData.active || true;
+
+		
 		this.maxRange = this.userData.maxRange;
 		this.maxThrust = this.userData.thrust;
 		this.minThrust = this.maxThrust * 0.2;
-		this.active = this.userData.active;
+		
 		updateUserData(this.entityId, this.userData)
 	}
 
 	this.deactivate = function(){
 		this.userData.active = false;
-		this.active = false;
+		updateUserData(this.entityId, this.userData);
 		Entities.editEntity(this.entityId, {color: this.offColor});
 		this.cleanUp();
 	}
@@ -105,7 +102,8 @@
 	}
 
 	this.update = function(deltaTime){
-		if(!self.active){
+		print("IS ACTIVE???? " + self.userData.active);
+		if(!self.userData.active){
 			return;
 		}
 		self.props = Entities.getEntityProperties(self.entityId);
@@ -130,6 +128,12 @@
 		    self.velocity = Vec3.multiply(self.direction, self.thrust);
 		    MyAvatar.addThrust(Vec3.multiply(self.velocity, deltaTime));
 		}
+
+		self.checkForUserDataUpdates();
+	}
+
+	this.checkForUserDataUpdates = function(){
+		this.setUserProperties();
 
 	}
 
