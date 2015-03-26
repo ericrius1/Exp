@@ -1,5 +1,5 @@
 (function(){
-	this.defaultMaxRange = 5;
+	this.defaultRange = 5;
 	this.acceleration = {x: 0, y: 0, z: 0};
 	this.onColor = {red: 10, green: 200, blue: 10};
 	this.offColor = {red: 200, green: 0, blue: 0};
@@ -17,7 +17,6 @@
 
 	this.getUserData = function() {
 		if(this.properties.userData){
-			print("USER DATA " + this.properties.userData);
 		    this.userData = JSON.parse(this.properties.userData);
 		}
 	}
@@ -70,14 +69,8 @@
 	}
 
 	this.initUserData = function(){
-		this.userData.maxRange = this.userData.maxRange || this.defaultMaxRange;
+		this.userData.range = this.userData.range || this.defaultRange;
 		this.userData.thrust = this.userData.thrust || this.defaultThrust;
-		this.userData.active = this.userData.active || false;
-
-		
-		this.maxThrust = this.userData.thrust;
-		this.minThrust = this.maxThrust * 0.2;
-		
 		this.updateUserData();
 	}
 
@@ -103,18 +96,15 @@
 			return;
 		}
 		self.distance = Vec3.distance(MyAvatar.position, self.properties.position);
-		print("DISTANCE" + self.distance )
-		print("MAX RANGE" + self.userData.maxRange )
-		if(self.distance < self.userData.maxRange){
-		    print('RUN')
-			self.rotationMixVal = map(self.distance, 0, self.userData.maxRange, self.maxRotMixVal, self.minRotMixVal);
+		if(self.distance < self.userData.range){
+			self.rotationMixVal = map(self.distance, 0, self.userData.range, self.maxRotMixVal, self.minRotMixVal);
 		    self.newOrientation = Quat.mix(MyAvatar.orientation, self.properties.rotation, self.rotationMixVal);
 		    MyAvatar.orientation = self.newOrientation;
 
 		    self.rotatedDir = {x: self.forward.x, y: self.forward.y, z: self.forward.z};
 		    self.rotatedDir = Vec3.multiplyQbyV(self.properties.rotation, self.rotatedDir);
 
-		    self.thrust= map(self.distance, 0, self.userData.maxRange, self.userData.maxThrust, self.userData.maxThrust * self.minThrustPercentage);
+		    self.thrust= map(self.distance, 0, self.userData.range, self.userData.thrust, self.userData.thrust * self.minThrustPercentage);
 		    self.direction = Vec3.normalize(self.rotatedDir);
 		    self.velocity = Vec3.multiply(self.direction, self.thrust);
 		    MyAvatar.addThrust(Vec3.multiply(self.velocity, deltaTime));
