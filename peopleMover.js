@@ -1,6 +1,6 @@
 (function(){
 	this.moverOn = false
-	this.maxRange=5;
+	this.defaultMaxRange = 5;
 	this.acceleration = {x: 0, y: 0, z: 0};
 	this.onColor = {red: 10, green: 200, blue: 10};
 	this.offColor = {red: 200, green: 0, blue: 0};
@@ -65,7 +65,7 @@
 		Entities.editEntity(this.entityId, {
 			color: this.onColor, 
 			dimensions: {x: .1, y: .1, z: 0.5},
-			// rotation: Quat.fromPitchYawRollDegrees(45, 0, 0)ssss
+			// rotation: Quat.fromPitchYawRollDegrees(45, 0, 0)
 		});
 
 		this.moverOn = true;
@@ -75,9 +75,15 @@
 	this.setUserProperties = function(){
 		this.userData = getUserData(this.entityId);
 		if(!this.userData){
-			this.userData = {}
+			this.userData = {
+				maxRange: this.defaultMaxRange
+			}
+		} else {
+			if(!this.userData.maxRange){
+				this.userData.maxRange = this.defaultMaxRange;
+			}
 		}
-
+		this.maxRange = this.userData.maxRange;
 		print(JSON.stringify(this.userData))
 		updateUserData(this.entityId, this.userData)
 	}
