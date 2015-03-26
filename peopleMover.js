@@ -13,19 +13,16 @@
 	this.minRotMixVal = this.maxRotMixVal * 0.5;
 	this.userData = {};
 
-	function getUserData(entityId) {
-		var properties = Entities.getEntityProperties(entityId);
-		if(properties.userData){
-			return JSON.parse(properties.userData);
-			// print("USER DATA " + properties.userData);
-		} else {
-			return null;
+
+	this.getUserData = function() {
+		if(this.properties.userData){
+			print("USER DATA " + this.properties.userData);
+		    this.userData = JSON.parse(this.properties.userData);
 		}
 	}
 
-	function updateUserData(entityId, userData){
-		Entities.editEntity(entityId, {userData: JSON.stringify(userData) });
-		// Entities.editEntity(entityId, {userData: "hello" });
+	this.updateUserData = function(userData){
+		Entities.editEntity(this.entityId, {userData: JSON.stringify(this.userData) });
 	}
 	
 
@@ -48,14 +45,14 @@
 
 	this.activate = function(){
 		//activate a light at the movers position
-		var props = Entities.getEntityProperties(this.entityId);
-		this.setUserProperties();
+		this.properties = Entities.getEntityProperties(this.entityId);
+		this.getUserData();
+	    this.userData.active = true;
+		this.initUserData();
 
-		this.moverPosition = props.position;
-		this.moverRotation = props.rotation;
 		this.light = Entities.addEntity({
 			type: "Light",
-			position: this.moverPosition,
+			position: this.properties.position,
 			isSpotlight: false,
 			dimensions: {x: 10, y:10, z:10},
 			color: {red: 200, green: 10, blue: 200},
@@ -71,27 +68,24 @@
 		});
 	}
 
-	this.setUserProperties = function(){
-		this.userData = getUserData(this.entityId);
-		if(!this.userData){
-			this.userData = {};
-		}
-		
+	this.initUserData = function(){
 		this.userData.maxRange = this.userData.maxRange || this.defaultMaxRange;
 		this.userData.thrust = this.userData.thrust || this.defaultThrust;
-		this.userData.active = this.userData.active || true;
+		this.userData.active = this.userData.active || false;
 
 		
 		this.maxRange = this.userData.maxRange;
 		this.maxThrust = this.userData.thrust;
 		this.minThrust = this.maxThrust * 0.2;
 		
-		updateUserData(this.entityId, this.userData)
+		this.updateUserData();
 	}
+
+
 
 	this.deactivate = function(){
 		this.userData.active = false;
-		updateUserData(this.entityId, this.userData);
+		this.updateUserData();
 		Entities.editEntity(this.entityId, {color: this.offColor});
 		this.cleanUp();
 	}
@@ -101,27 +95,23 @@
 	}
 
 	this.update = function(deltaTime){
-		self.props = Entities.getEntityProperties(self.entityId);
-		self.checkForUserDataUpdates();
+		self.properties = Entities.getEntityProperties(self.entityId);
+		self.getUserData();
+		self.userData.randShit = Math.floor(Math.random() * 10);
+		self.updateUserData();
 		if(!self.userData.active){
 			return;
 		}
-		self.moverPosition = self.props.position;
-		self.moverRotation = self.props.rotation;
-		self.distance = Vec3.distance(MyAvatar.position, self.moverPosition);
+		print('WTF WTF WTF')
+		self.distance = Vec3.distance(MyAvatar.position, self.properties.position);
 		if(self.distance < self.maxRange){
-		// 	self.direction = Vec3.subtract(self.moverPosition, MyAvatar.position);
-		// 	self.direction = Vec3.multiply(.01, Vec3.normalize(self.direction));
-		// 	MyAvatar.position = Vec3.sum(MyAvatar.position, self.direction);
 			self.rotationMixVal = map(self.distance, 0, self.maxRange, self.maxRotMixVal, self.minRotMixVal);
-		    self.newOrientation = Quat.mix(MyAvatar.orientation, self.moverRotation, self.rotationMixVal);
+		    self.newOrientation = Quat.mix(MyAvatar.orientation, self.properties.rotation, self.rotationMixVal);
 		    MyAvatar.orientation = self.newOrientation;
 
-
 		    self.rotatedDir = {x: self.forward.x, y: self.forward.y, z: self.forward.z};
-		    self.rotatedDir = Vec3.multiplyQbyV(self.moverRotation, self.rotatedDir);
+		    self.rotatedDir = Vec3.multiplyQbyV(self.properties.rotation, self.rotatedDir);
 
-		    //first normalize, then scale velocity; (Eventually based on user data)
 		    self.thrust= map(self.distance, 0, self.maxRange, self.maxThrust, self.minThrust);
 		    self.direction = Vec3.normalize(self.rotatedDir);
 		    self.velocity = Vec3.multiply(self.direction, self.thrust);
@@ -130,10 +120,6 @@
 
 	}
 
-	this.checkForUserDataUpdates = function(){
-		this.setUserProperties();
-
-	}
 
 	this.preload = function(entityId){
 		this.entityId = entityId;
