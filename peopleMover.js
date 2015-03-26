@@ -47,7 +47,6 @@
 	this.turnMoverOn = function(){
 		//activate a light at the movers position
 		var props = Entities.getEntityProperties(this.entityId);
-		this.userData = getUserData(this.entityId);
 		this.setUserProperties();
 
 		this.moverPosition = props.position;
@@ -69,19 +68,17 @@
 			// rotation: Quat.fromPitchYawRollDegrees(45, 0, 0)ssss
 		});
 
-
-
 		this.moverOn = true;
 
 	}
 
 	this.setUserProperties = function(){
+		this.userData = getUserData(this.entityId);
 		if(!this.userData){
 			this.userData = {}
 		}
-		if(this.userData.ability !== "mover"){
-			this.userData.ability = "mover";
-		}
+
+		print(JSON.stringify(this.userData))
 		updateUserData(this.entityId, this.userData)
 	}
 
