@@ -5,11 +5,11 @@
 	this.onColor = {red: 10, green: 200, blue: 10};
 	this.offColor = {red: 200, green: 0, blue: 0};
 	var self = this;
-	this.defaultRotation = {x: 0, y: 0, z: -1};
+	//Default forward direction of mover object
+	this.forward = {x: 0, y: 0, z: -1};
 	this.isMoving = false;
 	this.velocity = {x: 0, y: 0, z: 0};
-	this.maxThrustStrength = 500;
-	this.minThrustStrength = this.maxThrustStrength * .2;
+	this.defaultThrust = 500;
 	this.maxRotMixVal = 0.01;
 	this.minRotMixVal = this.maxRotMixVal * 0.5;
 
@@ -76,15 +76,18 @@
 		this.userData = getUserData(this.entityId);
 		if(!this.userData){
 			this.userData = {
-				maxRange: this.defaultMaxRange
+				maxRange: this.defaultMaxRange,
+				thrust: this.defaultThrust
+
 			}
 		} else {
-			if(!this.userData.maxRange){
-				this.userData.maxRange = this.defaultMaxRange;
-			}
+			this.userData.maxRange = this.userData.maxRange || this.defaultMaxRange;
+			this.userData.thrust = this.userData.thrust || this.defaultThrust;
+
 		}
 		this.maxRange = this.userData.maxRange;
-		print(JSON.stringify(this.userData))
+		this.maxThrust = this.userData.thrust;
+		this.minThrust = this.maxThrust * 0.2;
 		updateUserData(this.entityId, this.userData)
 	}
 
@@ -115,13 +118,13 @@
 		    MyAvatar.orientation = self.newOrientation;
 
 
-		    self.rotatedDir = {x: self.defaultRotation.x, y: self.defaultRotation.y, z: self.defaultRotation.z};
+		    self.rotatedDir = {x: self.forward.x, y: self.forward.y, z: self.forward.z};
 		    self.rotatedDir = Vec3.multiplyQbyV(self.moverRotation, self.rotatedDir);
 
 		    //first normalize, then scale velocity; (Eventually based on user data)
-		    self.thrustStrength= map(self.distance, 0, self.maxRange, self.maxThrustStrength, self.minThrustStrength);
+		    self.thrust= map(self.distance, 0, self.maxRange, self.maxThrust, self.minThrust);
 		    self.direction = Vec3.normalize(self.rotatedDir);
-		    self.velocity = Vec3.multiply(self.direction, self.thrustStrength);
+		    self.velocity = Vec3.multiply(self.direction, self.thrust);
 		    MyAvatar.addThrust(Vec3.multiply(self.velocity, deltaTime));
 		}
 
