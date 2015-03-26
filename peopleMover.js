@@ -1,5 +1,4 @@
 (function(){
-	this.active = false
 	this.defaultMaxRange = 5;
 	this.acceleration = {x: 0, y: 0, z: 0};
 	this.onColor = {red: 10, green: 200, blue: 10};
@@ -68,7 +67,7 @@
 			// rotation: Quat.fromPitchYawRollDegrees(45, 0, 0)
 		});
 
-		this.active = true;
+
 
 	}
 
@@ -77,24 +76,28 @@
 		if(!this.userData){
 			this.userData = {
 				maxRange: this.defaultMaxRange,
-				thrust: this.defaultThrust
+				thrust: this.defaultThrust,
+				active: true
 
 			}
 		} else {
 			this.userData.maxRange = this.userData.maxRange || this.defaultMaxRange;
 			this.userData.thrust = this.userData.thrust || this.defaultThrust;
+			this.userData.active = this.userData.active || true;
 
 		}
 		this.maxRange = this.userData.maxRange;
 		this.maxThrust = this.userData.thrust;
 		this.minThrust = this.maxThrust * 0.2;
+		this.active = this.userData.active;
 		updateUserData(this.entityId, this.userData)
 	}
 
 	this.deactivate = function(){
+		this.userData.active = false;
+		this.active = false;
 		Entities.editEntity(this.entityId, {color: this.offColor});
 		this.cleanUp();
-		this.active = false;
 	}
 
 	this.scriptEnding = function(){
