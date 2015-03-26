@@ -4,13 +4,14 @@
 	this.acceleration = {x: 0, y: 0, z: 0};
 	this.onColor = {red: 10, green: 200, blue: 10};
 	this.offColor = {red: 200, green: 0, blue: 0};
-	this.rotationMixVal = 0.01;
 	var self = this;
 	this.defaultRotation = {x: 0, y: 0, z: -1};
 	this.isMoving = false;
 	this.velocity = {x: 0, y: 0, z: 0};
 	this.maxThrustStrength = 500;
 	this.minThrustStrength = this.maxThrustStrength * .2;
+	this.maxRotMixVal = 0.01;
+	this.minRotMixVal = this.maxRotMixVal * 0.5;
 
 	function getUserData(entityId) {
 		var properties = Entities.getEntityProperties(entityId);
@@ -106,16 +107,16 @@
 		// 	self.direction = Vec3.subtract(self.moverPosition, MyAvatar.position);
 		// 	self.direction = Vec3.multiply(.01, Vec3.normalize(self.direction));
 		// 	MyAvatar.position = Vec3.sum(MyAvatar.position, self.direction);
-
+				self.rotationMixVal = map(self.distance, 0, self.maxRange, self.maxRotMixVal, self.minRotMixVal);
 		    self.newOrientation = Quat.mix(MyAvatar.orientation, self.moverRotation, self.rotationMixVal);
 		    MyAvatar.orientation = self.newOrientation;
-		    self.thrustStrength= map(self.distance, 0, self.maxRange, self.maxThrustStrength, self.minThrustStrength);
 
 
 		    self.rotatedDir = {x: self.defaultRotation.x, y: self.defaultRotation.y, z: self.defaultRotation.z};
 		    self.rotatedDir = Vec3.multiplyQbyV(self.moverRotation, self.rotatedDir);
 
 		    //first normalize, then scale velocity; (Eventually based on user data)
+		    self.thrustStrength= map(self.distance, 0, self.maxRange, self.maxThrustStrength, self.minThrustStrength);
 		    self.direction = Vec3.normalize(self.rotatedDir);
 		    self.velocity = Vec3.multiply(self.direction, self.thrustStrength);
 		    MyAvatar.addThrust(Vec3.multiply(self.velocity, deltaTime));
