@@ -17,6 +17,7 @@
 		var properties = Entities.getEntityProperties(entityId);
 		if(properties.userData){
 			return JSON.parse(properties.userData);
+			// print("USER DATA " + properties.userData);
 		} else {
 			return null;
 		}
@@ -24,6 +25,7 @@
 
 	function updateUserData(entityId, userData){
 		Entities.editEntity(entityId, {userData: JSON.stringify(userData) });
+		// Entities.editEntity(entityId, {userData: "hello" });
 	}
 	
 
@@ -67,9 +69,6 @@
 			dimensions: {x: .1, y: .1, z: 0.5},
 			// rotation: Quat.fromPitchYawRollDegrees(45, 0, 0)
 		});
-
-
-
 	}
 
 	this.setUserProperties = function(){
@@ -102,11 +101,11 @@
 	}
 
 	this.update = function(deltaTime){
-		print("IS ACTIVE???? " + self.userData.active);
+		self.props = Entities.getEntityProperties(self.entityId);
+		self.checkForUserDataUpdates();
 		if(!self.userData.active){
 			return;
 		}
-		self.props = Entities.getEntityProperties(self.entityId);
 		self.moverPosition = self.props.position;
 		self.moverRotation = self.props.rotation;
 		self.distance = Vec3.distance(MyAvatar.position, self.moverPosition);
@@ -114,7 +113,7 @@
 		// 	self.direction = Vec3.subtract(self.moverPosition, MyAvatar.position);
 		// 	self.direction = Vec3.multiply(.01, Vec3.normalize(self.direction));
 		// 	MyAvatar.position = Vec3.sum(MyAvatar.position, self.direction);
-				self.rotationMixVal = map(self.distance, 0, self.maxRange, self.maxRotMixVal, self.minRotMixVal);
+			self.rotationMixVal = map(self.distance, 0, self.maxRange, self.maxRotMixVal, self.minRotMixVal);
 		    self.newOrientation = Quat.mix(MyAvatar.orientation, self.moverRotation, self.rotationMixVal);
 		    MyAvatar.orientation = self.newOrientation;
 
@@ -129,12 +128,15 @@
 		    MyAvatar.addThrust(Vec3.multiply(self.velocity, deltaTime));
 		}
 
-		self.checkForUserDataUpdates();
 	}
 
 	this.checkForUserDataUpdates = function(){
 		this.setUserProperties();
 
+	}
+
+	this.preload = function(entityId){
+		this.entityId = entityId;
 	}
 
 	this.unload = function(){
