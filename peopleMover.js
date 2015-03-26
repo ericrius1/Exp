@@ -68,11 +68,7 @@
 			// rotation: Quat.fromPitchYawRollDegrees(45, 0, 0)ssss
 		});
 
-		this.rotatedDir = {x: this.defaultRotation.x, y: this.defaultRotation.y, z: this.defaultRotation.z};
-		this.rotatedDir = Vec3.multiplyQbyV(this.moverRotation, this.rotatedDir);
 
-		//first normalize, then scale velocity; (Eventually based on user data)
-		this.direction = Vec3.normalize(this.rotatedDir);
 
 		this.moverOn = true;
 
@@ -102,7 +98,9 @@
 		if(!self.moverOn){
 			return;
 		}
-
+		self.props = Entities.getEntityProperties(self.entityId);
+		self.moverPosition = self.props.position;
+		self.moverRotation = self.props.rotation;
 		self.distance = Vec3.distance(MyAvatar.position, self.moverPosition);
 		if(self.distance < self.maxRange){
 		// 	self.direction = Vec3.subtract(self.moverPosition, MyAvatar.position);
@@ -112,6 +110,13 @@
 		    self.newOrientation = Quat.mix(MyAvatar.orientation, self.moverRotation, self.rotationMixVal);
 		    MyAvatar.orientation = self.newOrientation;
 		    self.thrustStrength= map(self.distance, 0, self.maxRange, self.maxThrustStrength, self.minThrustStrength);
+
+
+		    self.rotatedDir = {x: self.defaultRotation.x, y: self.defaultRotation.y, z: self.defaultRotation.z};
+		    self.rotatedDir = Vec3.multiplyQbyV(self.moverRotation, self.rotatedDir);
+
+		    //first normalize, then scale velocity; (Eventually based on user data)
+		    self.direction = Vec3.normalize(self.rotatedDir);
 		    self.velocity = Vec3.multiply(self.direction, self.thrustStrength);
 		    MyAvatar.addThrust(Vec3.multiply(self.velocity, deltaTime));
 		}
