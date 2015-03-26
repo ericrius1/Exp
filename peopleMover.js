@@ -1,5 +1,5 @@
 (function(){
-	this.moverOn = false
+	this.active = false
 	this.defaultMaxRange = 5;
 	this.acceleration = {x: 0, y: 0, z: 0};
 	this.onColor = {red: 10, green: 200, blue: 10};
@@ -28,11 +28,11 @@
 	
 
 	this.toggleMover = function(){
-		if(!this.moverOn){
-			this.turnMoverOn();
+		if(!this.active){
+			this.activate();
 		}
-		else if(this.moverOn){
-			this.turnMoverOff();
+		else if(this.active){
+			this.deactivate();
 		}
 
 	}
@@ -44,7 +44,7 @@
 		}
 	}
 
-	this.turnMoverOn = function(){
+	this.activate = function(){
 		//activate a light at the movers position
 		var props = Entities.getEntityProperties(this.entityId);
 		this.setUserProperties();
@@ -68,7 +68,7 @@
 			// rotation: Quat.fromPitchYawRollDegrees(45, 0, 0)
 		});
 
-		this.moverOn = true;
+		this.active = true;
 
 	}
 
@@ -91,10 +91,10 @@
 		updateUserData(this.entityId, this.userData)
 	}
 
-	this.turnMoverOff = function(){
+	this.deactivate = function(){
 		Entities.editEntity(this.entityId, {color: this.offColor});
 		this.cleanUp();
-		this.moverOn = false;
+		this.active = false;
 	}
 
 	this.scriptEnding = function(){
@@ -102,7 +102,7 @@
 	}
 
 	this.update = function(deltaTime){
-		if(!self.moverOn){
+		if(!self.active){
 			return;
 		}
 		self.props = Entities.getEntityProperties(self.entityId);
