@@ -95,9 +95,11 @@
 		}
 		self.distance = Vec3.distance(MyAvatar.position, self.properties.position);
 		if(self.distance < self.userData.range){
-			print("MOVE");
 			self.rotationMixVal = map(self.distance, 0, self.userData.range, self.maxRotMixVal, self.minRotMixVal);
-		    self.newOrientation = Quat.mix(MyAvatar.orientation, self.properties.rotation, self.rotationMixVal);
+
+			//We want to extract yaw from rotated object so avatars do not pith or roll, as they will be stuck that way.
+			self.sanitizedRotation = Quat.fromPitchYawRollDegrees(0, Quat.safeEulerAngles(self.properties.rotation).y, 0);
+		    self.newOrientation = Quat.mix(MyAvatar.orientation, self.sanitizedRotation, self.rotationMixVal);
 		    MyAvatar.orientation = self.newOrientation;
 
 		    self.rotatedDir = {x: self.forward.x, y: self.forward.y, z: self.forward.z};
