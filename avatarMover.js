@@ -49,16 +49,17 @@
 		this.getUserData();
 	    this.userData.active = true;
 		this.initUserData();
-
+		var lightPos = this.properties.position;
+		lightPos.y += .1;
 		this.light = Entities.addEntity({
 			type: "Light",
 			position: this.properties.position,
 			isSpotlight: false,
-			dimensions: {x: 10, y:10, z:10},
+			dimensions: {x: 2, y:2, z:2},
 			color: this.onColor,
-			intensity: 5,
+			intensity: 10
 			// rotation: {x : 0, y: Math.PI/2, z: 0}
-		})
+		});
 
 		//change color
 		Entities.editEntity(this.entityId, {
