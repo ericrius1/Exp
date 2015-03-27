@@ -61,9 +61,12 @@
 			// rotation: {x : 0, y: Math.PI/2, z: 0}
 		});
 
-		// this.field = Overlays.addOverlay("sphere", {
-		// 	position: 
-		// })
+		this.field = Overlays.addOverlay("sphere", {
+			position: this.properties.position,
+			size: this.userData.range,
+			solid: false,
+			color: {red: 250, green: 10, blue: 10},
+		})
 
 		//change color
 		Entities.editEntity(this.entityId, {
@@ -75,6 +78,12 @@
 		this.userData.range = this.userData.range || this.defaultRange;
 		this.userData.thrust = this.userData.thrust || this.defaultThrust;
 		this.updateUserData();
+	}
+
+	this.updateOverlays = function(){
+		if(this.field){
+		  Overlays.editOverlay(this.field, {size: this.userData.range});	
+		}
 	}
 
 
@@ -93,6 +102,7 @@
 	this.update = function(deltaTime){
 		self.properties = Entities.getEntityProperties(self.entityId);
 		self.getUserData();
+		self.updateOverlays();
 		if(!self.userData.active){
 			return;
 		}
@@ -129,6 +139,7 @@
 
 	this.cleanUp = function(){
 		Entities.deleteEntity(this.light);
+		Overlays.deleteOverlay(this.field);
 	}
 
 	function map(value, min1, max1, min2, max2) {
