@@ -12,3 +12,8 @@ If there are two mover objects with overlapping fields, should velocity be avera
 
 
 //NEED TO FIGURE OUT WHY other person's active property on user data is not being updated....
+
+
+TODO>>>>>
+
+Get scale and default rotation sorted for arrow....
