@@ -53,13 +53,17 @@
 		lightPos.y += .1;
 		this.light = Entities.addEntity({
 			type: "Light",
-			position: this.properties.position,
+			position: lightPos,
 			isSpotlight: false,
 			dimensions: {x: 2, y:2, z:2},
 			color: this.onColor,
 			intensity: 10
 			// rotation: {x : 0, y: Math.PI/2, z: 0}
 		});
+
+		// this.field = Overlays.addOverlay("sphere", {
+		// 	position: 
+		// })
 
 		//change color
 		Entities.editEntity(this.entityId, {
