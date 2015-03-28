@@ -21,7 +21,7 @@
 		}
 	}
 
-	this.updateUserData = function(userData){
+	this.updateUserData = function(){
 		Entities.editEntity(this.entityId, {userData: JSON.stringify(this.userData) });
 	}
 	
