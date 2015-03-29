@@ -1,10 +1,20 @@
 (function(){
 
   var self = this;
-  this.userData = {};
-  this.init = function(){
+  var firstTime = 
+  this.preload = function(entityId){
+    this.entityId = entityId;
+    this.properties = Entities.getEntityProperties(this.entityId);
+    this.getUserData();
 
-    print("INIT INIT INIT");
+    Entities.editEntity(this.entityId, {dimensions: {x: 1, y: 1.5, z: .2}});
+    
+    if(!this.properties.userData){
+      //if this is the door's true birth, then set it's state to closed
+      this.userData = {};
+      this.userData.state = "closed";
+    }
+
   }
 
   this.getUserData = function(){
@@ -19,22 +29,14 @@
   }
 
   this.toggle = function(){
-    if(!this.userData.doorOpen){
-      this.openDoor();
-    } else if(this.userData.doorOpen){
-      this.closeDoor();
+  //We ignore user click if the door is in process of opening or closing
+   if(this.userData.state === "opening" || this.userData.state === "closing"){
+      return;
     }
-  }
+    if(this.userData.state === "closed"){
 
-  this.openDoor = function(){
-    this.userData.doorOpen = true;
-
-    print("OPEN DOOR");
-  }
-
-  this.closeDoor = function(){
-    this.userData.doorOpen = false;
-    print("CLOSED DOOR");
+      this.userData.state = "opening";
+    }
   }
 
   this.clickReleaseOnEntity = function(entityId, mouseEvent){
@@ -50,10 +52,6 @@
 		}
 	}
 
-	this.preload = function(entityId){
-		this.entityId = entityId;
-    print("LOOOOADD");
-	}
 
 	this.unload = function(){
 		Script.update.disconnect(this.update);
@@ -67,13 +65,15 @@
     self.properties = Entities.getEntityProperties(self.entityId)
     self.getUserData();
 
+    if(self.userData.state === "closed"){
+        print("OPENING")
+    }
+
   }
 
   Script.update.connect(this.update);
 
 
-  //Entry point when script is first attached to entity
-  this.init();
 
 
 });
