@@ -37,6 +37,9 @@
 
       this.userData.state = "opening";
     }
+    if(this.userData.state === "open"){
+      this.userData.state = "closing";
+    }
   }
 
   this.clickReleaseOnEntity = function(entityId, mouseEvent){
@@ -66,7 +69,13 @@
     self.getUserData();
 
     if(self.userData.state === "closed"){
-        print("OPENING")
+      //We want top open
+      self.userData.state = "opening";
+      self.updateUserData();
+    }
+
+    else if(self.userData.state = "opening"){
+      Entities.editEntity(self.entityId, {position: {x: self.properties.position.x += .02, y: self.properties.position.y, z: self.properties.position.z}})
     }
 
   }
