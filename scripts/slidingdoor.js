@@ -44,6 +44,7 @@
       this.direction = Quat.getRight(this.properties.rotation);
       this.targetPosition = Vec3.sum(Vec3.multiply(this.direction, this.width), this.properties.position);
       this.userData.state = "opening";
+      this.open();
     }
     if (this.userData.state === "open") {
       //reverse direction
@@ -75,28 +76,47 @@
   }
 
   this.cleanUp = function() {}
+
+  this.open = function(){
+    var current = {
+      x: this.properties.position.x,
+      y: this.properties.position.y,
+      z: this.properties.position.z,
+    }
+    var end = {
+      x: this.targetPosition.x,
+      y: this.targetPosition.y,
+      z: this.targetPosition.z,
+    }
+    var openTween = new TWEEN.Tween(current, 1000).
+      to(end).
+      onUpdate(function(){
+        Entities.editEntity(self.entityId, {position: {x: current.x, y: current.y, z: current.z}});
+      }).start();
+
+  }
   this.update = function() {
     self.properties = Entities.getEntityProperties(self.entityId)
     self.getUserData();
 
 
-    if (self.userData.state === "opening" || self.userData.state === "closing") {
-      self.newPosition = Vec3.mix(self.properties.position, self.targetPosition, 0.02);
-      Entities.editEntity(self.entityId, {
-        position: self.newPosition
-      });
+    // if (self.userData.state === "opening" || self.userData.state === "closing") {
+    //   self.newPosition = Vec3.mix(self.properties.position, self.targetPosition, 0.02);
+    //   Entities.editEntity(self.entityId, {
+    //     position: self.newPosition
+    //   });
 
-      self.distanceToTarget = Vec3.distance(self.newPosition, self.targetPosition);
-      if (self.distanceToTarget < 0.05) {
-        //We have reached target, now set state to either closed or open
-        if (self.userData.state === "opening") {
-          self.userData.state = "open";
-        } else if (self.userData.state = "closing") {
-          self.userData.state = "closed";
-        }
-        self.updateUserData();
-      }
-    }
+    //   self.distanceToTarget = Vec3.distance(self.newPosition, self.targetPosition);
+    //   if (self.distanceToTarget < 0.05) {
+    //     //We have reached target, now set state to either closed or open
+    //     if (self.userData.state === "opening") {
+    //       self.userData.state = "open";
+    //     } else if (self.userData.state = "closing") {
+    //       self.userData.state = "closed";
+    //     }
+    //     self.updateUserData();
+    //   }
+    // }
 
     TWEEN.update();
 
