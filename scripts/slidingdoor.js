@@ -34,12 +34,18 @@
       return;
     }
     if(this.userData.state === "closed"){
-
+      this.direction = Quat.getRight(this.properties.rotation);
+      this.targetPosition = Vec3.sum(Vec3.multiply(this.direction, 2), this.properties.position);
       this.userData.state = "opening";
     }
     if(this.userData.state === "open"){
+      //reverse direction
+      this.direction = Vec3.multiply(-1, Quat.getRight(this.properties.rotation));
+      this.targetPosition = Vec3.sum(Vec3.multiply(this.direction, 2), this.properties.position);
       this.userData.state = "closing";
     }
+
+    this.updateUserData();
   }
 
   this.clickReleaseOnEntity = function(entityId, mouseEvent){
@@ -68,14 +74,22 @@
     self.properties = Entities.getEntityProperties(self.entityId)
     self.getUserData();
 
-    if(self.userData.state === "closed"){
-      //We want top open
-      self.userData.state = "opening";
-      self.updateUserData();
-    }
 
-    else if(self.userData.state = "opening"){
-      Entities.editEntity(self.entityId, {position: {x: self.properties.position.x += .02, y: self.properties.position.y, z: self.properties.position.z}})
+    if(self.userData.state === "opening" || self.userData.state === "closing"){
+      self.newPosition = Vec3.mix(self.properties.position, self.targetPosition, 0.01);
+      Entities.editEntity(self.entityId, {position: self.newPosition});
+
+      self.distanceToTarget = Vec3.distance(self.newPosition, self.targetPosition);
+      print("DISTANCE TO TARGET! "+ self.distanceToTarget)
+      if(self.distanceToTarget < 0.02){
+        //We have reached target, now set state to either closed or open
+        if(self.userData.state === "opening"){
+          self.userData.state = "open";
+        } else if(self.userData.state = "closing"){
+          self.userData.state = "closed";
+        }
+        self.updateUserData();
+      }
     }
 
   }
