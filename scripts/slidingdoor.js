@@ -18,6 +18,7 @@
       //if this is the door's true birth, then set it's state to closed
       this.userData = {};
       this.userData.state = "closed";
+      this.updateUserData();
     }
 
   }
@@ -51,7 +52,7 @@
       this.direction = Vec3.multiply(-1, Quat.getRight(this.properties.rotation));
       this.targetPosition = Vec3.sum(Vec3.multiply(this.direction, this.width), this.properties.position);
       this.userData.state = "sliding";
-      this.slide('closed');
+      this.slide("closed");
     }
 
     this.updateUserData();
@@ -89,23 +90,24 @@
       y: this.targetPosition.y,
       z: this.targetPosition.z,
     }
-    var openTween = new TWEEN.Tween(current, 1500).
-      to(end).
+    var slideTween = new TWEEN.Tween(current).
+      to(end, 1000).
       easing(TWEEN.Easing.Cubic.InOut).
       onUpdate(function(){
         Entities.editEntity(self.entityId, {position: {x: current.x, y: current.y, z: current.z}});
       }).start();
 
-    openTween.onComplete(function(){
+    slideTween.onComplete(function(){
       self.userData.state = endState;
+      print("USER STATE... " + self.userData.slide);
       self.updateUserData();
-    })
-
+    });
 
   }
 
   this.update = function() {
-    self.properties = Entities.getEntityProperties(self.entityId)
+    self.properties = Entities.getEntityProperties(self.entityId);
+    self.getUserData();
     TWEEN.update();
 
   }
