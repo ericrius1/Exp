@@ -1,13 +1,13 @@
 (function(){
-
   var self = this;
-  var firstTime = 
   this.preload = function(entityId){
+    print("TWEEN  ... " + TWEEN);
+    this.width = 1;
     this.entityId = entityId;
     this.properties = Entities.getEntityProperties(this.entityId);
     this.getUserData();
 
-    Entities.editEntity(this.entityId, {dimensions: {x: 1, y: 1.5, z: .2}});
+    Entities.editEntity(this.entityId, {dimensions: {x: this.width, y: 1.5, z: .2}});
     
     if(!this.properties.userData){
       //if this is the door's true birth, then set it's state to closed
@@ -35,13 +35,13 @@
     }
     if(this.userData.state === "closed"){
       this.direction = Quat.getRight(this.properties.rotation);
-      this.targetPosition = Vec3.sum(Vec3.multiply(this.direction, 2), this.properties.position);
+      this.targetPosition = Vec3.sum(Vec3.multiply(this.direction, this.width), this.properties.position);
       this.userData.state = "opening";
     }
     if(this.userData.state === "open"){
       //reverse direction
       this.direction = Vec3.multiply(-1, Quat.getRight(this.properties.rotation));
-      this.targetPosition = Vec3.sum(Vec3.multiply(this.direction, 2), this.properties.position);
+      this.targetPosition = Vec3.sum(Vec3.multiply(this.direction, this.width), this.properties.position);
       this.userData.state = "closing";
     }
 
@@ -76,12 +76,12 @@
 
 
     if(self.userData.state === "opening" || self.userData.state === "closing"){
-      self.newPosition = Vec3.mix(self.properties.position, self.targetPosition, 0.01);
+      self.newPosition = Vec3.mix(self.properties.position, self.targetPosition, 0.02);
       Entities.editEntity(self.entityId, {position: self.newPosition});
 
       self.distanceToTarget = Vec3.distance(self.newPosition, self.targetPosition);
       print("DISTANCE TO TARGET! "+ self.distanceToTarget)
-      if(self.distanceToTarget < 0.02){
+      if(self.distanceToTarget < 0.05){
         //We have reached target, now set state to either closed or open
         if(self.userData.state === "opening"){
           self.userData.state = "open";
@@ -96,7 +96,6 @@
 
   Script.update.connect(this.update);
 
-
-
-
 });
+
+
