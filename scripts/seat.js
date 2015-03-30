@@ -7,8 +7,28 @@
     this.properties = Entities.getEntityProperties(this.entityId);
 		this.isSittingSettingHandle = "AvatarSittingState";
     Settings.setValue(this.isSittingSettingHandle, false);
+    this.startPoseAndTransition = [];
+    //target pose
+    this.pose = [
+      {joint:"RightUpLeg", rotation: {x:100.0, y:15.0, z:0.0}},
+      {joint:"RightLeg", rotation: {x:-130.0, y:15.0, z:0.0}},
+      {joint:"RightFoot", rotation: {x:30, y:15.0, z:0.0}},
+      {joint:"LeftUpLeg", rotation: {x:100.0, y:-15.0, z:0.0}},
+      {joint:"LeftLeg", rotation: {x:-130.0, y:-15.0, z:0.0}},
+      {joint:"LeftFoot", rotation: {x:30, y:15.0, z:0.0}}
+    ]
+
+    this.storeStartPoseAndTransition();
 
 	}
+
+  this.storeStartPoseAndTransition = function() {
+    for(var i = 0; i < this.pose.length; i++){
+      var startRotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(this.pose[i].joint));
+      var transitionVector = Vec3.subtract(this.pose[i].rotation, startRotation);
+      this.startPoseAndTransition.push({joint: this.pose[i].joint, start: startRotation, transition: transitionVector});
+    }
+  }
 
 	this.clickReleaseOnEntity = function(entityId, mouseEvent){
 		if(mouseEvent.isLeftButton){
@@ -35,7 +55,7 @@
       MyAvatar.orientation = Quat.mix(MyAvatar.orientation, self.sanitizedRotation, 0.02);
       MyAvatar.position = Vec3.mix(MyAvatar.position, self.properties.position, 0.01);
     } else {
-      //otherwise we made it ot chair, now sit down should be out active update function
+      //otherwise we made it to chair, now sit down should be out active update function
       this.elapsedTime = 0
       self.activeUpdate = self.sitDown;
     }
@@ -44,7 +64,19 @@
 
   this.sitDown = function(deltaTime){
     self.elapsedTime += deltaTime;
-    print("ELAPSED TIME... " + self.elapsedTime)
+    self.factor = self.elapsedTime/self.totalAnimationTime;
+    if(self.elapsedTime< self.totalAnimationTime){
+      self.updateJoints();
+    }
+  }
+
+  self.updateJoints = function(){
+    for(var i = 0; i < self.startPoseAndTransition.length; i++){
+      self.scaledTransition = Vec3.multiply(self.startPoseAndTransition[i].transition, self.factor);
+      self.jointRotation = Vec3.sum(self.startPoseAndTransition[i].start, self.scaledTransition);
+      MyAvatar.setJointData(self.startPoseAndTransition[i].joint, Quat.fromVec3Degrees(self.jointRotation));
+    }
+
   }
 
   this.unload = function(){
