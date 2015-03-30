@@ -1,19 +1,11 @@
 (function() {
   var self = this;
   this.preload = function(entityId) {
-    this.width = 1;
+    print('PRELOAD PRELOAD');
     this.entityId = entityId;
     this.properties = Entities.getEntityProperties(this.entityId);
+    this.width = this.properties.dimensions.x;
     this.getUserData();
-
-
-    Entities.editEntity(this.entityId, {
-      dimensions: {
-        x: this.width,
-        y: 1.5,
-        z: .2
-      }
-    });
 
     if (!this.properties.userData) {
       //if this is the door's true birth, then set it's state to closed
@@ -50,6 +42,7 @@
     }
     if (this.userData.state === "open") {
       //reverse direction
+      this.direction = Quat.getRight(this.properties.rotation);
       this.direction = Vec3.multiply(-1, Quat.getRight(this.properties.rotation));
       this.targetPosition = Vec3.sum(Vec3.multiply(this.direction, this.width), this.properties.position);
       this.userData.state = "sliding";
@@ -98,7 +91,6 @@
 
     slideTween.onComplete(function(){
       self.userData.state = endState;
-      print("USER STATE... " + self.userData.slide);
       self.updateUserData();
     });
 
