@@ -6,6 +6,7 @@
     this.properties = Entities.getEntityProperties(this.entityId);
     this.getUserData();
 
+
     Entities.editEntity(this.entityId, {
       dimensions: {
         x: this.width,
@@ -74,10 +75,8 @@
 
   this.unload = function() {
     Script.update.disconnect(this.update);
-    this.cleanUp();
   }
 
-  this.cleanUp = function() {}
 
   this.slide = function(endState){
      var current = {
