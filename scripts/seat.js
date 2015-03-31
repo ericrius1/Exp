@@ -1,13 +1,14 @@
 (function(){
 	var self = this;
 	this.preload = function(entityId){
-    this.totalAnimationTime = 5;
-    this.targetAvatarToChairDistance = .5;
+    this.totalAnimationTime = 3;
+    this.targetAvatarToChairDistance = 0.5;
     this.entityId = entityId;
     this.properties = Entities.getEntityProperties(this.entityId);
 		this.isSittingSettingHandle = "AvatarSittingState";
     Settings.setValue(this.isSittingSettingHandle, false);
     this.startPoseAndTransition = [];
+    self.seatVelocity = {x: -.1, y: 0, z: 0};
     //target pose
     this.pose = [
       {joint:"RightUpLeg", rotation: {x:100.0, y:15.0, z:0.0}},
@@ -41,6 +42,7 @@
   }
 
   this.update = function(deltaTime){
+    self.properties = Entities.getEntityProperties(self.entityId);
     if(!self.activeUpdate){
       return;
     }
@@ -67,7 +69,19 @@
     self.factor = self.elapsedTime/self.totalAnimationTime;
     if(self.elapsedTime< self.totalAnimationTime){
       self.updateJoints();
+    } else {
+      //We've sat, now start moving the platform (for testing)
+      self.activeUpdate = self.moveSeat;
+      print("PROPERTIES " + JSON.stringify(self.properties));
+      var isValid = MyAvatar.setModelReferential(self.properties.id);
     }
+  }
+
+  this.moveSeat = function(){
+    self.newPosition = Vec3.sum(self.seatVelocity, self.properties.position);
+    Entities.editEntity(this.entityId, {position: self.newPosition});
+    // MyAvatar.position = self.newPosition;
+
   }
 
   self.updateJoints = function(){
@@ -75,12 +89,17 @@
       self.scaledTransition = Vec3.multiply(self.startPoseAndTransition[i].transition, self.factor);
       self.jointRotation = Vec3.sum(self.startPoseAndTransition[i].start, self.scaledTransition);
       MyAvatar.setJointData(self.startPoseAndTransition[i].joint, Quat.fromVec3Degrees(self.jointRotation));
+
     }
 
   }
 
   this.unload = function(){
-
+    //if entity is deleted, automatically 
+    MyAvatar.clearReferential();
+    for(var i = 0; i < self.pose.length; i++){
+      MyAvatar.clearJointData(this.pose[i].joint);
+    }
     Script.update.disconnect(this.update);
   }
 
