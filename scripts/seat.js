@@ -100,8 +100,9 @@
   this.standUp = function(deltaTime){
     self.elapsedTime += deltaTime;
     self.factor = 1 - self.elapsedTime/self.totalAnimationTime;
-    print("STANDING UP");
     if(self.elapsedTime < self.totalAnimationTime){
+      
+      print("STANDING UP");
       self.updateJoints();
     } else {
       //We're done with standing animation
