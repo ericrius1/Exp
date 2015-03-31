@@ -61,6 +61,7 @@
   }
 
   this.update = function(deltaTime){
+    print('update');
     self.properties = Entities.getEntityProperties(self.entityId);
     if(!self.activeUpdate){
       return;
@@ -100,14 +101,17 @@
   this.standUp = function(deltaTime){
     self.elapsedTime += deltaTime;
     self.factor = 1 - self.elapsedTime/self.totalAnimationTime;
-    if(self.elapsedTime < self.totalAnimationTime){
-      
-      print("STANDING UP");
+    if(self.elapsedTime < self.totalAnimationTime){      
       self.updateJoints();
     } else {
       //We're done with standing animation
       self.activeUpdate = null;
       Settings.setValue(this.isSittingSettingHandle, false);
+      //We just finished a standup after deleting the entity the avatar was sitting on
+      if(self.disconnectAfterStanding){
+        Script.update.disconnect(self.update);
+      }
+      this.clearAvatarAnimation();
     }
 
 
@@ -141,21 +145,30 @@
 
   this.unload = function(){
     Overlays.deleteOverlay(this.standUpButton);
-    this.clearAvatarAnimation();
-    //if entity is deleted, automatically 
-    Script.update.disconnect(this.update);
+    if(Settings.getValue(this.isSittingSettingHandle) === true){
+      //We need to let avatar stand before disconnecting, and then end
+      this.initStandUp();
+      this.disconnectAfterStanding = true;
+      this.activeUpdate = this.standUp
+    } else {
+      this.clearAvatarAnimation();
+      Script.update.disconnect(this.update);
+    }
   }
 
   this.onClick = function(event){
     var clickedOverlay = Overlays.getOverlayAtPoint({x: event.x, y: event.y});
     if(clickedOverlay === self.standUpButton){
-      self.elapsedTime = 0;
-      self.activeUpdate = self.standUp;
-      MyAvatar.clearReferential();
-      Overlays.editOverlay(self.standUpButton, {visible: false});
-
+     self.initStandUp();
     }
 
+  }
+
+  this.initStandUp = function(){
+    self.elapsedTime = 0;
+    self.activeUpdate = self.standUp;
+    MyAvatar.clearReferential();
+    Overlays.editOverlay(self.standUpButton, {visible: false});
   }
 
   function map(value, min1, max1, min2, max2) {
