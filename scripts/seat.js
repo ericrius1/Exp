@@ -1,14 +1,16 @@
 (function(){
 	var self = this;
 	this.preload = function(entityId){
-    this.totalAnimationTime = 3;
+    this.buttonImageURL = "https://s3.amazonaws.com/hifi-public/images/tools/sit.svg";
+    this.addStandButton();
+    this.totalAnimationTime = 1;
     this.targetAvatarToChairDistance = 0.5;
     this.entityId = entityId;
     this.properties = Entities.getEntityProperties(this.entityId);
 		this.isSittingSettingHandle = "AvatarSittingState";
     Settings.setValue(this.isSittingSettingHandle, false);
     this.startPoseAndTransition = [];
-    self.seatVelocity = {x: -.1, y: 0, z: 0};
+    self.seatVelocity = {x: -.01, y: 0, z: 0};
     //target pose
     this.pose = [
       {joint:"RightUpLeg", rotation: {x:100.0, y:15.0, z:0.0}},
@@ -22,6 +24,23 @@
     this.storeStartPoseAndTransition();
 
 	}
+
+  this.addStandButton = function(){
+    this.windowDimensions = Controller.getViewportDimensions();
+    this.buttonWidth = 37;
+    this.buttonHeight = 46;
+    this.buttonPadding = 10;
+
+    this.buttonPositionX = this.windowDimensions.x - this.buttonPadding - this.buttonWidth;
+    this.buttonPositionY = (this.windowDimensions.y - this.buttonHeight)/2 - (this.buttonHeight + this.buttonPadding);
+    this.standUpButton = Overlays.addOverlay("image", {
+      x: this.buttonPositionX, y: this.buttonPositionY, width: this.buttonWidth, height: this.buttonHeight,
+      subImage: {x : this.buttonWidth, y: this.buttonHeight, width: this.buttonWidth, height: this.buttonHeight},
+      imageURL: this.buttonImageURL,
+      visible: false,
+      alpha: 1.0
+    });
+  }
 
   this.storeStartPoseAndTransition = function() {
     for(var i = 0; i < this.pose.length; i++){
@@ -72,9 +91,25 @@
     } else {
       //We've sat, now start moving the platform (for testing)
       self.activeUpdate = self.moveSeat;
-      print("PROPERTIES " + JSON.stringify(self.properties));
+      Settings.setValue(self.isSittingSettingHandle, true);
+      Overlays.editOverlay(self.standUpButton, {visible: true});
       var isValid = MyAvatar.setModelReferential(self.properties.id);
     }
+  }
+
+  this.standUp = function(deltaTime){
+    self.elapsedTime += deltaTime;
+    self.factor = 1 - self.elapsedTime/self.totalAnimationTime;
+    print("STANDING UP");
+    if(self.elapsedTime < self.totalAnimationTime){
+      self.updateJoints();
+    } else {
+      //We're done with standing animation
+      self.activeUpdate = null;
+      Settings.setValue(this.isSittingSettingHandle, false);
+    }
+
+
   }
 
   this.moveSeat = function(){
@@ -94,18 +129,39 @@
 
   }
 
-  this.unload = function(){
-    //if entity is deleted, automatically 
+  this.clearAvatarAnimation = function(){
     MyAvatar.clearReferential();
     for(var i = 0; i < self.pose.length; i++){
       MyAvatar.clearJointData(this.pose[i].joint);
     }
+    Overlays.editOverlay(this.standUpButton, {visible: false});
+
+  }
+
+  this.unload = function(){
+    Overlays.deleteOverlay(this.standUpButton);
+    this.clearAvatarAnimation();
+    //if entity is deleted, automatically 
     Script.update.disconnect(this.update);
+  }
+
+  this.onClick = function(event){
+    var clickedOverlay = Overlays.getOverlayAtPoint({x: event.x, y: event.y});
+    if(clickedOverlay === self.standUpButton){
+      self.elapsedTime = 0;
+      self.activeUpdate = self.standUp;
+      MyAvatar.clearReferential();
+      Overlays.editOverlay(self.standUpButton, {visible: false});
+
+    }
+
   }
 
   function map(value, min1, max1, min2, max2) {
     return min2 + (max2 - min2) * ((value - min1) / (max1 - min1));
   }
+
+  Controller.mousePressEvent.connect(this.onClick);
 
   Script.update.connect(this.update);
 
