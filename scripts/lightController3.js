@@ -58,13 +58,22 @@
 
 
   this.findClosestLight = function() {
-    var entities = Entities.findEntities(this.properties.position, 0.5);
+    var entities = Entities.findEntities(this.properties.position, 1);
+    var lightEntities = [];
+    var closestLight = null;
+    var nearestDistance = 2
+
     for (var i = 0; i < entities.length; i++) {
-      if (Entities.getEntityProperties(entities[i]).type === "Light") {
-        return entities[i];
+      var props = Entities.getEntityProperties(entities[i]);
+      if (props.type === "Light") {
+        var distance = Vec3.distance(entities[i], this.properties.position)
+        if( distance> nearestDistance){
+          closestLight = entities[i];
+          nearestDistance = distance
+        }
       }
     }
-    return null;
+    return closestLight;
   }
 
 });
