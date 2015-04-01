@@ -5,9 +5,10 @@ var generating = false;
 var generateInterval;
 var rowIndex = 0;
 var numRows = 10;
-var boxSize = 1;
+var boxSize = 100;
 //We want boxes to lines up evenly
-var numCols = 20;
+var numCols = 10;
+var interval = 100;
 var floorWidth = numCols * boxSize;
 var floorHeight;
 
@@ -18,7 +19,7 @@ function keyPressed(event) {
       pos = MyAvatar.position;
       floorHeight = pos.y - 2;
       generate();
-      generateInterval = Script.setInterval(generate, 500);
+      generateInterval = Script.setInterval(generate, interval);
     } else{
       Script.clearInterval(generateInterval);
       reset();
@@ -30,11 +31,11 @@ function keyPressed(event) {
 
 
 function generate(){
-   var zPos = map(rowIndex, 0, numRows, pos.z, pos.z - floorWidth);
-   print("ZPOS" + zPos)
+   var zPos = map(rowIndex, 0, numRows, pos.z + floorWidth/2, pos.z - floorWidth/2);
+   // print("ZPOS" + zPos)
    for(var i = 0; i < numCols; i++){
     var xPos = map(i, 0, numCols, pos.x-floorWidth/2, pos.x + floorWidth/2);
-    print("XPOS" + xPos)
+    // print("XPOS" + xPos)
     items.push(Entities.addEntity({
       type: 'Box',
       position: {x: xPos, y: floorHeight, z: zPos},
@@ -58,10 +59,10 @@ function reset(){
 }
 
 function destroy(){
-  items.forEach(function(item){
-    Entities.deleteEntity(item);
-  });
-  items = [];
+  // items.forEach(function(item){
+  //   Entities.deleteEntity(item);
+  // });
+  // items = [];
 }
 
 function randFloat ( low, high ) {
