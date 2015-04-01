@@ -61,13 +61,13 @@
     var entities = Entities.findEntities(this.properties.position, 1);
     var lightEntities = [];
     var closestLight = null;
-    var nearestDistance = 2
+    var nearestDistance = 20
 
     for (var i = 0; i < entities.length; i++) {
       var props = Entities.getEntityProperties(entities[i]);
       if (props.type === "Light") {
-        var distance = Vec3.distance(entities[i], this.properties.position)
-        if( distance> nearestDistance){
+        var distance = Vec3.distance(props.position, this.properties.position)
+        if( distance < nearestDistance){
           closestLight = entities[i];
           nearestDistance = distance
         }
