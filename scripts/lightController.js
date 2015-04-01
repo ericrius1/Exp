@@ -35,7 +35,10 @@
         return entityID && entityID.isKnownID;
     }
     function doesEntityExistNow(entityID) {
-        return entityID && getTrueID(entityID).isKnownID;
+        print("****** entityID ********" + JSON.stringify(entityID));
+        var trueID = getTrueID(entityID);
+        print(" ************ isKnownId ******** " + trueID.isKnownID);
+        return entityID && trueID.isKnownID;
     }
     function getTrueID(entityID) {
         var properties = Entities.getEntityProperties(entityID);
@@ -88,9 +91,6 @@
     
     // Create a Light entity
     this.createLight = function(userData) {
-        if(userData.hasLight){
-            return;
-        }
         var lightProperties = copyObject(userData.lightDefaultProperties);
         if (lightProperties) {
             var entityProperties = Entities.getEntityProperties(this.entityID);
@@ -99,8 +99,6 @@
             lightProperties.position = Vec3.sum(entityProperties.position,
                                                 Vec3.multiplyQbyV(entityProperties.rotation,
                                                                   lightProperties.position));
-            userData.hasLight = true;
-            updateUserData(this.entityID, userData);
             return Entities.addEntity(lightProperties);
         } else {
             print("Warning: light controller has no default light.");
@@ -116,7 +114,9 @@
         }
         
         var userData = getUserData(this.entityID);
-        if (doesEntityExistNow(userData.lightID)) {
+        var doesExist = doesEntityExistNow(userData.lightID);
+        print("DOES EXIST ******** " + doesExist);
+        if (doesExist) {
             this.lightID = userData.lightID;
             return;
         }
