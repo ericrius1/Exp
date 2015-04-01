@@ -48,6 +48,8 @@
       intensity: 10
       // rotation: {x : 0, y: Math.PI/2, z: 0}
     });
+    this.userData.intensity = 10;
+    this.updateUserData();
 
   }
   this.clickReleaseOnEntity = function(entityId, mouseEvent) {
@@ -64,11 +66,13 @@
     if(this.userData.lightOn){
       Entities.editEntity(this.light, {intensity: 0, position: position});
     } else {
-      Entities.editEntity(this.light, {intensity: 10, position: position});
+      Entities.editEntity(this.light, {intensity: this.userData.intensity, position: position});
     }
     this.userData.lightOn = !this.userData.lightOn;
+    this.userData.intensity = this.properties.intensity;
     this.updateUserData();
   }
+
 
 
   this.unload = function(){
