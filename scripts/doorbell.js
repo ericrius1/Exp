@@ -42,7 +42,6 @@
     }
 
     Script.setTimeout(function() {
-      print("YAAAAA")
       Entities.editEntity(self.bellLight, {intensity: 0});
     }, 200);
   }

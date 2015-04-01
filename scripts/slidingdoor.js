@@ -1,7 +1,6 @@
 (function() {
   var self = this;
   this.preload = function(entityId) {
-    print('PRELOAD PRELOAD');
     this.entityId = entityId;
     this.properties = Entities.getEntityProperties(this.entityId);
     this.width = this.properties.dimensions.x;

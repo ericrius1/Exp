@@ -11,6 +11,8 @@
     Settings.setValue(this.isSittingSettingHandle, false);
     this.startPoseAndTransition = [];
     self.seatVelocity = {x: -.01, y: 0, z: 0};
+    this.radius = this.properties.dimensions.x/2;
+    self.seatHeight = 1;
     //target pose
     this.pose = [
       {joint:"RightUpLeg", rotation: {x:100.0, y:15.0, z:0.0}},
@@ -61,8 +63,10 @@
   }
 
   this.update = function(deltaTime){
-    print('update');
     self.properties = Entities.getEntityProperties(self.entityId);
+    //need to always update seat so when user clicks on it it is in proper world space
+    self.seatPosition = {x: self.properties.position.x + self.radius, y: self.properties.position.y + self.seatHeight, z: self.properties.position.z}
+
     if(!self.activeUpdate){
       return;
     }
@@ -71,11 +75,11 @@
   }
 
   this.moveToSeat = function(deltaTime){
-    self.distance = Vec3.distance(MyAvatar.position, self.properties.position)
+    self.distance = Vec3.distance(MyAvatar.position, self.seatPosition);
     if(self.distance > self.targetAvatarToChairDistance){
       self.sanitizedRotation = Quat.fromPitchYawRollDegrees(0, Quat.safeEulerAngles(self.properties.rotation).y, 0);
       MyAvatar.orientation = Quat.mix(MyAvatar.orientation, self.sanitizedRotation, 0.02);
-      MyAvatar.position = Vec3.mix(MyAvatar.position, self.properties.position, 0.01);
+      MyAvatar.position = Vec3.mix(MyAvatar.position, self.seatPosition, 0.01);
     } else {
       //otherwise we made it to chair, now sit down should be out active update function
       this.elapsedTime = 0
@@ -120,6 +124,7 @@
   this.moveSeat = function(){
     self.newPosition = Vec3.sum(self.seatVelocity, self.properties.position);
     Entities.editEntity(this.entityId, {position: self.newPosition});
+    MyAvatar.headYaw += .01;
     // MyAvatar.position = self.newPosition;
 
   }
