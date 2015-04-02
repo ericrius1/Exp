@@ -11,20 +11,16 @@ var dimensions = {
 };
 var waypoints = [];
 var numPoints = 5;
-var radius = 100;
+var radius = 10;
+var currentWaypointIndex = 0;
+var ship;
 
 function init() {
-  Entities.addEntity({
-    type: "Model",
-    modelURL: shipModel,
-    position: startingPosition,
-    dimensions: dimensions
-  });
 
   for (var i = 0; i < numPoints; i++) {
     var theta = (i / numPoints) * (Math.PI * 2);
-    var xPos = radius * Math.cos(theta);
-    var zPos = radius * Math.sin(theta);
+    var xPos = startingPosition.x + radius * Math.cos(theta);
+    var zPos = startingPosition.z + radius * Math.sin(theta);
     waypoints.push({
       x: xPos,
       y: startingPosition.y,
@@ -32,11 +28,31 @@ function init() {
     });
 
   }
+  print(JSON.stringify(waypoints));
+  ship = Entities.addEntity({
+    type: "Model",
+    modelURL: shipModel,
+    position: waypoints[currentWaypointIndex],
+    dimensions: dimensions
+  });
+
 }
 
 Script.setTimeout(function() {
   init()
 }, 500);
+
+Script.scriptEnding.connect(destroy);
+
+function destroy(){
+  Entities.deleteEntity(ship);
+}
+
+
+
+//****************************************************************************************************************************************
+//****************************************************************************************************************************************
+//****************************************************************************************************************************************
 
 
 
@@ -807,6 +823,5 @@ TWEEN.Interpolation = {
   }
 
 };
-
 
 

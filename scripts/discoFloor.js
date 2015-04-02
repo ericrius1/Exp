@@ -2,18 +2,18 @@ var items = [];
 
 
 var boxHeight = 100;
-var DOMAIN_SIZE = 16000
+var xWidth = 1000
+var zWidth = 16000;
 
 var rowIndex = 0;
-var rowCount = DOMAIN_SIZE/boxSize;
+var rowCount = xWidth/boxSize;
 var x = 0;
-
 
 var boxSize = 100
 var generateInterval = 500;
 
 function generateFloor() {
-    for (var z = 0; z < DOMAIN_SIZE; z += boxSize) {
+    for (var z = 0; z <zWidth; z += boxSize) {
       items.push(Entities.addEntity({
         type: 'Box',
         position: {
@@ -35,7 +35,7 @@ function generateFloor() {
 
     }
 
-    if(x< DOMAIN_SIZE){
+    if(x< xWidth){
       x+= boxSize;
       Script.setTimeout(generateFloor, generateInterval);
 
