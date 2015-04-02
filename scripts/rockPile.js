@@ -1,8 +1,5 @@
 var pos;
 var items = [];
-var generateInterval;
-var rowIndex = 0;
-//We want boxes to lines up evenly
 
 var GRAVITY = -3.5;
 var numRocks = 100;

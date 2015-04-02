@@ -35,6 +35,7 @@
     this.properties = Entities.getEntityProperties(this.entityId)
     this.light = this.findClosestLight();
     if (this.light) {
+      this.lightProperties = Entities.getEntityProperties(this.light);
       this.getUserData();
       Entities.editEntity(this.light, {
         visible: !this.userData.lightOn
@@ -42,6 +43,7 @@
 
       this.userData.lightOn = !this.userData.lightOn;
       this.updateUserData();
+      this.moveLight();
     }
   }
 
@@ -56,9 +58,18 @@
     }
   }
 
+  this.moveLight = function(){
+    if(this.light){
+      var heightOffset = this.lightProperties.position.y - this.properties.position.y;
+      var newPos = {x: this.properties.position.x, y: this.properties.position.y + heightOffset, z: this.properties.position.z};
+      Entities.editEntity(this.light, {position: newPos});
+    }
+
+  }
+
 
   this.findClosestLight = function() {
-    var entities = Entities.findEntities(this.properties.position, 1);
+    var entities = Entities.findEntities(this.properties.position, 4);
     var lightEntities = [];
     var closestLight = null;
     var nearestDistance = 20
