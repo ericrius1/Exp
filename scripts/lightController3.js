@@ -4,6 +4,7 @@
     this.sound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/sounds/Switches%20and%20sliders/lamp_switch_1.wav");
     this.entityId = entityId;
     this.properties = Entities.getEntityProperties(this.entityId);
+    this.previousPosition = this.properties.position;
     this.getUserData()
     if (!this.userData) {
       this.userData = {};
@@ -43,7 +44,7 @@
 
       this.userData.lightOn = !this.userData.lightOn;
       this.updateUserData();
-      this.moveLight();
+      this.tryMoveLight();
     }
   }
 
@@ -58,18 +59,26 @@
     }
   }
 
-  this.moveLight = function(){
+  this.tryMoveLight = function(){
     if(this.light){
-      var heightOffset = this.lightProperties.position.y - this.properties.position.y;
-      var newPos = {x: this.properties.position.x, y: this.properties.position.y + heightOffset, z: this.properties.position.z};
-      Entities.editEntity(this.light, {position: newPos});
+      if(!Vec3.equal(this.properties.position, this.previousPosition )){
+       //just get new offset
+        var offset = Vec3.subtract(this.properties.position, this.previousPosition);
+        print("OFFFSET" + JSON.stringify(offset));
+        var newWorldLightPosition = Vec3.sum(this.lightProperties.position, offset);
+        print("OLD LIGHT WORLD POS ******  " + JSON.stringify(this.lightProperties.position))
+        print("NEW LIGHT WORLD POS ******  " + JSON.stringify(newWorldLightPosition));
+        Entities.editEntity(this.light, {position: newWorldLightPosition})
+        this.previousPosition = this.properties.position;
+
+      }
     }
 
   }
 
 
   this.findClosestLight = function() {
-    var entities = Entities.findEntities(this.properties.position, 4);
+    var entities = Entities.findEntities(this.properties.position, 10);
     var lightEntities = [];
     var closestLight = null;
     var nearestDistance = 20
