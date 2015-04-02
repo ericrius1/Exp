@@ -1,0 +1,260 @@
+{
+    "Entities": [
+        {
+            "age": 228.72349548339844,
+            "ageAsText": "0 hours 3 minutes 48 seconds",
+            "angularDamping": 0.39346998929977417,
+            "angularVelocity": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "animationFPS": 30,
+            "animationFrameIndex": 0,
+            "animationIsPlaying": false,
+            "animationSettings": "{\"firstFrame\":0,\"fps\":30,\"frameIndex\":0,\"hold\":false,\"lastFrame\":100000,\"loop\":false,\"running\":false,\"startAutomatically\":false}",
+            "animationURL": "",
+            "backgroundColor": {
+                "blue": 0,
+                "green": 0,
+                "red": 0
+            },
+            "boundingBox": {
+                "brn": {
+                    "x": -0.033088207244873047,
+                    "y": -0.066461145877838135,
+                    "z": -0.033088654279708862
+                },
+                "center": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                },
+                "dimensions": {
+                    "x": 0.066176414489746094,
+                    "y": 0.13292229175567627,
+                    "z": 0.066177308559417725
+                },
+                "tfl": {
+                    "x": 0.033088207244873047,
+                    "y": 0.066461145877838135,
+                    "z": 0.033088654279708862
+                }
+            },
+            "collisionModelURL": "",
+            "collisionsWillMove": false,
+            "color": {
+                "blue": 0,
+                "green": 0,
+                "red": 0
+            },
+            "cutoff": 3.1415927410125732,
+            "damping": 0.39346998929977417,
+            "density": 1000,
+            "dimensions": {
+                "x": 0.066176414489746094,
+                "y": 0.13292229175567627,
+                "z": 0.066177308559417725
+            },
+            "emitDirection": {
+                "x": 0,
+                "y": 1,
+                "z": 0
+            },
+            "emitRate": 15,
+            "emitStrength": 25,
+            "exponent": 0,
+            "glowLevel": 0,
+            "gravity": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "id": "{22fd6e37-f20a-457a-bb06-e773faf25d9f}",
+            "ignoreForCollisions": false,
+            "intensity": 1,
+            "isKnownID": true,
+            "isSpotlight": false,
+            "lifespan": 3,
+            "lifetime": -1,
+            "lineHeight": 0.10000000149011612,
+            "localGravity": -9.8000001907348633,
+            "localRenderAlpha": 0.10000000149011612,
+            "locked": false,
+            "marketplaceID": "",
+            "maxParticles": 1000,
+            "modelURL": "https://s3.amazonaws.com/hifi-public/marketplace/hificontent/Furnishings/VotiveCandle+.fbx",
+            "naturalDimensions": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            },
+            "originalTextures": "",
+            "particleRadius": 0.02500000037252903,
+            "position": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "registrationPoint": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "rotation": {
+                "w": 1,
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "script": "file:///Users/ericlevin1/MyHiFiStuff/scripts/lightController3.js",
+            "shapeType": "none",
+            "sittingPoints": {
+                "length": 0
+            },
+            "text": "",
+            "textColor": {
+                "blue": 255,
+                "green": 255,
+                "red": 255
+            },
+            "textures": "",
+            "type": "Model",
+            "userData": "{\"lightOn\":true}",
+            "velocity": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "visible": true
+        },
+        {
+            "age": 223.35108947753906,
+            "ageAsText": "0 hours 3 minutes 43 seconds",
+            "angularDamping": 0.39346998929977417,
+            "angularVelocity": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "animationFPS": 30,
+            "animationFrameIndex": 0,
+            "animationIsPlaying": false,
+            "animationSettings": "{\"fps\":30,\"frameIndex\":0,\"running\":false}",
+            "animationURL": "",
+            "backgroundColor": {
+                "blue": 0,
+                "green": 0,
+                "red": 0
+            },
+            "boundingBox": {
+                "brn": {
+                    "x": -1.311279296875,
+                    "y": -1.5,
+                    "z": -1.3486328125
+                },
+                "center": {
+                    "x": 0.188720703125,
+                    "y": 0,
+                    "z": 0.1513671875
+                },
+                "dimensions": {
+                    "x": 3,
+                    "y": 3,
+                    "z": 3
+                },
+                "tfl": {
+                    "x": 1.688720703125,
+                    "y": 1.5,
+                    "z": 1.6513671875
+                }
+            },
+            "collisionModelURL": "",
+            "collisionsWillMove": false,
+            "color": {
+                "blue": 9,
+                "green": 85,
+                "red": 233
+            },
+            "cutoff": 180,
+            "damping": 0.39346998929977417,
+            "density": 1000,
+            "dimensions": {
+                "x": 3,
+                "y": 3,
+                "z": 3
+            },
+            "emitDirection": {
+                "x": 0,
+                "y": 1,
+                "z": 0
+            },
+            "emitRate": 15,
+            "emitStrength": 25,
+            "exponent": 0,
+            "glowLevel": 0,
+            "gravity": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "id": "{6e895b69-023f-4bf0-8020-15517abc809b}",
+            "ignoreForCollisions": false,
+            "intensity": 3,
+            "isKnownID": true,
+            "isSpotlight": false,
+            "lifespan": 3,
+            "lifetime": -1,
+            "lineHeight": 0.10000000149011612,
+            "localGravity": -9.8000001907348633,
+            "localRenderAlpha": 0.10000000149011612,
+            "locked": false,
+            "marketplaceID": "",
+            "maxParticles": 1000,
+            "modelURL": "",
+            "naturalDimensions": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            },
+            "originalTextures": "",
+            "particleRadius": 0.02500000037252903,
+            "position": {
+                "x": 0.188720703125,
+                "y": 0,
+                "z": 0.1513671875
+            },
+            "registrationPoint": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "rotation": {
+                "w": 1,
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "script": "",
+            "shapeType": "none",
+            "sittingPoints": {
+                "length": 0
+            },
+            "text": "",
+            "textColor": {
+                "blue": 255,
+                "green": 255,
+                "red": 255
+            },
+            "textures": "",
+            "type": "Light",
+            "userData": "",
+            "velocity": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "visible": true
+        }
+    ]
+}

@@ -1,14 +1,18 @@
-var rowIndex = 0;
 var items = [];
 
 
-var boxSize = 1000
 var boxHeight = 100;
 var DOMAIN_SIZE = 16000
 
+var rowIndex = 0;
+var rowCount = DOMAIN_SIZE/boxSize;
+var x = 0;
+
+
+var boxSize = 100
+var generateInterval = 500;
 
 function generateFloor() {
-  for (var x = 0; x < DOMAIN_SIZE; x += boxSize) {
     for (var z = 0; z < DOMAIN_SIZE; z += boxSize) {
       items.push(Entities.addEntity({
         type: 'Box',
@@ -30,7 +34,12 @@ function generateFloor() {
       }));
 
     }
-  }
+
+    if(x< DOMAIN_SIZE){
+      x+= boxSize;
+      Script.setTimeout(generateFloor, generateInterval);
+
+    }
 }
 
 var count = 300;
