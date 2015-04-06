@@ -107,7 +107,7 @@
                 "y": 0,
                 "z": 0
             },
-            "script": "file:///Users/ericlevin1/MyHiFiStuff/scripts/seat.js",
+            "script": "https://hifi-public.s3.amazonaws.com/eric/scripts/seat.js",
             "shapeType": "none",
             "sittingPoints": {
                 "length": 0

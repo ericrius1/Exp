@@ -1,23 +1,38 @@
+Script.include("https://hifi-public.s3.amazonaws.com/eric/scripts/readme.js");
+var isAssignmentScript = false;
+var startingPosition;
+//If you are running this as an assignment script, set the starting spawn point for the vehicle here
+//Otherwise, leave this commented out and the vehicle will spawn in front of your avatar
+
+//****************************************
+//isAssignmentScript = true
+//startingPosition = {
+//   x: 8000,
+//   y: 8000,
+//   z: 8000
+// };
+//*****************************************
+new ReadmeModal({description: "Click on the ship to take a ride! \n Invite your friends to hop on as well!", displayTime: 5000});
 var shipModel = "https://hifi-public.s3.amazonaws.com/ryan/lobby_platform4.fbx";
-var startingPosition = {
-  x: 8000,
-  y: 8000,
-  z: 8000
-};
 var dimensions = {
   x: 10.8,
   y: 4.04,
   z: 10.8
 };
+
+if(!isAssignmentScript){
+  startingPosition = MyAvatar.position;
+}
 var waypoints = [];
 var numPoints = 5;
-var radius = 50;
 var currentWaypointIndex = 0;
 var ship;
+var radius = 50;
 var pointToPointTime = 5000;
 var turnToPointTime = 3000;
 var easingFunc;
 var waitTimeBetweenLoops = 20000;
+var waitTimeBetweenStops = 5000;
 
 function init() {
   easingFunc = TWEEN.Easing.Cubic.InOut;
@@ -36,11 +51,13 @@ function init() {
     type: "Model",
     modelURL: shipModel,
     position: waypoints[currentWaypointIndex++],
-    dimensions: dimensions
+    dimensions: dimensions,
+    script: "https://hifi-public.s3.amazonaws.com/eric/scripts/seat.js"
   });
 
+
   Script.setTimeout(function(){
-    //followWaypoints();
+    followWaypoints();
   }, waitTimeBetweenLoops);
 
 }
@@ -78,7 +95,9 @@ function followWaypoints(){
           followWaypoints();
         }, waitTimeBetweenLoops)
       } else{
-        followWaypoints();
+        Script.setTimeout(function(){
+          followWaypoints();
+        }, waitTimeBetweenStops)
       }
     })
 
