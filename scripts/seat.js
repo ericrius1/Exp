@@ -11,6 +11,7 @@
     Settings.setValue(this.isSittingSettingHandle, false);
     this.startPoseAndTransition = [];
     this.forward = {x: 0, y: 0, z: -1};
+    this.mySeatIndex = null;
 
     this.seatVelocity = {
       x: -.01,
@@ -88,8 +89,18 @@
   }
 
   //returns the index of first empty seat found in vehicle
-  this.findEmptySeat = function(){
-    return 1;
+  this.assignSeat = function(){
+    this.getUserData();
+    for(var i = 0; i < this.userData.seats.length; i++){
+      if(this.userData.seats[i] === 0){
+        this.mySeatIndex = i;
+        this.userData.seats[this.mySeatIndex] = 1;
+        this.updateUserData();
+        //Now return so we don't fill up any other seat!
+        return;
+      }
+    }
+
   }
 
   this.getUserData = function() {
@@ -158,12 +169,15 @@
   }
 
   this.initMoveToSeat = function() {
-    this.getUserData();
-    this.mySeatIndex = this.findEmptySeat();
-    this.updateUserData();
-    this.seatTheta = -this.mySeatIndex / this.numSeats * this.sittingAreaAngle;
-    //first we need to move avatar towards chair
-    this.activeUpdate = this.moveToSeat;
+
+    this.assignSeat();
+    if(this.mySeatIndex !== null){
+      this.seatTheta = -this.mySeatIndex / this.numSeats * this.sittingAreaAngle;
+      //first we need to move avatar towards chair
+      this.activeUpdate = this.moveToSeat;
+    } else {
+      print("NO SEAT AVAILABLE AT THIS TIME *************************");
+    }
 
   }
 
@@ -179,8 +193,6 @@
         z: zPos
       };
     }
-
-
     if (!self.activeUpdate) {
       return;
     }
@@ -234,6 +246,10 @@
       }
       //make sure we set avatar head yaw back to 0.
       MyAvatar.headYaw = 0
+      this.userData.seats[this.mySeatIndex] = 0;
+      this.mySeatIndex = null;
+      this.updateUserData();
+      //make sure we free up this seat
       this.clearAvatarAnimation();
 
     }
