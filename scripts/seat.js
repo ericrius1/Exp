@@ -22,7 +22,7 @@
       y: 0,
       z: 0
     };
-    this.radius = this.properties.dimensions.x / 2;
+    this.radius = this.properties.dimensions.x  * 0.4;
     this.sittingAreaAngle = Math.PI;
     this.numSeats = 5;
     this.seatHeight = 0.0;
@@ -227,7 +227,8 @@
   this.moveToSeat = function(deltaTime) {
     self.distance = Vec3.distance(MyAvatar.position, self.seatPosition);
     if (self.distance > self.targetAvatarToChairDistance) {
-      // self.sanitizedRotation = Quat.fromPitchYawRollDegrees(0, Quat.safeEulerAngles(self.properties.rotation).y, 0);
+      self.sanitizedRotation = Quat.fromPitchYawRollDegrees(0, Quat.safeEulerAngles(self.properties.rotation).y, 0);
+      MyAvatar.orientation = Quat.mix(MyAvatar.orientation, self.sanitizedRotation, 0.02);
       MyAvatar.position = Vec3.mix(MyAvatar.position, self.seatPosition, 0.05);
     } else {
       //otherwise we made it to chair, now sit down should be out active update function
