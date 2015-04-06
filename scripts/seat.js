@@ -78,15 +78,28 @@
     this.getUserData();
   }
 
+  this.initSeats = function(){
+    this.userData.seats = [];
+    for(var i = 0; i < this.numSeats; i++){
+      this.userData.seats[i] = 0;
+    }
+    this.updateUserData();
+
+  }
+
+  //returns the index of first empty seat found in vehicle
+  this.findEmptySeat = function(){
+    return 1;
+  }
+
   this.getUserData = function() {
     if (this.properties.userData) {
       this.userData = JSON.parse(this.properties.userData);
     } else {
       this.userData = {};
     }
-    if (!this.userData.currentSeatIndex) {
-      this.userData.currentSeatIndex = 0;
-      this.updateUserData();
+    if (!this.userData.seats) {
+      this.initSeats();
     }
   }
 
@@ -146,10 +159,9 @@
 
   this.initMoveToSeat = function() {
     this.getUserData();
-    this.currentSeatIndex = this.userData.currentSeatIndex;
-    this.userData.currentSeatIndex++;
+    this.mySeatIndex = this.findEmptySeat();
     this.updateUserData();
-    this.seatTheta = -this.currentSeatIndex / this.numSeats * this.sittingAreaAngle;
+    this.seatTheta = -this.mySeatIndex / this.numSeats * this.sittingAreaAngle;
     //first we need to move avatar towards chair
     this.activeUpdate = this.moveToSeat;
 
