@@ -10,7 +10,11 @@
     this.isSittingSettingHandle = "AvatarSittingState";
     Settings.setValue(this.isSittingSettingHandle, false);
     this.startPoseAndTransition = [];
-    this.forward = {x: 0, y: 0, z: -1};
+    this.forward = {
+      x: 0,
+      y: 0,
+      z: -1
+    };
     this.mySeatIndex = null;
 
     this.seatVelocity = {
@@ -23,65 +27,85 @@
     this.numSeats = 5;
     this.seatHeight = 0.0;
 
-    //target pose
-    this.pose = [
-      {
-        joint: "RightUpLeg",
-        rotation: {
-          x: 100.0,
-          y: 15.0,
-          z: 0.0
-        }
-      },
-      {
-        joint: "RightLeg",
-        rotation: {
-          x: -130.0,
-          y: 15.0,
-          z: 0.0
-        }
-      },
-      {
-        joint: "RightFoot",
-        rotation: {
-          x: 30,
-          y: 15.0,
-          z: 0.0
-        }
-      },
-      {
-        joint: "LeftUpLeg",
-        rotation: {
-          x: 100.0,
-          y: -15.0,
-          z: 0.0
-        }
-      },
-      {
-        joint: "LeftLeg",
-        rotation: {
-          x: -130.0,
-          y: -15.0,
-          z: 0.0
-        }
-      },
-      {
-        joint: "LeftFoot",
-        rotation: {
-          x: 30,
-          y: 15.0,
-          z: 0.0
-        }
+    this.pose = [{
+      joint: "LeftArm",
+      rotation: {
+        x: 70.0,
+        y: 0.0,
+        z: 60.0
       }
-    ]
+    }, {
+      joint: "LeftForeArm",
+      rotation: {
+        x: -40.0,
+        y: 15.0,
+        z: 20.0
+      }
+    }, {
+      joint: "RightArm",
+      rotation: {
+        x: 70.0,
+        y: 0.0,
+        z: -60.0
+      }
+    }, {
+      joint: "RightForeArm",
+      rotation: {
+        x: -40.0,
+        y: -15.0,
+        z: -20.0
+      }
+    }, {
+      joint: "RightUpLeg",
+      rotation: {
+        x: 100.0,
+        y: 15.0,
+        z: 0.0
+      }
+    }, {
+      joint: "RightLeg",
+      rotation: {
+        x: -120.0,
+        y: 80.0,
+        z: 0.0
+      }
+    }, {
+      joint: "RightFoot",
+      rotation: {
+        x: 20,
+        y: 5.0,
+        z: 0.0
+      }
+    }, {
+      joint: "LeftUpLeg",
+      rotation: {
+        x: 100.0,
+        y: -15.0,
+        z: 0.0
+      }
+    }, {
+      joint: "LeftLeg",
+      rotation: {
+        x: -150.0,
+        y: -70.0,
+        z: 0.0
+      }
+    }, {
+      joint: "LeftFoot",
+      rotation: {
+        x: 30,
+        y: 15.0,
+        z: 0.0
+      }
+    }];
 
     this.storeStartPoseAndTransition();
     this.getUserData();
   }
 
-  this.initSeats = function(){
+  this.initSeats = function() {
     this.userData.seats = [];
-    for(var i = 0; i < this.numSeats; i++){
+    for (var i = 0; i < this.numSeats; i++) {
       this.userData.seats[i] = 0;
     }
     this.updateUserData();
@@ -89,10 +113,10 @@
   }
 
   //returns the index of first empty seat found in vehicle
-  this.assignSeat = function(){
+  this.assignSeat = function() {
     this.getUserData();
-    for(var i = 0; i < this.userData.seats.length; i++){
-      if(this.userData.seats[i] === 0){
+    for (var i = 0; i < this.userData.seats.length; i++) {
+      if (this.userData.seats[i] === 0) {
         this.mySeatIndex = i;
         this.userData.seats[this.mySeatIndex] = 1;
         this.updateUserData();
@@ -171,7 +195,7 @@
   this.initMoveToSeat = function() {
 
     this.assignSeat();
-    if(this.mySeatIndex !== null){
+    if (this.mySeatIndex !== null) {
       this.seatTheta = -this.mySeatIndex / this.numSeats * this.sittingAreaAngle;
       //first we need to move avatar towards chair
       this.activeUpdate = this.moveToSeat;
