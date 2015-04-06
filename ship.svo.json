@@ -1,0 +1,132 @@
+{
+    "Entities": [
+        {
+            "age": 30.225683212280273,
+            "ageAsText": "0 hours 0 minutes 30 seconds",
+            "angularDamping": 0.39346998929977417,
+            "angularVelocity": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "animationFPS": 30,
+            "animationFrameIndex": 0,
+            "animationIsPlaying": false,
+            "animationSettings": "{\"firstFrame\":0,\"fps\":30,\"frameIndex\":0,\"hold\":false,\"lastFrame\":100000,\"loop\":false,\"running\":false,\"startAutomatically\":false}",
+            "animationURL": "",
+            "backgroundColor": {
+                "blue": 0,
+                "green": 0,
+                "red": 0
+            },
+            "boundingBox": {
+                "brn": {
+                    "x": -5.4000000953674316,
+                    "y": -2.0199999809265137,
+                    "z": -5.4000000953674316
+                },
+                "center": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                },
+                "dimensions": {
+                    "x": 10.800000190734863,
+                    "y": 4.0399999618530273,
+                    "z": 10.800000190734863
+                },
+                "tfl": {
+                    "x": 5.4000000953674316,
+                    "y": 2.0199999809265137,
+                    "z": 5.4000000953674316
+                }
+            },
+            "collisionModelURL": "",
+            "collisionsWillMove": false,
+            "color": {
+                "blue": 0,
+                "green": 0,
+                "red": 0
+            },
+            "cutoff": 3.1415927410125732,
+            "damping": 0.39346998929977417,
+            "density": 1000,
+            "dimensions": {
+                "x": 10.800000190734863,
+                "y": 4.0399999618530273,
+                "z": 10.800000190734863
+            },
+            "emitDirection": {
+                "x": 0,
+                "y": 1,
+                "z": 0
+            },
+            "emitRate": 15,
+            "emitStrength": 25,
+            "exponent": 0,
+            "glowLevel": 0,
+            "gravity": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "id": "{1f087a28-90af-49d2-91f4-6a01f5d50cd9}",
+            "ignoreForCollisions": false,
+            "intensity": 1,
+            "isKnownID": true,
+            "isSpotlight": false,
+            "lifespan": 3,
+            "lifetime": -1,
+            "lineHeight": 0.10000000149011612,
+            "localGravity": -9.8000001907348633,
+            "localRenderAlpha": 0.10000000149011612,
+            "locked": false,
+            "marketplaceID": "",
+            "maxParticles": 1000,
+            "modelURL": "https://hifi-public.s3.amazonaws.com/ryan/lobby_platform4.fbx",
+            "naturalDimensions": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            },
+            "originalTextures": "",
+            "particleRadius": 0.02500000037252903,
+            "position": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "registrationPoint": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            },
+            "rotation": {
+                "w": 1,
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "script": "file:///Users/ericlevin1/MyHiFiStuff/scripts/seat.js",
+            "shapeType": "none",
+            "sittingPoints": {
+                "length": 0
+            },
+            "text": "",
+            "textColor": {
+                "blue": 255,
+                "green": 255,
+                "red": 255
+            },
+            "textures": "",
+            "type": "Model",
+            "userData": "",
+            "velocity": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "visible": true
+        }
+    ]
+}

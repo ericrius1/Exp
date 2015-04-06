@@ -1,57 +1,80 @@
-var range = {x: 100, y: 100, z: 100};
-var pos = MyAvatar.position;
-var numBoxes = 20;
 var items = [];
-var generating = false;
-var spawnCount = 0;
-var maxCount = 10;
-var generateInterval;
 
 
-function keyPressed(event) {
-  if(event.text === 'f'){
-    if(!generating){
-      generate();
-      generateInterval = Script.setInterval(generate, 100);
-    } else{
-      Script.clearInterval(generateInterval);
-      destroy();
-    }
-    generating = !generating;
-  }
-}
+var boxSizeRange = {
+  min: 0.5,
+  max: 5
+};
+var startPosition = {
+  x: 1000,
+  y: 1000,
+  z: 1000
+};
+var range = 100;
+
+var currentNumBoxes = 0;
+var maxBoxes = 10000;
+var interval = 1000;
+var numBoxesPerInterval = 100;
 
 
-function generate(){
-   spawnCount++;
-   for(var i = 0; i < numBoxes; i++){
-    items.push(Entities.addEntity({
-      type: 'Box',
-      // position: {x: pos.x + randFloat(-range.x/2, range.x/2), y: pos.y + randFloat(-rang.y/2, range.y/2), z: randFloat(-range.z/2, range.z/2)},
-      position: {x: pos.x + randFloat(-range.x/2, range.x/2), y: pos.y + randFloat(-range.y/2, range.y/2), z: pos.z + randFloat(-range.z/2, range.z/2)},
-      dimensions: {x: 1, y:1, z: 1},
-      color: {red: randFloat(50, 200), green: randFloat(5, 100), blue: randFloat(50, 200)}
-    }));
+
+
+
+function generateFloor() {
+  print("YAAAAAA")
+
+  if (currentNumBoxes > maxBoxes) {
+    return;
   }
 
-  if(spawnCount >= maxCount){
-    generating = false;
-    Script.clearInterval(generateInterval);
+  for (var i = 0; i < numBoxesPerInterval; i++) {
+    var size = randFloat(boxSizeRange.min, boxSizeRange.max);
+    var dimensions = {
+      x: size,
+      y: size,
+      z: size
+    };
+    Entities.addEntity({
+      type: "Box",
+      position: {
+        x: startPosition.x + randFloat(-range / 2, range / 2),
+        y: startPosition.y + randFloat(-range / 2, range / 2),
+        z: startPosition.z + randFloat(-range / 2, range / 2)
+      },
+      dimensions: dimensions,
+      color: {
+        red: randFloat(100, 200),
+        green: randFloat(5, 50),
+        blue: randFloat(100, 200)
+      }
+    });
+  }
+    currentNumBoxes += numBoxesPerInterval;
+
+  Script.setTimeout(generateFloor, interval);
+
+}
+
+var count = 300;
+function update() {
+  if (count > 0) {
+    count--;
+    return;
+  } else {
+    generateFloor();
+    Script.update.disconnect(update);
   }
 
-
 }
 
-function destroy(){
-  items.forEach(function(item){
-    Entities.deleteEntity(item);
-  });
-  items = [];
+
+Script.update.connect(update);
+
+function randFloat(low, high) {
+  return Math.floor(low + Math.random() * (high - low));
 }
 
-function randFloat ( low, high ) {
-  return Math.floor(low + Math.random() * ( high - low ));
+function map(value, min1, max1, min2, max2) {
+  return min2 + (max2 - min2) * ((value - min1) / (max1 - min1));
 }
-
-Script.scriptEnding.connect(destroy);
-Controller.keyPressEvent.connect(keyPressed)

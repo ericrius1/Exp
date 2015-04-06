@@ -11,12 +11,16 @@ var dimensions = {
 };
 var waypoints = [];
 var numPoints = 5;
-var radius = 10;
+var radius = 50;
 var currentWaypointIndex = 0;
 var ship;
+var pointToPointTime = 5000;
+var turnToPointTime = 3000;
+var easingFunc;
+var waitTimeBetweenLoops = 20000;
 
 function init() {
-
+  easingFunc = TWEEN.Easing.Cubic.InOut;
   for (var i = 0; i < numPoints; i++) {
     var theta = (i / numPoints) * (Math.PI * 2);
     var xPos = startingPosition.x + radius * Math.cos(theta);
@@ -28,20 +32,67 @@ function init() {
     });
 
   }
-  print(JSON.stringify(waypoints));
   ship = Entities.addEntity({
     type: "Model",
     modelURL: shipModel,
-    position: waypoints[currentWaypointIndex],
+    position: waypoints[currentWaypointIndex++],
     dimensions: dimensions
   });
 
+  Script.setTimeout(function(){
+    //followWaypoints();
+  }, waitTimeBetweenLoops);
+
+}
+
+function followWaypoints(){
+
+  startingPosition = Entities.getEntityProperties(ship).position;
+  
+  var currentProps = {
+    x: startingPosition.x,
+    y: startingPosition.y,
+    z: startingPosition.z,
+  }
+  var endProps = {
+    x: waypoints[currentWaypointIndex].x,
+    y: waypoints[currentWaypointIndex].y,
+    z: waypoints[currentWaypointIndex].z,
+  }
+
+
+  var moveTween = new TWEEN.Tween(currentProps).
+    to(endProps, pointToPointTime).
+    easing(easingFunc).
+    onUpdate(function(){
+      Entities.editEntity(ship, {position: {x: currentProps.x, y: currentProps.y, z : currentProps.z}});
+    }).start();
+
+    moveTween.onComplete(function(){
+      currentWaypointIndex++;
+      if(currentWaypointIndex === waypoints.length){
+        currentWaypointIndex = 0;
+
+        //If we've finished loop, then wait specified time to start over again
+        Script.setTimeout(function(){
+          followWaypoints();
+        }, waitTimeBetweenLoops)
+      } else{
+        followWaypoints();
+      }
+    })
+
+}
+
+function update(){
+  TWEEN.update();
 }
 
 Script.setTimeout(function() {
   init()
 }, 500);
 
+Script.update.connect(update);
 Script.scriptEnding.connect(destroy);
 
 function destroy(){

@@ -3,16 +3,20 @@
 	this.preload = function(entityId){
     this.buttonImageURL = "https://s3.amazonaws.com/hifi-public/images/tools/sit.svg";
     this.addStandButton();
-    this.totalAnimationTime = 1;
+    this.totalAnimationTime = 0.7;
     this.targetAvatarToChairDistance = 0.5;
     this.entityId = entityId;
     this.properties = Entities.getEntityProperties(this.entityId);
 		this.isSittingSettingHandle = "AvatarSittingState";
     Settings.setValue(this.isSittingSettingHandle, false);
     this.startPoseAndTransition = [];
-    self.seatVelocity = {x: -.01, y: 0, z: 0};
+    
+    this.seatVelocity = {x: -.01, y: 0, z: 0};
     this.radius = this.properties.dimensions.x/2;
-    self.seatHeight = 1;
+    this.sittingAreaAngle = Math.PI;
+    this.numSeats = 5;
+    this.seatHeight = 1;
+
     //target pose
     this.pose = [
       {joint:"RightUpLeg", rotation: {x:100.0, y:15.0, z:0.0}},
@@ -24,8 +28,25 @@
     ]
 
     this.storeStartPoseAndTransition();
-
+    this.getUserData();
 	}
+
+  this.getUserData = function() {
+    if(this.properties.userData){
+      this.userData = JSON.parse(this.properties.userData);
+    } else{
+      this.userData = {};
+    }
+    if(!this.userData.currentSeatIndex){
+      this.userData.currentSeatIndex = 0;
+      this.updateUserData();
+    }
+  }
+
+  this.updateUserData = function(){
+    Entities.editEntity(this.entityId, {userData: JSON.stringify(this.userData) });
+  }
+  
 
   this.addStandButton = function(){
     this.windowDimensions = Controller.getViewportDimensions();
@@ -56,6 +77,10 @@
 		if(mouseEvent.isLeftButton){
      
       if(Settings.getValue(this.isSittingSettingHandle, false) == "false"){
+        this.getUserData();
+        this.currentSeatIndex = this.userData.currentSeatIndex;
+        this.userData.currentSeatIndex++;
+        this.updateUserData();
         //first we need to move avatar towards chair
         this.activeUpdate = this.moveToSeat;
       }
@@ -63,9 +88,16 @@
   }
 
   this.update = function(deltaTime){
-    self.properties = Entities.getEntityProperties(self.entityId);
-    //need to always update seat so when user clicks on it it is in proper world space
-    self.seatPosition = {x: self.properties.position.x + self.radius, y: self.properties.position.y + self.seatHeight, z: self.properties.position.z}
+    print('waaah')
+    if(self.entityId){
+      self.properties = Entities.getEntityProperties(self.entityId);
+      //need to always update seat so when user clicks on it it is in proper world space
+      var theta = -self.currentSeatIndex/self.numSeats * self.sittingAreaAngle;
+      var xPos = self.properties.position.x + (Math.cos(theta) * self.radius);
+      var zPos = self.properties.position.z + (Math.sin(theta) * self.radius);
+      self.seatPosition = {x: xPos, y: self.properties.position.y + self.seatHeight, z: zPos};
+    }
+
 
     if(!self.activeUpdate){
       return;
@@ -79,7 +111,7 @@
     if(self.distance > self.targetAvatarToChairDistance){
       self.sanitizedRotation = Quat.fromPitchYawRollDegrees(0, Quat.safeEulerAngles(self.properties.rotation).y, 0);
       MyAvatar.orientation = Quat.mix(MyAvatar.orientation, self.sanitizedRotation, 0.02);
-      MyAvatar.position = Vec3.mix(MyAvatar.position, self.seatPosition, 0.01);
+      MyAvatar.position = Vec3.mix(MyAvatar.position, self.seatPosition, 0.05);
     } else {
       //otherwise we made it to chair, now sit down should be out active update function
       this.elapsedTime = 0
@@ -94,8 +126,8 @@
     if(self.elapsedTime< self.totalAnimationTime){
       self.updateJoints();
     } else {
-      //We've sat, now start moving the platform (for testing)
-      self.activeUpdate = self.moveSeat;
+      //We've sat, now we don't need to update any longer;
+      self.activeUpdate = null;
       Settings.setValue(self.isSittingSettingHandle, true);
       Overlays.editOverlay(self.standUpButton, {visible: true});
       var isValid = MyAvatar.setModelReferential(self.properties.id);
@@ -103,31 +135,29 @@
   }
 
   this.standUp = function(deltaTime){
+
     self.elapsedTime += deltaTime;
     self.factor = 1 - self.elapsedTime/self.totalAnimationTime;
+    print("ELAPSED TIME  *****************   " + self.elapsedTime)
     if(self.elapsedTime < self.totalAnimationTime){      
       self.updateJoints();
+      print("Stand up!")
     } else {
       //We're done with standing animation
       self.activeUpdate = null;
       Settings.setValue(this.isSittingSettingHandle, false);
       //We just finished a standup after deleting the entity the avatar was sitting on
       if(self.disconnectAfterStanding){
+        Overlays.deleteOverlay(this.standUpButton);
         Script.update.disconnect(self.update);
       }
+      //make sure we set avatar head yaw back to 0.
+      MyAvatar.headYaw = 0
       this.clearAvatarAnimation();
+
     }
-
-
   }
 
-  this.moveSeat = function(){
-    self.newPosition = Vec3.sum(self.seatVelocity, self.properties.position);
-    Entities.editEntity(this.entityId, {position: self.newPosition});
-    MyAvatar.headYaw += .01;
-    // MyAvatar.position = self.newPosition;
-
-  }
 
   self.updateJoints = function(){
     for(var i = 0; i < self.startPoseAndTransition.length; i++){
@@ -149,14 +179,17 @@
   }
 
   this.unload = function(){
-    Overlays.deleteOverlay(this.standUpButton);
-    if(Settings.getValue(this.isSittingSettingHandle) === true){
-      //We need to let avatar stand before disconnecting, and then end
+    var isSitting = Settings.getValue(this.isSittingSettingHandle)
+    this.entityId = null;
+    if(isSitting === "true"){
+      print("SHOULD BE HERE ****************************")
+    //  We need to let avatar stand before disconnecting, and then end
       this.initStandUp();
       this.disconnectAfterStanding = true;
       this.activeUpdate = this.standUp
     } else {
       this.clearAvatarAnimation();
+      print("DISCONNECT")
       Script.update.disconnect(this.update);
     }
   }
@@ -170,8 +203,8 @@
   }
 
   this.initStandUp = function(){
-    self.elapsedTime = 0;
-    self.activeUpdate = self.standUp;
+    this.elapsedTime = 0;
+    this.activeUpdate = this.standUp;
     MyAvatar.clearReferential();
     Overlays.editOverlay(self.standUpButton, {visible: false});
   }

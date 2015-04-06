@@ -2,7 +2,7 @@ var items = [];
 
 
 var boxHeight = 100;
-var xWidth = 1000
+var xWidth = 16000
 var zWidth = 16000;
 
 var rowIndex = 0;

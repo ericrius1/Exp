@@ -134,6 +134,9 @@ function update(deltaTime) {
         }
 
         MyAvatar.orientation = newOrientation;
+        if(MyAvatar.hasReferential()){
+            MyAvatar.headYaw += yawFromMouse * 10;
+        }
         yawFromTouch = 0;
         yawFromMouse = 0;
     }
