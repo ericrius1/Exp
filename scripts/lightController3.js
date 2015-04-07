@@ -30,7 +30,7 @@
     if (!mouseEvent.isLeftButton) {
       return;
     }
-    //firist find closest light 
+    //first find closest light 
     this.entityId = entityId
     this.playSound();
     this.properties = Entities.getEntityProperties(this.entityId)
@@ -59,16 +59,15 @@
     }
   }
 
-  this.tryMoveLight = function(){
-    if(this.light){
-      if(!Vec3.equal(this.properties.position, this.previousPosition )){
-       //just get new offset
+  this.tryMoveLight = function() {
+    if (this.light) {
+      if (!Vec3.equal(this.properties.position, this.previousPosition)) {
+        //just get new offset
         var offset = Vec3.subtract(this.properties.position, this.previousPosition);
-        print("OFFFSET" + JSON.stringify(offset));
         var newWorldLightPosition = Vec3.sum(this.lightProperties.position, offset);
-        print("OLD LIGHT WORLD POS ******  " + JSON.stringify(this.lightProperties.position))
-        print("NEW LIGHT WORLD POS ******  " + JSON.stringify(newWorldLightPosition));
-        Entities.editEntity(this.light, {position: newWorldLightPosition})
+        Entities.editEntity(this.light, {
+          position: newWorldLightPosition
+        })
         this.previousPosition = this.properties.position;
 
       }
@@ -87,7 +86,7 @@
       var props = Entities.getEntityProperties(entities[i]);
       if (props.type === "Light") {
         var distance = Vec3.distance(props.position, this.properties.position)
-        if( distance < nearestDistance){
+        if (distance < nearestDistance) {
           closestLight = entities[i];
           nearestDistance = distance
         }
