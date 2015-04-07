@@ -47,6 +47,8 @@ function init() {
     });
 
   }
+
+  MyAvatar.orientation = Quat.fromPitchYawRollDegrees(0, -90, 0);
   ship = Entities.addEntity({
     type: "Model",
     modelURL: shipModel,

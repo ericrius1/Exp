@@ -8,8 +8,8 @@ ReadmeModal = function(options) {
     font: {
       size: 16
     },
-    x: 500,
-    y: 500,
+    x: Window.innerWidth/2,
+    y: Window.innerHeight/2,
     width: 400,
     height: 400,
     text: this.description,
