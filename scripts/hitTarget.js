@@ -1,4 +1,4 @@
-var controllerID, controllerActive, holdPosition;
+var controllerID, controllerActive;
 var originalTargetPosition = Vec3.sum(MyAvatar.position, Vec3.multiply(1.2, Quat.getFront(Camera.getOrientation())));
 originalTargetPosition.y = MyAvatar.position.y;
 var dPosition;
@@ -17,7 +17,7 @@ var target = Entities.addEntity({
   rotation: MyAvatar.orientation,
   ignoreCollisions: false,
   collisionsWillMove: true,
-  damping: 0.0
+  damping: 0.3
 });
 
 print("STICK_ORIENTATION  ****************  " + JSON.stringify(STICK_ORIENTATION));
@@ -64,14 +64,23 @@ function onKeyPress(event){
   }
 }
 
-function update(delta){
+function update(deltaTime){
   if(!controllerActive){
     return;
   }
-  var holdPosition = Vec3.sum(MyAvatar.getRightPalmPosition(), Vec3.multiplyQbyV(MyAvatar.orientation, HOLD_POSITION_OFFSET));
-  stickProperties = Entities.getEntityProperties(stick);
+  holdPosition = Vec3.sum(MyAvatar.getRightPalmPosition(), Vec3.multiplyQbyV(MyAvatar.orientation, HOLD_POSITION_OFFSET));
+  targetProperties = Entities.getEntityProperties(target);
+  // if(Math.random() > .9){
+  //   print("ANGULAR VELOCITY **************** " + targetProperties.angularVelocity.x);
+  // }
+  spring = Vec3.subtract(originalTargetPosition, targetProperties.position);
+  springLength = Vec3.length(spring);
+  spring = Vec3.normalize(spring);
+  targetVelocity = Vec3.sum(targetProperties.velocity, Vec3.multiply(springLength * SPRING_FORCE * deltaTime, spring));
   stickWorldOrientation = Quat.multiply(Quat.multiply(MyAvatar.orientation, Controller.getSpatialControlRawRotation(controllerID)), STICK_ORIENTATION);
   Entities.editEntity(stick, {position: holdPosition, rotation: stickWorldOrientation });
+  Entities.editEntity(target, {velocity: targetVelocity});
+  // Entities.editEntity(target, {position: originalTargetPosition});
 }
 
 Controller.keyPressEvent.connect(onKeyPress);
