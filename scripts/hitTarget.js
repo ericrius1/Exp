@@ -8,8 +8,13 @@ var originalSwordPosition = {x: originalTargetPosition.x + 0.5, y: originalTarge
 var SWORD_ORIENTATION = Quat.fromPitchYawRollDegrees(0, 0, 0);
 var SPRING_FORCE = 15.0;
 var SWORD_DIMENSIONS = {x: .1, y: .04, z: .53};
+var MIN_MSEC_BETWEEN_SWORD_SOUNDS = 500;
+var MIN_VELOCITY_FOR_SOUND_IMPACT = 0.25
 var hitSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/sword.wav");
-var targetProperties, swordProperties;
+var targetProperties, swordProperties, dVelocity;
+
+var lastSoundTime = 0;
+var currentTime;
 
 var target = Entities.addEntity({
   type: "Box",
@@ -41,7 +46,7 @@ var swordCollisionBox = Entities.addEntity({
   rotation: MyAvatar.orientation,
   ignoreCollisions: false,
   collisionsWillMove: true,
-  visible: false
+  // visible: false
 })
 
 initControls();
@@ -66,11 +71,17 @@ function cleanUp(){
 
 function onCollision(entity1, entity2, collision){
   if(entity1.id === swordCollisionBox.id || entity2.id === swordCollisionBox.id){
-    swordProperties = Entities.getEntityProperties(swordCollisionBox);
-    if(hitSound && hitSound.downloaded){
-      Audio.playSound(hitSound, {position:MyAvatar.position, volume: 1.0});
-    } else{
-    }
+    var currentTime = new Date().getTime();
+    if( (currentTime - lastSoundTime) > MIN_MSEC_BETWEEN_SWORD_SOUNDS){
+        var props1 = Entities.getEntityProperties(entity1); 
+      var props2 = Entities.getEntityProperties(entity2);
+      swordProperties = Entities.getEntityProperties(swordCollisionBox);
+      dVelocity = Vec3.length(Vec3.subtract(props1.velocity, props2.velocity));
+      if(dVelocity > MIN_VELOCITY_FOR_SOUND_IMPACT){
+        Audio.playSound(hitSound, {position:MyAvatar.position, volume: 1.0});
+      }
+      lastSoundTime = new Date().getTime();
+    } 
 
   }
 }
@@ -94,8 +105,8 @@ function update(deltaTime){
   spring = Vec3.normalize(spring);
   targetVelocity = Vec3.sum(targetProperties.velocity, Vec3.multiply(springLength * SPRING_FORCE * deltaTime, spring));
   swordWorldOrientation = Quat.multiply(Quat.multiply(MyAvatar.orientation, Controller.getSpatialControlRawRotation(controllerID)), SWORD_ORIENTATION);
-  Entities.editEntity(sword, {position: holdPosition, rotation: swordWorldOrientation });
-  Entities.editEntity(swordCollisionBox, {position: holdPosition, rotation: swordWorldOrientation });
+  Entities.editEntity(sword, {position: holdPosition, rotation: swordWorldOrientation, velocity: Controller.getSpatialControlVelocity(controllerID) });
+  Entities.editEntity(swordCollisionBox, {position: holdPosition, rotation: swordWorldOrientation, velocity: Controller.getSpatialControlVelocity(controllerID) });
   Entities.editEntity(target, {velocity: targetVelocity});
 }
 
