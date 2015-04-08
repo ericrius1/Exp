@@ -23,15 +23,16 @@ var target = Entities.addEntity({
 print("STICK_ORIENTATION  ****************  " + JSON.stringify(STICK_ORIENTATION));
 var stickWorldOrientation;
 var stick = Entities.addEntity({
-  type: "Box",
+  type: "Model",
+  modelURL: "https://hifi-public.s3.amazonaws.com/eric/models/sword2.fbx",
   position: originalStickPosition,
-  dimensions: {x: .2, y:.2, z: 0.5},
+  dimensions: {x: .05, y:.02, z: 0.26},
   rotation: MyAvatar.orientation,
   color: {red: 200, blue: 10, green: 10},
   ignoreCollisions: false,
   collisionsWillMove: true,
   damping: 0
-})
+});
 
 initControls();
 
