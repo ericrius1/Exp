@@ -7,6 +7,7 @@ var HOLD_POSITION_OFFSET = {x: 0, y: 0, z: -0.5};
 var originalSwordPosition = {x: originalTargetPosition.x + 0.5, y: originalTargetPosition.y, z: originalTargetPosition.z};
 var SWORD_ORIENTATION = Quat.fromPitchYawRollDegrees(0, 0, 0);
 var SPRING_FORCE = 15.0;
+var SWORD_DIMENSIONS = {x: .1, y: .04, z: .53};
 
 
 var target = Entities.addEntity({
@@ -25,7 +26,7 @@ var sword = Entities.addEntity({
   type: "Model",
   modelURL: "https://hifi-public.s3.amazonaws.com/eric/models/sword2.fbx",
   position: originalSwordPosition,
-  dimensions: {x: .05, y:.02, z: 0.26},
+  dimensions: SWORD_DIMENSIONS,
   rotation: MyAvatar.orientation,
   color: {red: 200, blue: 10, green: 10},
   damping: 0
@@ -34,7 +35,7 @@ var sword = Entities.addEntity({
 var swordCollisionBox = Entities.addEntity({
   type: "Box",
   position: originalSwordPosition,
-  dimensions: {x: .05, y: 0.02, z: 0.26},
+  dimensions: SWORD_DIMENSIONS,
   color: {red: 200, blue: 10, green: 10},
   rotation: MyAvatar.orientation,
   ignoreCollisions: false,
