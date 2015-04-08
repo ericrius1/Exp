@@ -1,5 +1,5 @@
 var controllerID, controllerActive;
-var originalTargetPosition = Vec3.sum(MyAvatar.position, Vec3.multiply(1.2, Quat.getFront(Camera.getOrientation())));
+var originalTargetPosition = Vec3.sum(MyAvatar.position, Vec3.multiply(2, Quat.getFront(Camera.getOrientation())));
 originalTargetPosition.y = MyAvatar.position.y;
 var dPosition;
 var stickProperties, spring, springLength, targetVelocity;
@@ -19,7 +19,7 @@ var currentTime;
 var target = Entities.addEntity({
   type: "Box",
   position: originalTargetPosition,
-  dimensions: {x: .1, y: 0.1, z: 0.1},
+  dimensions: {x: .2, y: 0.2, z: 0.2},
   color: {red: 200, green: 20, blue: 200},
   rotation: MyAvatar.orientation,
   ignoreCollisions: false,
@@ -35,7 +35,7 @@ var sword = Entities.addEntity({
   dimensions: SWORD_DIMENSIONS,
   rotation: MyAvatar.orientation,
   color: {red: 200, blue: 10, green: 10},
-  damping: 0
+  damping: .3
 });
 
 var swordCollisionBox = Entities.addEntity({
@@ -46,7 +46,8 @@ var swordCollisionBox = Entities.addEntity({
   rotation: MyAvatar.orientation,
   ignoreCollisions: false,
   collisionsWillMove: true,
-  // visible: false
+  visible: false,
+  damping: 0.3
 })
 
 initControls();
