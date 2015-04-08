@@ -8,7 +8,8 @@ var originalSwordPosition = {x: originalTargetPosition.x + 0.5, y: originalTarge
 var SWORD_ORIENTATION = Quat.fromPitchYawRollDegrees(0, 0, 0);
 var SPRING_FORCE = 15.0;
 var SWORD_DIMENSIONS = {x: .1, y: .04, z: .53};
-
+var hitSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/sword.wav");
+var targetProperties, swordProperties;
 
 var target = Entities.addEntity({
   type: "Box",
@@ -65,7 +66,12 @@ function cleanUp(){
 
 function onCollision(entity1, entity2, collision){
   if(entity1.id === swordCollisionBox.id || entity2.id === swordCollisionBox.id){
-    print("COLLISION!")
+    swordProperties = Entities.getEntityProperties(swordCollisionBox);
+    if(hitSound && hitSound.downloaded){
+      Audio.playSound(hitSound, {position:MyAvatar.position, volume: 1.0});
+    } else{
+    }
+
   }
 }
 
