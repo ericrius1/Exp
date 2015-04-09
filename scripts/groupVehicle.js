@@ -1,4 +1,4 @@
-Script.include("https://hifi-public.s3.amazonaws.com/eric/scripts/readme.js");
+Script.include("https://hifi-public.s3.amazonaws.com/eric/scripts/displayMessage.js");
 Script.include("https://hifi-public.s3.amazonaws.com/eric/scripts/tween.js")
 var isAssignmentScript = false;
 var startingPosition;
@@ -13,16 +13,21 @@ var startingPosition;
 //   z: 8000
 // };
 //*****************************************
-new ReadmeModal({description: "Click on the ship to take a ride! \n Invite your friends to hop on as well!", displayTime: 5000});
+new Message({
+  description: "Click on the ship to take a ride! \n Invite your friends to hop on as well!",
+  displayTime: 5000
+});
 var shipModelURL = "https://hifi-public.s3.amazonaws.com/ryan/lobby_platform4.fbx";
-var seatManagerScriptURL = "https://hifi-public.s3.amazonaws.com/eric/scripts/seatManager.js"
+var seatManagerScriptURL = "https://hifi-public.s3.amazonaws.com/eric/scripts/seatManager.js";
+var shipSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/spaceship.wav");
+
 var shipDimensions = {
   x: 10.8,
   y: 4.04,
   z: 10.8
 };
 
-if(!isAssignmentScript){
+if (!isAssignmentScript) {
   startingPosition = MyAvatar.position;
 }
 var waypoints = [];
@@ -30,14 +35,32 @@ var numPoints = 5;
 var currentWaypointIndex = 0;
 var ship;
 var radius = 50;
+
+//Modify these variables to change the pace of your vehicle tour
 var pointToPointTime = 5000;
-var turnToPointTime = 3000;
-var easingFunc;
-var waitTimeBetweenLoops = 20000;
+var waitTimeBetweenLoops = 5000;
 var waitTimeBetweenStops = 5000;
 
 function init() {
-  easingFunc = TWEEN.Easing.Cubic.InOut;
+
+  createWaypoints();
+  MyAvatar.orientation = Quat.fromPitchYawRollDegrees(0, -90, 0);
+  ship = Entities.addEntity({
+    type: "Model",
+    modelURL: shipModelURL,
+    position: waypoints[0],
+    dimensions: shipDimensions,
+    script: seatManagerScriptURL
+  });
+  currentWaypointIndex++;
+
+  Script.setTimeout(function() {
+    followWaypoints();
+  }, waitTimeBetweenLoops);
+
+}
+
+function createWaypoints() {
   for (var i = 0; i < numPoints; i++) {
     var theta = (i / numPoints) * (Math.PI * 2);
     var xPos = startingPosition.x + radius * Math.cos(theta);
@@ -49,24 +72,9 @@ function init() {
     });
 
   }
-
-  MyAvatar.orientation = Quat.fromPitchYawRollDegrees(0, -90, 0);
-  ship = Entities.addEntity({
-    type: "Model",
-    modelURL: shipModelURL,
-    position: waypoints[0],
-    dimensions: shipDimensions,
-    script: seatManagerScriptURL
-  });
-  currentWaypointIndex++;
-
-  Script.setTimeout(function(){
-    followWaypoints();
-  }, waitTimeBetweenLoops);
-
 }
 
-function followWaypoints(){
+function followWaypoints() {
   startingPosition = Entities.getEntityProperties(ship).position;
   var currentProps = {
     x: startingPosition.x,
@@ -74,7 +82,8 @@ function followWaypoints(){
     z: startingPosition.z,
   }
   var endProps = {
-    x: waypoints[currentWaypointIndex].x,
+    x: waypoints[
+    currentWaypointIndex].x,
     y: waypoints[currentWaypointIndex].y,
     z: waypoints[currentWaypointIndex].z,
   }
@@ -82,30 +91,35 @@ function followWaypoints(){
 
   var moveTween = new TWEEN.Tween(currentProps).
     to(endProps, pointToPointTime).
-    easing(easingFunc).
-    onUpdate(function(){
-      Entities.editEntity(ship, {position: {x: currentProps.x, y: currentProps.y, z : currentProps.z}});
+    easing(TWEEN.Easing.Cubic.InOut).
+    onUpdate(function() {
+      Entities.editEntity(ship, {
+        position: {
+          x: currentProps.x,
+          y: currentProps.y,
+          z: currentProps.z
+        }
+      });
     }).start();
+    Audio.playSound(shipSound, {position: startingPosition});
 
-    moveTween.onComplete(function(){
-      currentWaypointIndex++;
-      if(currentWaypointIndex === waypoints.length){
-        currentWaypointIndex = 0;
-
-        //If we've finished loop, then wait specified time to start over again
-        Script.setTimeout(function(){
-          followWaypoints();
-        }, waitTimeBetweenLoops)
-      } else{
-        Script.setTimeout(function(){
-          followWaypoints();
-        }, waitTimeBetweenStops)
-      }
-    })
-
+  moveTween.onComplete(function() {
+    currentWaypointIndex++;
+    if (currentWaypointIndex === waypoints.length) {
+      currentWaypointIndex = 0;
+      //If we've finished loop, then wait specified time to start over again
+      Script.setTimeout(function() {
+        followWaypoints();
+      }, waitTimeBetweenLoops)
+    } else {
+      Script.setTimeout(function() {
+        followWaypoints();
+      }, waitTimeBetweenStops)
+    }
+  });
 }
 
-function update(){
+function update() {
   TWEEN.update();
 }
 
@@ -116,6 +130,6 @@ Script.setTimeout(function() {
 Script.update.connect(update);
 Script.scriptEnding.connect(destroy);
 
-function destroy(){
+function destroy() {
   Entities.deleteEntity(ship);
 }

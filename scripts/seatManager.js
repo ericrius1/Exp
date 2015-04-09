@@ -1,11 +1,11 @@
 (function() {
   var self = this;
   this.preload = function(entityId) {
+    this.entityId = entityId;
     this.buttonImageURL = "https://s3.amazonaws.com/hifi-public/images/tools/sit.svg";
     this.addStandButton();
     this.totalAnimationTime = 0.7;
     this.targetAvatarToChairDistance = 0.5;
-    this.entityId = entityId;
     this.properties = Entities.getEntityProperties(this.entityId);
     this.isSittingSettingHandle = "AvatarSittingState";
     Settings.setValue(this.isSittingSettingHandle, false);
@@ -17,12 +17,12 @@
     };
     this.mySeatIndex = null;
 
-    this.radius = this.properties.dimensions.x  * 0.4;
+    this.seatRadius = this.properties.dimensions.x  * 0.4;
     this.sittingAreaAngle = Math.PI;
     this.numSeats = 5;
     this.seatHeight = 1.0;
 
-    this.pose = [{
+    this.seatedPose = [{
       joint: "LeftArm",
       rotation: {
         x: 70.0,
@@ -104,7 +104,6 @@
       this.userData.seats[i] = 0;
     }
     this.updateUserData();
-
   }
 
   //returns the index of first empty seat found in vehicle
@@ -165,24 +164,20 @@
   }
 
   this.storeStartPoseAndTransition = function() {
-    for (var i = 0; i < this.pose.length; i++) {
-      var startRotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(this.pose[i].joint));
-      var transitionVector = Vec3.subtract(this.pose[i].rotation, startRotation);
+    for (var i = 0; i < this.seatedPose.length; i++) {
+      var startRotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(this.seatedPose[i].joint));
+      var transitionVector = Vec3.subtract(this.seatedPose[i].rotation, startRotation);
       this.startPoseAndTransition.push({
-        joint: this.pose[i].joint,
+        joint: this.seatedPose[i].joint,
         start: startRotation,
         transition: transitionVector
       });
     }
   }
 
-  this.clickReleaseOnEntity = function(entityId, mouseEvent) {
-    if (mouseEvent.isLeftButton) {
-
-      if (Settings.getValue(this.isSittingSettingHandle, false) == "false") {
-        this.initMoveToSeat();
-
-      }
+  this.clickDownOnEntity = function(entityId, mouseEvent) {
+    if (mouseEvent.isLeftButton && Settings.getValue(this.isSittingSettingHandle, false) == "false") {
+      this.initMoveToSeat();
     }
   }
 
@@ -191,7 +186,7 @@
     this.assignSeat();
     if (this.mySeatIndex !== null) {
       this.seatTheta = -this.mySeatIndex / this.numSeats * this.sittingAreaAngle;
-      //first we need to move avatar towards chair
+      //first we need to move avatar towards seat
       this.activeUpdate = this.moveToSeat;
     } else {
       print("NO SEAT AVAILABLE AT THIS TIME *************************");
@@ -203,8 +198,8 @@
     if (self.entityId) {
       self.properties = Entities.getEntityProperties(self.entityId);
       //need to always update seat so when user clicks on it it is in proper world space
-      var xPos = self.properties.position.x + (Math.cos(self.seatTheta) * self.radius);
-      var zPos = self.properties.position.z + (Math.sin(self.seatTheta) * self.radius);
+      var xPos = self.properties.position.x + (Math.cos(self.seatTheta) * self.seatRadius);
+      var zPos = self.properties.position.z + (Math.sin(self.seatTheta) * self.seatRadius);
       self.seatPosition = {
         x: xPos,
         y: self.properties.position.y + self.seatHeight,
@@ -286,8 +281,8 @@
 
   this.clearAvatarAnimation = function() {
     MyAvatar.clearReferential();
-    for (var i = 0; i < self.pose.length; i++) {
-      MyAvatar.clearJointData(this.pose[i].joint);
+    for (var i = 0; i < self.seatedPose.length; i++) {
+      MyAvatar.clearJointData(this.seatedPose[i].joint);
     }
     Overlays.editOverlay(this.standUpButton, {
       visible: false

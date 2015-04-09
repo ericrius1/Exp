@@ -1,10 +1,10 @@
 
-ReadmeModal = function(options) {
+Message = function(options) {
   this.options = options;
-  this.description = this.options.description || "This is what this script is. /n This is how to use this script"
+  this.description = this.options.description || "Provide a description when instantiating the message!"
   this.displayTime = this.options.displayTime || 5000;
 
-  var readmeOverlay = Overlays.addOverlay("text", {
+  var messageOverlay = Overlays.addOverlay("text", {
     font: {
       size: 16
     },
@@ -27,6 +27,6 @@ ReadmeModal = function(options) {
   });
 
   Script.setTimeout(function() {
-    Overlays.deleteOverlay(readmeOverlay);
+    Overlays.deleteOverlay(messageOverlay);
   }, this.displayTime)
 }

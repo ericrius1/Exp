@@ -3,17 +3,20 @@
     var soundURLs = ["https://hifi-public.s3.amazonaws.com/sounds/Switches%20and%20sliders/lamp_switch_1.wav",
       "https://hifi-public.s3.amazonaws.com/sounds/Switches%20and%20sliders/lamp_switch_2.wav",
       "https://hifi-public.s3.amazonaws.com/sounds/Switches%20and%20sliders/lamp_switch_3.wav"];
-    var soundURL = soundURLs[Math.floor(Math.random() * soundURLs.length)];
-    this.sound = SoundCache.getSound(soundURL);
     this.entityId = entityId;
     this.properties = Entities.getEntityProperties(this.entityId);
     this.previousPosition = this.properties.position;
+    this.previousRotation = this.properties.rotation;
     this.getUserData()
     if (!this.userData) {
       this.userData = {};
       this.userData.lightOn = false;
+      this.userData.soundIndex = Math.floor(Math.random() * soundURLs.length);
+      this.updateUserData();
     }
+    this.sound = SoundCache.getSound(soundURLs[this.userData.soundIndex]);
   }
+
 
   this.getUserData = function() {
     if (this.properties.userData) {
@@ -29,7 +32,6 @@
   }
 
   this.clickReleaseOnEntity = function(entityId, mouseEvent) {
-    print("ENTITY CLICK")
     if (!mouseEvent.isLeftButton) {
       return;
     }
@@ -65,11 +67,13 @@
   this.tryMoveLight = function() {
     if (this.light) {
       //compute offset position
-      var offsetPosition = Quat.multiply(Quat.inverse(this.properties.rotation), Vec3.subtract(this.lightProperties.position, this.properties.position));
+      var offsetPosition = Quat.multiply(Quat.inverse(this.previousRotation), Vec3.subtract(this.lightProperties.position, this.previousPosition));
       var newPosition = Vec3.sum(this.properties.position, Vec3.multiplyQbyV(this.properties.rotation, offsetPosition));
       if (!Vec3.equal(newPosition, this.lightProperties.position)) {
         Entities.editEntity(this.light, {position: newPosition});
       }
+      this.previousPosition = this.properties.position;
+      this.previousRotation = this.properties.rotation;
     }
 
   }
