@@ -1,8 +1,5 @@
 Script.include("https://hifi-public.s3.amazonaws.com/eric/scripts/readme.js");
-Script.include("tween.js")
-// Script.setTimeout(function(){
-  print("TWEEEEN ***********" +  TWEEN)
-// }, 1000)
+Script.include("https://hifi-public.s3.amazonaws.com/eric/scripts/tween.js")
 var isAssignmentScript = false;
 var startingPosition;
 //If you are running this as an assignment script, set the starting spawn point for the vehicle here
@@ -17,8 +14,9 @@ var startingPosition;
 // };
 //*****************************************
 new ReadmeModal({description: "Click on the ship to take a ride! \n Invite your friends to hop on as well!", displayTime: 5000});
-var shipModel = "https://hifi-public.s3.amazonaws.com/ryan/lobby_platform4.fbx";
-var dimensions = {
+var shipModelURL = "https://hifi-public.s3.amazonaws.com/ryan/lobby_platform4.fbx";
+var seatManagerScriptURL = "https://hifi-public.s3.amazonaws.com/eric/scripts/seatManager.js"
+var shipDimensions = {
   x: 10.8,
   y: 4.04,
   z: 10.8
@@ -55,12 +53,12 @@ function init() {
   MyAvatar.orientation = Quat.fromPitchYawRollDegrees(0, -90, 0);
   ship = Entities.addEntity({
     type: "Model",
-    modelURL: shipModel,
-    position: waypoints[currentWaypointIndex++],
-    dimensions: dimensions,
-    script: "https://hifi-public.s3.amazonaws.com/eric/scripts/seat.js"
+    modelURL: shipModelURL,
+    position: waypoints[0],
+    dimensions: shipDimensions,
+    script: seatManagerScriptURL
   });
-
+  currentWaypointIndex++;
 
   Script.setTimeout(function(){
     followWaypoints();
@@ -69,9 +67,7 @@ function init() {
 }
 
 function followWaypoints(){
-
   startingPosition = Entities.getEntityProperties(ship).position;
-  
   var currentProps = {
     x: startingPosition.x,
     y: startingPosition.y,
@@ -123,12 +119,3 @@ Script.scriptEnding.connect(destroy);
 function destroy(){
   Entities.deleteEntity(ship);
 }
-
-
-
-//****************************************************************************************************************************************
-//****************************************************************************************************************************************
-//****************************************************************************************************************************************
-
-
-

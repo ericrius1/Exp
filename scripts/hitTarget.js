@@ -3,7 +3,7 @@ var originalTargetPosition = Vec3.sum(MyAvatar.position, Vec3.multiply(2, Quat.g
 originalTargetPosition.y = MyAvatar.position.y;
 var dPosition;
 var stickProperties, spring, springLength, targetVelocity;
-var HOLD_POSITION_OFFSET = {x: 0, y: 0, z: -0.5};
+var HOLD_POSITION_OFFSET = {x: 0, y: 0, z: -0.0};
 var originalSwordPosition = {x: originalTargetPosition.x + 0.5, y: originalTargetPosition.y, z: originalTargetPosition.z};
 var SWORD_ORIENTATION = Quat.fromPitchYawRollDegrees(0, 0, 0);
 var SPRING_FORCE = 15.0;

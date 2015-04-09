@@ -1,28 +1,22 @@
-var items = [];
 
 
 var boxSizeRange = {
   min: 0.5,
   max: 5
 };
-var startPosition = {
-  x: 1000,
-  y: 1000,
-  z: 1000
-};
-var range = 100;
+var startPosition = MyAvatar.position;
+var range = 200;
 
 var currentNumBoxes = 0;
-var maxBoxes = 10000;
-var interval = 1000;
+var maxBoxes = 1000;
+var interval = 100;
 var numBoxesPerInterval = 100;
-
+var boxes = [];
 
 
 
 
 function generateFloor() {
-  print("YAAAAAA")
 
   if (currentNumBoxes > maxBoxes) {
     return;
@@ -35,7 +29,7 @@ function generateFloor() {
       y: size,
       z: size
     };
-    Entities.addEntity({
+    boxes.push(Entities.addEntity({
       type: "Box",
       position: {
         x: startPosition.x + randFloat(-range / 2, range / 2),
@@ -48,9 +42,9 @@ function generateFloor() {
         green: randFloat(5, 50),
         blue: randFloat(100, 200)
       }
-    });
+    }));
   }
-    currentNumBoxes += numBoxesPerInterval;
+  currentNumBoxes += numBoxesPerInterval;
 
   Script.setTimeout(generateFloor, interval);
 
@@ -69,7 +63,14 @@ function update() {
 }
 
 
+function cleanup() {
+  for (var i = 0; i < boxes.length; i++) {
+    Entities.deleteEntity(boxes[i]);
+  }
+}
+
 Script.update.connect(update);
+Script.scriptEnding.connect(cleanup);
 
 function randFloat(low, high) {
   return Math.floor(low + Math.random() * (high - low));

@@ -1,4 +1,12 @@
-//TWEEEEN STUFF
+/**
+ * Tween.js - Licensed under the MIT license
+ * https://github.com/sole/tween.js
+ * ----------------------------------------------
+ *
+ * See https://github.com/sole/tween.js/graphs/contributors for the full list of contributors.
+ * Thank you all, you're awesome!
+ */
+ 
 TWEEN = (function() {
 
     var _tweens = [];
