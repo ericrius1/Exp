@@ -9,60 +9,32 @@
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 //
 
-Script.include("https://hifi-public.s3.amazonaws.com/scripts/libraries/displayMessage.js");
 Script.include("https://hifi-public.s3.amazonaws.com/scripts/libraries/tween.js")
 var isAssignmentScript = false;
 var startingPosition;
 
-//************************************************************************************************
-//If you are running this as an assignment script, set the starting spawn point for the vehicle here
-//Otherwise, leave this commented out and the vehicle will spawn in front of your avatar
-// isAssignmentScript = true;
-// startingPosition = {
-//   x: 8000,
-//   y: 8000,
-//   z: 8000
-// //************************************************************************************************
-// };
-if (!isAssignmentScript) {
-  startingPosition = MyAvatar.position;
-  MyAvatar.orientation = Quat.fromPitchYawRollDegrees(0, -90, 0);
-  new Message({
-    description: "Click on the ship to take a ride! \n Invite your friends to hop on as well!",
-    displayTime: 5000
-  });
-}
-
-var shipModelURL = "https://hifi-public.s3.amazonaws.com/ryan/lobby_platform4.fbx";
-var seatManagerScriptURL = "https://hifi-public.s3.amazonaws.com/scripts/entityScripts/seatManager.js";
-var shipSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/spaceship.wav");
-
-var shipDimensions = {
-  x: 10.8,
-  y: 4.04,
-  z: 10.8
-};
-
-var waypoints = [];
-var numPoints = 5;
-var currentWaypointIndex = 0;
-var ship;
-var radius = 50;
-
+startingPosition = Vec3.sum(MyAvatar.position, Vec3.multiply(3, Quat.getFront(Camera.getOrientation())));
+var box;
 //Modify these variables to change the pace of your vehicle tour
 var pointToPointTime = 5000;
 var waitTimeBetweenLoops = 20000;
 var waitTimeBetweenStops = 5000;
+var waypoints = [];
+var currentWaypointIndex = 0;
+
+//Modify these variables to change the pace of your vehicle tour
+var pointToPointTime = 2000;
+var waitTimeBetweenLoops = 2000;
+var waitTimeBetweenStops = 2000;
 
 function init() {
 
   createWaypoints();
-  ship = Entities.addEntity({
-    type: "Model",
-    modelURL: shipModelURL,
+  box = Entities.addEntity({
+    type: "Box",
     position: waypoints[0],
-    dimensions: shipDimensions,
-    script: seatManagerScriptURL
+    dimensions: {x: 1, y: 1, z: 1},
+    color: {red: 200, green: 50, blue: 200}
   });
   currentWaypointIndex++;
 
@@ -73,21 +45,14 @@ function init() {
 }
 
 function createWaypoints() {
-  for (var i = 0; i < numPoints; i++) {
-    var theta = (i / numPoints) * (Math.PI * 2);
-    var xPos = startingPosition.x + radius * Math.cos(theta);
-    var zPos = startingPosition.z + radius * Math.sin(theta);
-    waypoints.push({
-      x: xPos,
-      y: startingPosition.y,
-      z: zPos
-    });
-
-  }
+  waypoints.push(
+    {x: startingPosition.x, y: startingPosition.y, z: startingPosition.z},
+    {x: startingPosition.x + 5, y: startingPosition.y, z: startingPosition.z}
+  )
 }
 
 function followWaypoints() {
-  startingPosition = Entities.getEntityProperties(ship).position;
+  startingPosition = Entities.getEntityProperties(box).position;
   var currentProps = {
     x: startingPosition.x,
     y: startingPosition.y,
@@ -105,7 +70,7 @@ function followWaypoints() {
     to(endProps, pointToPointTime).
     easing(TWEEN.Easing.Cubic.InOut).
     onUpdate(function() {
-      Entities.editEntity(ship, {
+      Entities.editEntity(box, {
         position: {
           x: currentProps.x,
           y: currentProps.y,
@@ -113,9 +78,6 @@ function followWaypoints() {
         }
       });
     }).start();
-  Audio.playSound(shipSound, {
-    position: startingPosition
-  });
 
   moveTween.onComplete(function() {
     currentWaypointIndex++;
@@ -131,6 +93,7 @@ function followWaypoints() {
       }, waitTimeBetweenStops)
     }
   });
+
 }
 
 function update() {
@@ -145,5 +108,5 @@ Script.update.connect(update);
 Script.scriptEnding.connect(destroy);
 
 function destroy() {
-  Entities.deleteEntity(ship);
+  Entities.deleteEntity(box);
 }

@@ -5,7 +5,7 @@ var boxSizeRange = {
   max: 5
 };
 var startPosition = MyAvatar.position;
-var range = 200;
+var range = 400;
 
 var currentNumBoxes = 0;
 var maxBoxes = 1000;

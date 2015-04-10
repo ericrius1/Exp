@@ -6,73 +6,73 @@
  * See https://github.com/sole/tween.js/graphs/contributors for the full list of contributors.
  * Thank you all, you're awesome!
  */
- 
+
 TWEEN = (function() {
 
-    var _tweens = [];
+  var _tweens = [];
 
-    return {
+  return {
 
-      REVISION: '14',
+    REVISION: '14',
 
-      getAll: function() {
+    getAll: function() {
 
-        return _tweens;
+      return _tweens;
 
-      },
+    },
 
-      removeAll: function() {
+    removeAll: function() {
 
-        _tweens = [];
+      _tweens = [];
 
-      },
+    },
 
-      add: function(tween) {
+    add: function(tween) {
 
-        _tweens.push(tween);
+      _tweens.push(tween);
 
-      },
+    },
 
-      remove: function(tween) {
+    remove: function(tween) {
 
-        var i = _tweens.indexOf(tween);
+      var i = _tweens.indexOf(tween);
 
-        if (i !== -1) {
+      if (i !== -1) {
+
+        _tweens.splice(i, 1);
+
+      }
+
+    },
+
+    update: function(time) {
+
+      if (_tweens.length === 0) return false;
+
+      var i = 0;
+
+      time = time !== undefined ? time : new Date().getTime();
+
+      while (i < _tweens.length) {
+
+        if (_tweens[i].update(time)) {
+
+          i++;
+
+        } else {
 
           _tweens.splice(i, 1);
 
         }
 
-      },
-
-      update: function(time) {
-
-        if (_tweens.length === 0) return false;
-
-        var i = 0;
-
-        time = time !== undefined ? time : new Date().getTime();
-
-        while (i < _tweens.length) {
-
-          if (_tweens[i].update(time)) {
-
-            i++;
-
-          } else {
-
-            _tweens.splice(i, 1);
-
-          }
-
-        }
-
-        return true;
-
       }
-    };
 
-  })();
+      return true;
+
+    }
+  };
+
+})();
 
 TWEEN.Tween = function(object) {
 
@@ -773,5 +773,4 @@ TWEEN.Interpolation = {
   }
 
 };
-
 

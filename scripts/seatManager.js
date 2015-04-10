@@ -1,3 +1,16 @@
+//
+// seatManager.js
+// examples/entityScripts
+//
+//  Created by Eric Levin on April 9, 2015
+//  Copyright 2015 High Fidelity, Inc.
+//
+// This is an example of an entity script which handles positioning and seating avatars correctly on a moving vehicle.
+//
+//  Distributed under the Apache License, Version 2.0.
+//  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
+//
+
 (function() {
   var self = this;
   this.preload = function(entityId) {
@@ -17,10 +30,10 @@
     };
     this.mySeatIndex = null;
 
-    this.seatRadius = this.properties.dimensions.x  * 0.4;
+    this.seatRadius = this.properties.dimensions.x * 0.4;
     this.sittingAreaAngle = Math.PI;
     this.numSeats = 5;
-    this.seatHeight = 1.0;
+    this.seatHeight = 2.0;
 
     this.seatedPose = [{
       joint: "LeftArm",
@@ -144,7 +157,7 @@
     this.buttonHeight = 46;
     this.buttonPadding = 10;
 
-    this.buttonPositionX = (this.windowDimensions.x - this.buttonPadding)/2 - this.buttonWidth;
+    this.buttonPositionX = (this.windowDimensions.x - this.buttonPadding) / 2 - this.buttonWidth;
     this.buttonPositionY = (this.windowDimensions.y - this.buttonHeight) - (this.buttonHeight + this.buttonPadding);
     this.standUpButton = Overlays.addOverlay("image", {
       x: this.buttonPositionX,
@@ -239,7 +252,7 @@
       Overlays.editOverlay(self.standUpButton, {
         visible: true
       });
-      var isValid = MyAvatar.setModelReferential(self.properties.id);
+      MyAvatar.setModelReferential(self.properties.id);
     }
   }
 
@@ -274,9 +287,7 @@
       self.scaledTransition = Vec3.multiply(self.startPoseAndTransition[i].transition, self.factor);
       self.jointRotation = Vec3.sum(self.startPoseAndTransition[i].start, self.scaledTransition);
       MyAvatar.setJointData(self.startPoseAndTransition[i].joint, Quat.fromVec3Degrees(self.jointRotation));
-
     }
-
   }
 
   this.clearAvatarAnimation = function() {
