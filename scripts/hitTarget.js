@@ -4,28 +4,38 @@ originalTargetPosition.y = MyAvatar.position.y;
 var dPosition;
 var stickProperties, spring, springLength, targetVelocity;
 var HOLD_POSITION_OFFSET = {x: 0, y: 0, z: -0.0};
-var originalSwordPosition = {x: originalTargetPosition.x + 0.5, y: originalTargetPosition.y, z: originalTargetPosition.z};
+var originalSwordPosition = {x: originalTargetPosition.x + 0.5, y: originalTargetPosition.y, z: originalTargetPosition.z + 1};
 var SWORD_ORIENTATION = Quat.fromPitchYawRollDegrees(0, 0, 0);
 var SPRING_FORCE = 15.0;
 var SWORD_DIMENSIONS = {x: .1, y: .04, z: .53};
 var MIN_MSEC_BETWEEN_SWORD_SOUNDS = 500;
 var MIN_VELOCITY_FOR_SOUND_IMPACT = 0.25
 var hitSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/sword.wav");
+var boxModelURL = "https://hifi-public.s3.amazonaws.com/eric/models/box.fbx";
+var boxCollisionModelURL = "https://hifi-public.s3.amazonaws.com/eric/models/box.obj"
+
 var targetProperties, swordProperties, dVelocity;
 
 var lastSoundTime = 0;
 var currentTime;
 
 var target = Entities.addEntity({
-  type: "Box",
+
+  type: "Model",
+  modelURL: boxModelURL,
+  dimensions: {x: .2, y: .2, z: .2},
+  collisionModelURL: boxCollisionModelURL,
   position: originalTargetPosition,
-  dimensions: {x: .2, y: 0.2, z: 0.2},
-  color: {red: 200, green: 20, blue: 200},
   rotation: MyAvatar.orientation,
   ignoreCollisions: false,
+  color: {red: 200, green: 10, blue: 200},
   collisionsWillMove: true,
   damping: 0.3
 });
+Script.setTimeout(function(){
+  var tempProps = Entities.getEntityProperties(target);
+  print("TARGET PROPS *********" + JSON.stringify(tempProps));
+}, 500);
 
 var swordWorldOrientation;
 var sword = Entities.addEntity({
@@ -72,9 +82,10 @@ function cleanUp(){
 
 function onCollision(entity1, entity2, collision){
   if(entity1.id === swordCollisionBox.id || entity2.id === swordCollisionBox.id){
+    print("COLLISION!")
     var currentTime = new Date().getTime();
     if( (currentTime - lastSoundTime) > MIN_MSEC_BETWEEN_SWORD_SOUNDS){
-        var props1 = Entities.getEntityProperties(entity1); 
+      var props1 = Entities.getEntityProperties(entity1); 
       var props2 = Entities.getEntityProperties(entity2);
       swordProperties = Entities.getEntityProperties(swordCollisionBox);
       dVelocity = Vec3.length(Vec3.subtract(props1.velocity, props2.velocity));
