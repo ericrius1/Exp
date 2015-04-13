@@ -3,15 +3,16 @@ var originalTargetPosition = Vec3.sum(MyAvatar.position, Vec3.multiply(2, Quat.g
 originalTargetPosition.y = MyAvatar.position.y;
 var dPosition;
 var stickProperties, spring, springLength, targetVelocity;
-var HOLD_POSITION_OFFSET = {x: 0, y: 0, z: -0.0};
-var originalSwordPosition = {x: originalTargetPosition.x + 0.5, y: originalTargetPosition.y, z: originalTargetPosition.z + 1};
+var HOLD_POSITION_OFFSET = {x: 0, y: .0, z: 0};
+var originalSwordPosition = {x: originalTargetPosition.x, y: originalTargetPosition.y, z: originalTargetPosition.z};
 var SWORD_ORIENTATION = Quat.fromPitchYawRollDegrees(0, 0, 0);
 var SPRING_FORCE = 15.0;
-var SWORD_DIMENSIONS = {x: .1, y: .04, z: .53};
+var SWORD_DIMENSIONS = {x: .11, y: .11, z: .59};
 var MIN_MSEC_BETWEEN_SWORD_SOUNDS = 500;
 var MIN_VELOCITY_FOR_SOUND_IMPACT = 0.25
 var hitSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/sword.wav");
 var boxModelURL = "https://hifi-public.s3.amazonaws.com/eric/models/box.fbx";
+var swordModelURL = "https://hifi-public.s3.amazonaws.com/eric/models/stick3.fbx";
 var boxCollisionModelURL = "https://hifi-public.s3.amazonaws.com/eric/models/box.obj"
 
 var targetProperties, swordProperties, dVelocity;
@@ -34,13 +35,12 @@ var target = Entities.addEntity({
 });
 Script.setTimeout(function(){
   var tempProps = Entities.getEntityProperties(target);
-  print("TARGET PROPS *********" + JSON.stringify(tempProps));
 }, 500);
 
 var swordWorldOrientation;
 var sword = Entities.addEntity({
   type: "Model",
-  modelURL: "https://hifi-public.s3.amazonaws.com/eric/models/sword2.fbx",
+  modelURL: swordModelURL,
   position: originalSwordPosition,
   dimensions: SWORD_DIMENSIONS,
   rotation: MyAvatar.orientation,
@@ -109,14 +109,15 @@ function update(deltaTime){
   if(!controllerActive){
     return;
   }
+  swordWorldOrientation = Quat.multiply(Quat.multiply(MyAvatar.orientation, Controller.getSpatialControlRawRotation(controllerID)), SWORD_ORIENTATION);
   holdPosition = Vec3.sum(MyAvatar.getRightPalmPosition(), Vec3.multiplyQbyV(MyAvatar.orientation, HOLD_POSITION_OFFSET));
+  holdPosition = Vec3.sum(holdPosition, Vec3.multiplyQbyV(swordWorldOrientation, {x: 0, y: 0, z: SWORD_DIMENSIONS.z/2 -.1}));
   targetProperties = Entities.getEntityProperties(target);
 
   spring = Vec3.subtract(originalTargetPosition, targetProperties.position);
   springLength = Vec3.length(spring);
   spring = Vec3.normalize(spring);
   targetVelocity = Vec3.sum(targetProperties.velocity, Vec3.multiply(springLength * SPRING_FORCE * deltaTime, spring));
-  swordWorldOrientation = Quat.multiply(Quat.multiply(MyAvatar.orientation, Controller.getSpatialControlRawRotation(controllerID)), SWORD_ORIENTATION);
   Entities.editEntity(sword, {position: holdPosition, rotation: swordWorldOrientation, velocity: Controller.getSpatialControlVelocity(controllerID) });
   Entities.editEntity(swordCollisionBox, {position: holdPosition, rotation: swordWorldOrientation, velocity: Controller.getSpatialControlVelocity(controllerID) });
   Entities.editEntity(target, {velocity: targetVelocity});
