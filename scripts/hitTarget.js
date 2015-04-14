@@ -1,5 +1,5 @@
 var controllerID, controllerActive;
-var originalTargetPosition = Vec3.sum(MyAvatar.position, Vec3.multiply(2, Quat.getFront(Camera.getOrientation())));
+var originalTargetPosition = Vec3.sum(MyAvatar.position, Vec3.multiply(1.5, Quat.getFront(Camera.getOrientation())));
 originalTargetPosition.y = MyAvatar.position.y;
 var dPosition;
 var stickProperties, spring, springLength, targetVelocity;
@@ -8,7 +8,7 @@ var originalStickPosition = {x: originalTargetPosition.x, y: originalTargetPosit
 var STICK_ORIENTATON = Quat.fromPitchYawRollDegrees(0, 0, 0);
 var SPRING_FORCE = 15.0;
 var STICK_DIMENSIONS = {x: .11, y: .11, z: .59};
-var MIN_VELOCITY_FOR_SOUND_IMPACT = 0.25
+var MIN_HIT_VELOCITY = 0.25
 var hitSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/sword.wav");
 var stickHitsCrateSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/wood-on-wood.wav");
 var wooshSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/woosh.wav");
@@ -21,7 +21,8 @@ var MIN_SWING_SOUND_SPEED = 4;
 var COLLISION_COOLDOWN_TIME= 500; //Needed because collison event repeatedly fires
 var allowCollide = true;
 Script.include('jumbotron.js');
-jumbotron.create(MyAvatar.position);
+var score = 0;
+jumbotron.create({position: {x: MyAvatar.position.x, y: MyAvatar.position.y + 1, z: MyAvatar.position.z}, text: "score: " + score});
 var targetProperties, stickProperties, dVelocity;
 
 var lastSoundTime = 0;
@@ -85,8 +86,11 @@ function onCollision(entity1, entity2, collision){
       var props2 = Entities.getEntityProperties(entity2);
       stickProperties = Entities.getEntityProperties(stick);
       dVelocity = Vec3.length(Vec3.subtract(props1.velocity, props2.velocity));
-      if(dVelocity > MIN_VELOCITY_FOR_SOUND_IMPACT){
+      if(dVelocity > MIN_HIT_VELOCITY){
         Audio.playSound(stickHitsCrateSound, {position:MyAvatar.position, volume: 1.0});
+        score++;
+        jumbotron.updateText("Hits: " + score);
+
       }
       lastSoundTime = new Date().getTime();
       allowCollide = false;
