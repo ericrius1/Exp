@@ -8,14 +8,18 @@ var originalStickPosition = {x: originalTargetPosition.x, y: originalTargetPosit
 var STICK_ORIENTATON = Quat.fromPitchYawRollDegrees(0, 0, 0);
 var SPRING_FORCE = 15.0;
 var STICK_DIMENSIONS = {x: .11, y: .11, z: .59};
-var MIN_MSEC_BETWEEN_SWORD_SOUNDS = 500;
 var MIN_VELOCITY_FOR_SOUND_IMPACT = 0.25
 var hitSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/sword.wav");
 var stickHitsCrateSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/wood-on-wood.wav");
+var wooshSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/woosh.wav");
+var canPlayWooshSound = true;
 var boxModelURL = "https://hifi-public.s3.amazonaws.com/eric/models/box.fbx";
 var boxCollisionModelURL = "https://hifi-public.s3.amazonaws.com/eric/models/box.obj";
 var stickModelURL = "https://hifi-public.s3.amazonaws.com/eric/models/stick.fbx";
 var stickCollisionModelURL = "https://hifi-public.s3.amazonaws.com/eric/models/stick.obj";
+var MIN_SWING_SOUND_SPEED = 4;
+var COLLISION_COOLDOWN_TIME= 500; //Needed because collison event repeatedly fires
+var allowCollide = true;
 
 var targetProperties, stickProperties, dVelocity;
 
@@ -74,9 +78,7 @@ function cleanUp(){
 
 function onCollision(entity1, entity2, collision){
   if(entity1.id === stick.id || entity2.id === stick.id){
-    print("COLLISION!")
-    var currentTime = new Date().getTime();
-    if( (currentTime - lastSoundTime) > MIN_MSEC_BETWEEN_SWORD_SOUNDS){
+    if( allowCollide){
       var props1 = Entities.getEntityProperties(entity1); 
       var props2 = Entities.getEntityProperties(entity2);
       stickProperties = Entities.getEntityProperties(stick);
@@ -85,6 +87,10 @@ function onCollision(entity1, entity2, collision){
         Audio.playSound(stickHitsCrateSound, {position:MyAvatar.position, volume: 1.0});
       }
       lastSoundTime = new Date().getTime();
+      allowCollide = false;
+      Script.setTimeout(function(){
+        allowCollide = true;
+      }, COLLISION_COOLDOWN_TIME)
     } 
 
   }
@@ -111,6 +117,13 @@ function update(deltaTime){
   spring = Vec3.normalize(spring);
   targetVelocity = Vec3.sum(targetProperties.velocity, Vec3.multiply(springLength * SPRING_FORCE * deltaTime, spring));
   Entities.editEntity(stick, {position: holdPosition, rotation: stickWorldOrientation, velocity: Controller.getSpatialControlVelocity(controllerID) });
+  if(Vec3.length(Controller.getSpatialControlVelocity(controllerID)) > MIN_SWING_SOUND_SPEED && canPlayWooshSound){
+    Audio.playSound(wooshSound, {position: holdPosition});
+    canPlayWooshSound = false;
+    Script.setTimeout(function(){
+      canPlayWooshSound = true;
+    }, 200);
+  }
   Entities.editEntity(target, {velocity: targetVelocity});
 }
 
