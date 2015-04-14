@@ -1,4 +1,4 @@
-var controllerID, controllerActive;
+var controllerID, controllerActive, scoreOverlay;
 var originalTargetPosition = Vec3.sum(MyAvatar.position, Vec3.multiply(1.5, Quat.getFront(Camera.getOrientation())));
 originalTargetPosition.y = MyAvatar.position.y;
 var dPosition;
@@ -22,7 +22,8 @@ var COLLISION_COOLDOWN_TIME= 500; //Needed because collison event repeatedly fir
 var allowCollide = true;
 Script.include('jumbotron.js');
 var score = 0;
-jumbotron.create({position: {x: MyAvatar.position.x, y: MyAvatar.position.y + 1, z: MyAvatar.position.z}, text: "score: " + score});
+var scoreText = "score: " + score;
+jumbotron.create({position: {x: MyAvatar.position.x, y: MyAvatar.position.y + 1, z: MyAvatar.position.z}, text: scoreText});
 var targetProperties, stickProperties, dVelocity;
 
 var lastSoundTime = 0;
@@ -60,6 +61,27 @@ var stick = Entities.addEntity({
 
 
 initControls();
+initHUD();
+
+function initHUD(){
+  var width = 50;
+  var height = 50;
+  scoreOverlay = Overlays.addOverlay("text", {
+    font: {
+      size: 16
+    },
+    x: Window.innerWidth / 2 - width / 2,
+    y: Window.innerHeight - height,
+
+    text: scoreText,
+
+    color: {
+      red: 10,
+      green: 200,
+      blue: 10
+    }
+  });
+}
 
 function initControls(){
   controllerID = 3; //right handed
@@ -76,6 +98,7 @@ function cleanup(){
   Entities.deleteEntity(target);
   Entities.deleteEntity(stick);
   jumbotron.cleanup();
+  Overlays.deleteOverlay(scoreOverlay);
 }
 
 
@@ -89,7 +112,9 @@ function onCollision(entity1, entity2, collision){
       if(dVelocity > MIN_HIT_VELOCITY){
         Audio.playSound(stickHitsCrateSound, {position:MyAvatar.position, volume: 1.0});
         score++;
-        jumbotron.updateText("Hits: " + score);
+        scoreText = "score: " + score
+        jumbotron.updateText(scoreText);
+        Overlays.editOverlay(scoreOverlay, {text: scoreText});
 
       }
       lastSoundTime = new Date().getTime();
