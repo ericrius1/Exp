@@ -9,8 +9,8 @@
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 //
 
-Script.include("https://hifi-public.s3.amazonaws.com/scripts/libraries/displayMessage.js");
-Script.include("https://hifi-public.s3.amazonaws.com/scripts/libraries/tween.js")
+Script.include("https://hifi-public.s3.amazonaws.com/eric/scripts/displayMessage.js");
+Script.include("https://hifi-public.s3.amazonaws.com/eric/scripts/tween.js")
 var isAssignmentScript = false;
 var startingPosition;
 
@@ -34,7 +34,7 @@ if (!isAssignmentScript) {
 }
 
 var shipModelURL = "https://hifi-public.s3.amazonaws.com/ryan/lobby_platform4.fbx";
-var seatManagerScriptURL = "https://hifi-public.s3.amazonaws.com/scripts/entityScripts/seatManager.js";
+var seatManagerScriptURL = "https://hifi-public.s3.amazonaws.com/eric/scripts/seatManager.js";
 var shipSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/spaceship.wav");
 
 var shipDimensions = {
