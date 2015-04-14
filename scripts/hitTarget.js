@@ -20,7 +20,8 @@ var stickCollisionModelURL = "https://hifi-public.s3.amazonaws.com/eric/models/s
 var MIN_SWING_SOUND_SPEED = 4;
 var COLLISION_COOLDOWN_TIME= 500; //Needed because collison event repeatedly fires
 var allowCollide = true;
-
+Script.include('jumbotron.js');
+jumbotron.create(MyAvatar.position);
 var targetProperties, stickProperties, dVelocity;
 
 var lastSoundTime = 0;
@@ -70,9 +71,10 @@ Script.setTimeout(function(){
   stick = Entities.identifyEntity(stick);  
 }, 500);
 
-function cleanUp(){
+function cleanup(){
   Entities.deleteEntity(target);
   Entities.deleteEntity(stick);
+  jumbotron.cleanup();
 }
 
 
@@ -131,5 +133,5 @@ Controller.keyPressEvent.connect(onKeyPress);
 
 Entities.entityCollisionWithEntity.connect(onCollision);
 
-Script.scriptEnding.connect(cleanUp);
+Script.scriptEnding.connect(cleanup);
 Script.update.connect(update);
