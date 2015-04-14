@@ -4,18 +4,20 @@ originalTargetPosition.y = MyAvatar.position.y;
 var dPosition;
 var stickProperties, spring, springLength, targetVelocity;
 var HOLD_POSITION_OFFSET = {x: 0, y: .0, z: 0};
-var originalSwordPosition = {x: originalTargetPosition.x, y: originalTargetPosition.y, z: originalTargetPosition.z};
-var SWORD_ORIENTATION = Quat.fromPitchYawRollDegrees(0, 0, 0);
+var originalStickPosition = {x: originalTargetPosition.x, y: originalTargetPosition.y, z: originalTargetPosition.z};
+var STICK_ORIENTATON = Quat.fromPitchYawRollDegrees(0, 0, 0);
 var SPRING_FORCE = 15.0;
-var SWORD_DIMENSIONS = {x: .11, y: .11, z: .59};
+var STICK_DIMENSIONS = {x: .11, y: .11, z: .59};
 var MIN_MSEC_BETWEEN_SWORD_SOUNDS = 500;
 var MIN_VELOCITY_FOR_SOUND_IMPACT = 0.25
 var hitSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/sword.wav");
+var stickHitsCrateSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/wood-on-wood.wav");
 var boxModelURL = "https://hifi-public.s3.amazonaws.com/eric/models/box.fbx";
-var swordModelURL = "https://hifi-public.s3.amazonaws.com/eric/models/stick3.fbx";
-var boxCollisionModelURL = "https://hifi-public.s3.amazonaws.com/eric/models/box.obj"
+var boxCollisionModelURL = "https://hifi-public.s3.amazonaws.com/eric/models/box.obj";
+var stickModelURL = "https://hifi-public.s3.amazonaws.com/eric/models/stick.fbx";
+var stickCollisionModelURL = "https://hifi-public.s3.amazonaws.com/eric/models/stick.obj";
 
-var targetProperties, swordProperties, dVelocity;
+var targetProperties, stickProperties, dVelocity;
 
 var lastSoundTime = 0;
 var currentTime;
@@ -37,28 +39,19 @@ Script.setTimeout(function(){
   var tempProps = Entities.getEntityProperties(target);
 }, 500);
 
-var swordWorldOrientation;
-var sword = Entities.addEntity({
+var stickWorldOrientation;
+var stick = Entities.addEntity({
   type: "Model",
-  modelURL: swordModelURL,
-  position: originalSwordPosition,
-  dimensions: SWORD_DIMENSIONS,
+  modelURL: stickModelURL,
+  collisionModelURL: stickCollisionModelURL,
+  position: originalStickPosition,
+  dimensions: STICK_DIMENSIONS,
   rotation: MyAvatar.orientation,
-  color: {red: 200, blue: 10, green: 10},
-  damping: .3
+  damping: .3,
+  collisionsWillMove: true
 });
 
-var swordCollisionBox = Entities.addEntity({
-  type: "Box",
-  position: originalSwordPosition,
-  dimensions: SWORD_DIMENSIONS,
-  color: {red: 200, blue: 10, green: 10},
-  rotation: MyAvatar.orientation,
-  ignoreCollisions: false,
-  collisionsWillMove: true,
-  visible: false,
-  damping: 0.3
-})
+
 
 initControls();
 
@@ -70,27 +63,26 @@ function initControls(){
 
 Script.setTimeout(function(){
   target = Entities.identifyEntity(target);
-  swordCollisionBox = Entities.identifyEntity(swordCollisionBox);  
+  stick = Entities.identifyEntity(stick);  
 }, 500);
 
 function cleanUp(){
   Entities.deleteEntity(target);
-  Entities.deleteEntity(sword);
-  Entities.deleteEntity(swordCollisionBox);
+  Entities.deleteEntity(stick);
 }
 
 
 function onCollision(entity1, entity2, collision){
-  if(entity1.id === swordCollisionBox.id || entity2.id === swordCollisionBox.id){
+  if(entity1.id === stick.id || entity2.id === stick.id){
     print("COLLISION!")
     var currentTime = new Date().getTime();
     if( (currentTime - lastSoundTime) > MIN_MSEC_BETWEEN_SWORD_SOUNDS){
       var props1 = Entities.getEntityProperties(entity1); 
       var props2 = Entities.getEntityProperties(entity2);
-      swordProperties = Entities.getEntityProperties(swordCollisionBox);
+      stickProperties = Entities.getEntityProperties(stick);
       dVelocity = Vec3.length(Vec3.subtract(props1.velocity, props2.velocity));
       if(dVelocity > MIN_VELOCITY_FOR_SOUND_IMPACT){
-        Audio.playSound(hitSound, {position:MyAvatar.position, volume: 1.0});
+        Audio.playSound(stickHitsCrateSound, {position:MyAvatar.position, volume: 1.0});
       }
       lastSoundTime = new Date().getTime();
     } 
@@ -101,7 +93,7 @@ function onCollision(entity1, entity2, collision){
 function onKeyPress(event){
   if(event.text === 'f'){
     Entities.editEntity(target, {position: originalTargetPosition, rotation: MyAvatar.orientation, velocity: {x: 0, y: 0, z: 0}, angularVelocity: {x: 0, y: 0, z:0}});
-    Entities.editEntity(sword, {position: originalSwordPosition, rotation: MyAvatar.orientation, velocity: {x: 0, y:0, z: 0}, angularVelocity: {x: 0, y: 0, z: 0}});
+    Entities.editEntity(sword, {position: originalStickPosition, rotation: MyAvatar.orientation, velocity: {x: 0, y:0, z: 0}, angularVelocity: {x: 0, y: 0, z: 0}});
   }
 }
 
@@ -109,17 +101,16 @@ function update(deltaTime){
   if(!controllerActive){
     return;
   }
-  swordWorldOrientation = Quat.multiply(Quat.multiply(MyAvatar.orientation, Controller.getSpatialControlRawRotation(controllerID)), SWORD_ORIENTATION);
+  stickWorldOrientation = Quat.multiply(Quat.multiply(MyAvatar.orientation, Controller.getSpatialControlRawRotation(controllerID)), STICK_ORIENTATON);
   holdPosition = Vec3.sum(MyAvatar.getRightPalmPosition(), Vec3.multiplyQbyV(MyAvatar.orientation, HOLD_POSITION_OFFSET));
-  holdPosition = Vec3.sum(holdPosition, Vec3.multiplyQbyV(swordWorldOrientation, {x: 0, y: 0, z: SWORD_DIMENSIONS.z/2 -.1}));
+  holdPosition = Vec3.sum(holdPosition, Vec3.multiplyQbyV(stickWorldOrientation, {x: 0, y: 0, z: STICK_DIMENSIONS.z/2 -.1}));
   targetProperties = Entities.getEntityProperties(target);
 
   spring = Vec3.subtract(originalTargetPosition, targetProperties.position);
   springLength = Vec3.length(spring);
   spring = Vec3.normalize(spring);
   targetVelocity = Vec3.sum(targetProperties.velocity, Vec3.multiply(springLength * SPRING_FORCE * deltaTime, spring));
-  Entities.editEntity(sword, {position: holdPosition, rotation: swordWorldOrientation, velocity: Controller.getSpatialControlVelocity(controllerID) });
-  Entities.editEntity(swordCollisionBox, {position: holdPosition, rotation: swordWorldOrientation, velocity: Controller.getSpatialControlVelocity(controllerID) });
+  Entities.editEntity(stick, {position: holdPosition, rotation: stickWorldOrientation, velocity: Controller.getSpatialControlVelocity(controllerID) });
   Entities.editEntity(target, {velocity: targetVelocity});
 }
 
