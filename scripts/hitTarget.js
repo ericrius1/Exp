@@ -1,5 +1,5 @@
 var controllerID, controllerActive, scoreOverlay;
-var originalTargetPosition = Vec3.sum(MyAvatar.position, Vec3.multiply(1.5, Quat.getFront(Camera.getOrientation())));
+var originalTargetPosition = Vec3.sum(MyAvatar.position, Vec3.multiply(1, Quat.getFront(Camera.getOrientation())));
 originalTargetPosition.y = MyAvatar.position.y;
 var dPosition;
 var stickProperties, spring, springLength, targetVelocity;

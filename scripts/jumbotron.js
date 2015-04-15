@@ -4,7 +4,7 @@ Jumbotron = function() {
 
 Jumbotron.prototype.create = function(options) {
   this.screens = [];
-  var dimensions = { x: 1, y: 0.3, z: 0.01 };
+  var dimensions = { x: 2, y: 0.3, z: 0.01 };
   var yaw = 0;
   this.backgroundColor = {
       red: 64,
