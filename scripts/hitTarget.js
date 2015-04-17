@@ -55,8 +55,10 @@ var stick = Entities.addEntity({
   dimensions: STICK_DIMENSIONS,
   rotation: MyAvatar.orientation,
   damping: .3,
-  collisionsWillMove: true
+  collisionsWillMove: true,
+  collisionCallbackEntites: [target]
 });
+
 
 
 
@@ -110,11 +112,12 @@ function onCollision(entity1, entity2, collision){
       stickProperties = Entities.getEntityProperties(stick);
       dVelocity = Vec3.length(Vec3.subtract(props1.velocity, props2.velocity));
       if(dVelocity > MIN_HIT_VELOCITY){
-        Audio.playSound(stickHitsCrateSound, {position:MyAvatar.position, volume: 1.0});
+        // Audio.playSound(stickHitsCrateSound, {position:MyAvatar.position, volume: 1.0});
         score++;
         scoreText = "score: " + score
         jumbotron.updateText(scoreText);
         Overlays.editOverlay(scoreOverlay, {text: scoreText});
+        print("HIT");
 
       }
       lastSoundTime = new Date().getTime();

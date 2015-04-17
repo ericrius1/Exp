@@ -18,11 +18,15 @@
     this.buttonImageURL = "https://s3.amazonaws.com/hifi-public/images/tools/sit.svg";
     this.addStandButton();
     this.totalAnimationTime = 0.7;
-    this.targetAvatarToChairDistance = .0001;
+    this.targetAvatarToChairDistance = 0.1;
     this.properties = Entities.getEntityProperties(this.entityId);
+    this.seatHeight = 0.1;
+    this.seatPosition = {x: this.properties.position.x, y: this.properties.position.y + this.seatHeight, z: this.properties.position.z};
     this.isSittingSettingHandle = "AvatarSittingState";
     Settings.setValue(this.isSittingSettingHandle, false);
     this.startPoseAndTransition = [];
+    this.entityRotationOffset = -20; //for entities rotated around y axis certain amount by default
+    this.targetRotation = Quat.safeEulerAngles(self.properties.rotation).y + this.entityRotationOffset;
     this.forward = {
       x: 0,
       y: 0,
@@ -30,10 +34,7 @@
     };
     this.mySeatIndex = null;
 
-    this.seatRadius = this.properties.dimensions.x * 0.4;
-    this.sittingAreaAngle = Math.PI;
-    this.numSeats = 2;
-    this.seatHeight = 0.5;
+    this.numSeats = 1;
 
     this.seatedPose = [{
       joint: "LeftArm",
@@ -190,9 +191,7 @@
 
   this.clickDownOnEntity = function(entityId, mouseEvent) {
     if (mouseEvent.isLeftButton && Settings.getValue(this.isSittingSettingHandle, false) == "false") {
-      MyAvatar.position = this.properties.position;
-      this.activeUpdate = self.sitDown;
-      // this.initMoveToSeat();
+      this.initMoveToSeat();
     }
   }
 
@@ -200,7 +199,6 @@
 
     this.assignSeat();
     if (this.mySeatIndex !== null) {
-      this.seatTheta = -this.mySeatIndex / this.numSeats * this.sittingAreaAngle;
       //first we need to move avatar towards seat
       this.activeUpdate = this.moveToSeat;
     } else {
@@ -210,17 +208,6 @@
   }
 
   this.update = function(deltaTime) {
-    if (self.entityId) {
-      self.properties = Entities.getEntityProperties(self.entityId);
-      //need to always update seat so when user clicks on it it is in proper world space
-      var xPos = self.properties.position.x + (Math.cos(self.seatTheta) * self.seatRadius);
-      var zPos = self.properties.position.z + (Math.sin(self.seatTheta) * self.seatRadius);
-      self.seatPosition = {
-        x: xPos,
-        y: self.properties.position.y + self.seatHeight,
-        z: zPos
-      };
-    }
     if (!self.activeUpdate) {
       return;
     }
@@ -231,8 +218,8 @@
   this.moveToSeat = function(deltaTime) {
     self.distance = Vec3.distance(MyAvatar.position, self.seatPosition);
     if (self.distance > self.targetAvatarToChairDistance) {
-      self.sanitizedRotation = Quat.fromPitchYawRollDegrees(0, Quat.safeEulerAngles(self.properties.rotation).y, 0);
-      MyAvatar.orientation = Quat.mix(MyAvatar.orientation, self.sanitizedRotation, 0.02);
+      self.sanitizedRotation = Quat.fromPitchYawRollDegrees(0, this.targetRotation, 0);
+      MyAvatar.orientation = Quat.mix(MyAvatar.orientation, self.sanitizedRotation, 0.1);
       MyAvatar.position = Vec3.mix(MyAvatar.position, self.seatPosition, 0.05);
     } else {
       //otherwise we made it to chair, now sit down should be out active update function
