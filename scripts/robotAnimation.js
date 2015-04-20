@@ -9,11 +9,15 @@ var safeEulerPivotStartRotation = Quat.safeEulerAngles(pivotStartRotation);
 var forward, angle, velocity, normalizedVelocity, targetRotation, rotation, targetLine, startLine, dotP, dir;
 var test = 0;
 
+var previousOrientation = MyAvatar.orientation;
 if (debug) {
   setUpDebugLines();
 }
+Script.setInterval(setNewTargetPivot, 1000);
 
-function update() {
+
+
+function update(deltaTime) {
   if (debug) {
     updateDebugLines();
   }
@@ -44,6 +48,7 @@ function update() {
 
 function cleanup() {
   Overlays.deleteOverlay(startLine);
+  Overlays.deleteOverlay(targetLine);
   MyAvatar.setJointData(wheelJoint, wheelStartRotation);
   MyAvatar.setJointData(pivotJoint, pivotStartRotation);
   MyAvatar.clearJoinData(wheelJoint);
@@ -79,7 +84,15 @@ function setUpDebugLines() {
 }
 
 function updateDebugLines() {
-  Overlays.editOverlay(startLine, {start: MyAvatar.position, end: Vec3.sum(MyAvatar.position, Vec3.multiply(lineLength, Quat.getFront(MyAvatar.orientation)))});
+  // Overlays.editOverlay(startLine, {start: MyAvatar.position, end: Vec3.sum(MyAvatar.position, Vec3.multiply(lineLength, Quat.getFront(MyAvatar.orientation)))});
+}
+
+
+function setNewTargetPivot(){
+  print("HEEEY")
+  Overlays.editOverlay(targetLine, {start: MyAvatar.position, end: Vec3.sum(MyAvatar.position, Vec3.multiply(lineLength, Quat.getFront(MyAvatar.orientation)))});
+  Overlays.editOverlay(startLine, {start: MyAvatar.position, end: Vec3.sum(MyAvatar.position, Vec3.multiply(lineLength, Quat.getFront(previousOrientation)))});
+  previousOrientation = MyAvatar.orientation;
 }
 
 Script.scriptEnding.connect(cleanup);
