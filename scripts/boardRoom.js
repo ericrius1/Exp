@@ -13,15 +13,19 @@
 
 var NUM_CHAIRS = 15
 var chairs = [];
-var seatURL = "https://hifi-public.s3.amazonaws.com/models/props/MidCenturyModernLivingRoom/Interior/Chair.fbx"
-var seatManagerURL = "file:///Users/ericlevin1/MyHiFiStuff/scripts/seatManager2.js"
-var center =MyAvatar.position
-var radius = 10;
-var defaultRotationOffset = 20
+var seatURL = "https://hifi-public.s3.amazonaws.com/eric/models/chair.fbx"
+var seatManagerURL = "https://hifi-public.s3.amazonaws.com/eric/scripts/seatManager2.js"
+var center = {x: 6924, y: 295, z: 4834};
+var radius = 7;
+var defaultRotationOffset = 0
 var seatFront = {x: 0, y: 0, z: -1}
 var targetRotation;
 
-for(var i = 0; i < NUM_CHAIRS; i++){
+Script.setTimeout(function(){
+  init();
+}, 500)
+function init() {
+  for(var i = 0; i < NUM_CHAIRS; i++){
   var theta = i/ NUM_CHAIRS * Math.PI * 2;
   var x = center.x + (Math.cos(theta) * radius);
   var z = center.z + (Math.sin(theta) * radius);
@@ -53,6 +57,10 @@ for(var i = 0; i < NUM_CHAIRS; i++){
     script: seatManagerURL
   }));
 }
+
+}
+
+
 
 function cleanup(){
   for(var i = 0; i < NUM_CHAIRS; i++){

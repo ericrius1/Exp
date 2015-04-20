@@ -20,12 +20,13 @@
     this.totalAnimationTime = 0.7;
     this.targetAvatarToChairDistance = 0.1;
     this.properties = Entities.getEntityProperties(this.entityId);
-    this.seatHeight = 0.1;
+    this.seatHeight = 0;
     this.seatPosition = {x: this.properties.position.x, y: this.properties.position.y + this.seatHeight, z: this.properties.position.z};
+    this.seatPosition = Vec3.sum(this.seatPosition, Vec3.multiply(0.8, Quat.getFront(this.properties.rotation)))
     this.isSittingSettingHandle = "AvatarSittingState";
     Settings.setValue(this.isSittingSettingHandle, false);
     this.startPoseAndTransition = [];
-    this.entityRotationOffset = -20; //for entities rotated around y axis certain amount by default
+    this.entityRotationOffset = 0; //for entities rotated around y axis certain amount by default
     this.targetRotation = Quat.safeEulerAngles(self.properties.rotation).y + this.entityRotationOffset;
     this.forward = {
       x: 0,
@@ -36,77 +37,15 @@
 
     this.numSeats = 1;
 
-    this.seatedPose = [{
-      joint: "LeftArm",
-      rotation: {
-        x: 70.0,
-        y: 0.0,
-        z: 60.0
-      }
-    }, {
-      joint: "LeftForeArm",
-      rotation: {
-        x: -40.0,
-        y: 15.0,
-        z: 20.0
-      }
-    }, {
-      joint: "RightArm",
-      rotation: {
-        x: 70.0,
-        y: 0.0,
-        z: -60.0
-      }
-    }, {
-      joint: "RightForeArm",
-      rotation: {
-        x: -40.0,
-        y: -15.0,
-        z: -20.0
-      }
-    }, {
-      joint: "RightUpLeg",
-      rotation: {
-        x: 100.0,
-        y: 15.0,
-        z: 0.0
-      }
-    }, {
-      joint: "RightLeg",
-      rotation: {
-        x: -120.0,
-        y: 80.0,
-        z: 0.0
-      }
-    }, {
-      joint: "RightFoot",
-      rotation: {
-        x: 20,
-        y: 5.0,
-        z: 0.0
-      }
-    }, {
-      joint: "LeftUpLeg",
-      rotation: {
-        x: 100.0,
-        y: -15.0,
-        z: 0.0
-      }
-    }, {
-      joint: "LeftLeg",
-      rotation: {
-        x: -150.0,
-        y: -70.0,
-        z: 0.0
-      }
-    }, {
-      joint: "LeftFoot",
-      rotation: {
-        x: 30,
-        y: 15.0,
-        z: 0.0
-      }
-    }];
+// This is the pose we would like to end up
+this.seatedPose = [
+  {joint:"RightUpLeg", rotation: {x:100.0, y:15.0, z:0.0}},
+  {joint:"RightLeg", rotation: {x:-130.0, y:15.0, z:0.0}},
+  {joint:"RightFoot", rotation: {x:30, y:15.0, z:0.0}},
+  {joint:"LeftUpLeg", rotation: {x:100.0, y:-15.0, z:0.0}},
+  {joint:"LeftLeg", rotation: {x:-130.0, y:-15.0, z:0.0}},
+  {joint:"LeftFoot", rotation: {x:30, y:15.0, z:0.0}}
+];
 
     this.storeStartPoseAndTransition();
     this.getUserData();
@@ -241,7 +180,7 @@
       Overlays.editOverlay(self.standUpButton, {
         visible: true
       });
-      MyAvatar.setModelReferential(self.properties.id);
+      // MyAvatar.setModelReferential(self.properties.id);
     }
   }
 
@@ -280,7 +219,7 @@
   }
 
   this.clearAvatarAnimation = function() {
-    MyAvatar.clearReferential();
+    // MyAvatar.clearReferential();
     for (var i = 0; i < self.seatedPose.length; i++) {
       MyAvatar.clearJointData(this.seatedPose[i].joint);
     }
@@ -317,7 +256,7 @@
   this.initStandUp = function() {
     this.elapsedTime = 0;
     this.activeUpdate = this.standUp;
-    MyAvatar.clearReferential();
+    // MyAvatar.clearReferential();
     Overlays.editOverlay(self.standUpButton, {
       visible: false
     });
