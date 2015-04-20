@@ -5,15 +5,22 @@ var pivotJoint = "LeftUpLeg";
 var lineLength = 10;
 var wheelStartRotation = MyAvatar.getJointRotation(wheelJoint);
 var pivotStartRotation = MyAvatar.getJointRotation(pivotJoint);
-var safeEulerPivotStartRotation = Quat.safeEulerAngles(pivotStartRotation);
-var forward, angle, velocity, normalizedVelocity, targetRotation, rotation, targetLine, startLine, dotP, dir;
+var eulerPivotStartRotation = Quat.safeEulerAngles(pivotStartRotation);
+eulerPivotStartRotation.y = 0;
+MyAvatar.setJointData(pivotJoint, Quat.fromVec3Degrees(eulerPivotStartRotation));
+pivotStartRotation = MyAvatar.getJointRotation(pivotJoint);
+var forward, velocity, normalizedVelocity, targetRotation, rotation, targetLine, startLine, dotP, dir;
+var angleOffset = 0;
+var angleDirection;
 var test = 0;
 
-var previousOrientation = MyAvatar.orientation;
+var previousAvatarOrientation = MyAvatar.orientation;
+var previousPivotRotation = pivotStartRotation;
+var targetPivotRotation = pivotStartRotation;
 if (debug) {
   setUpDebugLines();
 }
-Script.setInterval(setNewTargetPivot, 1000);
+Script.setInterval(setNewTargetPivot, 500);
 
 
 
@@ -32,16 +39,10 @@ function update(deltaTime) {
   rotation.x += Vec3.length(velocity) * dir;
   MyAvatar.setJointData(wheelJoint, Quat.fromVec3Degrees(rotation));
 
+  //slerp based on dot product - closer dot product is to 0, the closer to default joint we set
 
-  // normalizedVelocity = Vec3.normalize(velocity);
-  // print("normal vel " + JSON.stringify(velocity))
-  // angle = Math.acos(Vec3.dot(forward, normalizedVelocity));
-  // // print('angle ******* ' +  angle)
-  // targetRotation = Quat.fromPitchYawRollDegrees(safeEulerPivotStartRotation.x, angle * 100, safeEulerPivotStartRotation.z);
-  // MyAvatar.setJointData(pivotJoint, targetRotation);
-  // // print("Y ROTATION ******* " +  angle)
-  // test++;
-
+  //constantly slerp towards target orientation 
+  //keep pivot at same rotation
 
 
 }
@@ -89,11 +90,31 @@ function updateDebugLines() {
 
 
 function setNewTargetPivot(){
-  print("HEEEY")
-  Overlays.editOverlay(targetLine, {start: MyAvatar.position, end: Vec3.sum(MyAvatar.position, Vec3.multiply(lineLength, Quat.getFront(MyAvatar.orientation)))});
-  Overlays.editOverlay(startLine, {start: MyAvatar.position, end: Vec3.sum(MyAvatar.position, Vec3.multiply(lineLength, Quat.getFront(previousOrientation)))});
-  previousOrientation = MyAvatar.orientation;
+  var avatarForward = Vec3.sum(MyAvatar.position, Vec3.multiply(lineLength, Quat.getFront(MyAvatar.orientation)));
+  var previousAvatarForward = Vec3.sum(MyAvatar.position, Vec3.multiply(lineLength, Quat.getFront(previousAvatarOrientation)));
+  Overlays.editOverlay(targetLine, {start: MyAvatar.position, end: avatarForward});
+  Overlays.editOverlay(startLine, {start: MyAvatar.position, end: previousAvatarForward});
+  avatarForward = Vec3.normalize(avatarForward);
+  previousAvatarForward = Vec3.normalize(previousAvatarForward);
+  angleDirection = Math.atan2(avatarForward.y, avatarForward.x) - Math.atan2(previousAvatarForward.y, previousAvatarForward.x);
+  print("DIRECTION" + angleDirection)
+  angleOffset = Math.acos(Math.min(1, Vec3.dot(Quat.getFront(MyAvatar.orientation), Quat.getFront(previousAvatarOrientation))));
+  angleDirection > 0 ? angleOffset *=-1 : angleOffset *= 1;
+  angleOffset *=57;
+  // print("AVATAR YAW" + Quat.safeEulerAngles(MyAvatar.orientation).y);
+  print("ANGLE " + angleOffset);
+  previousAvatarOrientation = MyAvatar.orientation;
+  //rotate yaw of pivot by angle offset
+  var safeAngle = {x: eulerPivotStartRotation.x, y: eulerPivotStartRotation.y, z: eulerPivotStartRotation.z};
+  print(eulerPivotStartRotation.y);
+  safeAngle.y += angleOffset;
+  MyAvatar.setJointData(pivotJoint, Quat.fromVec3Degrees(safeAngle));
 }
+
+function map(value, min1, max1, min2, max2) {
+    return min2 + (max2 - min2) * ((value - min1) / (max1 - min1));
+}
+
 
 Script.scriptEnding.connect(cleanup);
 Script.update.connect(update);
