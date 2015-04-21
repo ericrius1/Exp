@@ -293,6 +293,7 @@
   this.clearAvatarAnimation = function() {
     MyAvatar.clearReferential();
     for (var i = 0; i < self.seatedPose.length; i++) {
+      print('YAAAAAA')
       MyAvatar.clearJointData(this.seatedPose[i].joint);
     }
     Overlays.editOverlay(this.standUpButton, {

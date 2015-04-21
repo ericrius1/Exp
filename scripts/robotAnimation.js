@@ -3,7 +3,7 @@ Script.include("https://hifi-public.s3.amazonaws.com/eric/scripts/tween.js");
 var debug = false;
 var wheelJoint = "LeftToeBase"
 var pivotJoint = "LeftUpLeg";
-var capeJoint = "RightUpLeg";
+var capeJoint = "RightToeBase";
 var lineLength = 10;
 var wheelStartRotation = MyAvatar.getJointRotation(wheelJoint);
 var pivotStartRotation = MyAvatar.getJointRotation(pivotJoint);
@@ -42,10 +42,33 @@ if (debug) {
 Script.setInterval(setNewTargetPivot, NEW_PIVOT_CHECK__POLL_TIME);
 
 
-var capeStartRotation = MyAvatar.getJointRotation(capeJoint);
-var capeRotationEuler = Quat.safeEulerAngles(capeStartRotation);
-capeRotationEuler.x -= 100;
-MyAvatar.setJointData(capeJoint, Quat.fromVec3Degrees(capeRotationEuler));
+//an array of cape joints to get more fluid cape waving
+var capeJoints = [{ name: "RightUpLeg"}, {name: "RightFoot"}, {name:"RightToeBase"}];
+capeJoints.forEach(function(joint){
+  joint.startingRotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(joint.name)); 
+});
+
+flapCape();
+
+function flapCape(){
+  var joint = capeJoints[0];
+  var curRot = Quat.safeEulerAngles(MyAvatar.getJointRotation(joint.name));
+  var currentProps = {
+    rotX: curRot.x
+  }
+  var endProps = {
+    rotX: curRot.x - 100
+  }
+  var flapTween = new TWEEN.Tween(currentProps).
+    to(endProps, 2000).
+    onUpdate(function(){
+      curRot.x = currentProps.rotX
+      MyAvatar.setJointData(joint.name, Quat.fromVec3Degrees(curRot));
+    }).start()
+
+}
+
+
 
 
 function update(deltaTime) {
@@ -73,10 +96,12 @@ function cleanup() {
   }
   MyAvatar.setJointData(wheelJoint, wheelStartRotation);
   MyAvatar.setJointData(pivotJoint, pivotStartRotation);
-  MyAvatar.setJointData(capeJoint, capeStartRotation);
-  MyAvatar.clearJoinData(wheelJoint);
-  MyAvatar.clearJointData(pivotJoint);
-  MyAvatar.clearJointData(capeJoint);
+  // MyAvatar.clearJoinData(wheelJoint);
+  // MyAvatar.clearJointData(pivotJoint);
+  capeJoints.forEach(function(joint){
+    MyAvatar.setJointData(joint.name, Quat.fromVec3Degrees(joint.startingRotation));
+    // MyAvatar.clearJointData(joint.jointName);
+  })
 }
 
 function setUpDebugLines() {
