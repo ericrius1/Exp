@@ -27,8 +27,8 @@ var PIVOT_TIME = 1100;
 var PIVOT_ANGLE_OFFSET = 50;
 var STRAFING_PIVOT_OFFSET = 90;
 var PIVOT_ANGLE_THRESHOLD = 3;
-var NEW_PIVOT_CHECK__POLL_TIME = 100;
-var MIN_SOUND_INTERVAL = NEW_PIVOT_CHECK__POLL_TIME * 2;
+var SLOW_UPDATE_TIME = 100;
+var MIN_SOUND_INTERVAL = SLOW_UPDATE_TIME * 2;
 var VELOCITY_THRESHOLD = 1;
 var targetAngle;
 var isStrafing = false
@@ -39,7 +39,7 @@ var strafingDir, previousStrafingDir;
 if (debug) {
   setUpDebugLines();
 }
-Script.setInterval(setNewTargetPivot, NEW_PIVOT_CHECK__POLL_TIME);
+Script.setInterval(slowUpdate, SLOW_UPDATE_TIME);
 
 
 //an array of cape joints to get more fluid cape waving
@@ -56,42 +56,34 @@ var capeJoints = [{
 }];
 capeJoints.forEach(function(joint) {
   joint.startingRotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(joint.name));
+  joint.currentRotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(joint.name));
+
 });
 
 var capeJointIndex = 0;
 var capeRotation = 100;
 var capeTweenTime = 700;
-flapCape();
+var capeTerminalVelocity = 10;
+var autoCapeOpen = false;
+
+if(autoCapeOpen){
+  flapCape()
+}
 
 function flapCape() {
-  if (capeJointIndex === capeJoints.length) {
-    capeRotation = 100;
-    capeTweenTime = 100;
-    return;
+  var joint = capeJoints[0];
+  var maxRotation = joint.startingRotation.x - 100;
+  var capeRotationX = Math.max(map(velocityLength, 0, capeTerminalVelocity, joint.startingRotation.x, maxRotation), maxRotation);
+  if(velocityLength > capeTerminalVelocity){
+    //the robot's moving fast, so flap cape with perlin noise (eventually)
+    capeRotationX += Math.random();
   }
-  var joint = capeJoints[capeJointIndex++];
+  if(autoCapeOpen){
+    capeRotationX = 100;
+  }
+  joint.currentRotation.x = capeRotationX;
+  MyAvatar.setJointData(joint.name, Quat.fromVec3Degrees(joint.currentRotation));
 
-  var curRot = Quat.safeEulerAngles(MyAvatar.getJointRotation(joint.name));
-  var currentProps = {
-    rotX: curRot.x
-  }
-  var endProps = {
-    rotX: curRot.x - capeRotation
-  }
-  var flapTween = new TWEEN.Tween(currentProps).
-    to(endProps, capeTweenTime).
-    easing(TWEEN.Easing.Cubic.InOut).
-    onUpdate(function() {
-      curRot.x = currentProps.rotX
-      MyAvatar.setJointData(joint.name, Quat.fromVec3Degrees(curRot));
-    }).start()
-
-  Script.setTimeout(function() {
-    capeRotation++;
-    capeRotation *= 0.3;
-    capeTweenTime *= 0.5;
-    flapCape()
-  }, capeTweenTime/2)
 }
 
 
@@ -106,15 +98,16 @@ function update(deltaTime) {
   if (velocityLength > VELOCITY_THRESHOLD) {
     forward = Quat.getFront(MyAvatar.orientation);
     avatarOrientationVelocityDotProduct = Vec3.dot(Vec3.normalize(velocity), forward);
-    if(isStrafing){
+    if (isStrafing) {
       dir = -1;
-    }
-    else{
+    } else {
       avatarOrientationVelocityDotProduct > 0 ? dir = -1 : dir = 1;
     }
     rotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(wheelJoint));
     rotation.x += Vec3.length(velocity) * dir;
     MyAvatar.setJointData(wheelJoint, Quat.fromVec3Degrees(rotation));
+    flapCape();
+
   }
 }
 
@@ -185,7 +178,7 @@ function setNewTargetPivot() {
   if (avatarYaw > 0 && avatarYaw < 180) {
     angleDirection *= -1;
   }
-  angleDirection = angleDirection < 0 ? -1 : 1;
+  angleDirection = angleDirection < 0 ? 1 : -1;
   angleOffset *= RADIAN_TO_ANGLE_CONVERSION_FACTOR;
   previousAvatarOrientation = MyAvatar.orientation;
   previousAvatarYaw = avatarYaw;
@@ -217,6 +210,7 @@ function setNewTargetPivot() {
     isStrafing = false;
   }
 
+
   //We need to check to see if robot velocity is moving perpendicular to avatrs rotation(ie avatar is strafing)
   //If so we need to turn robot that way
 
@@ -231,6 +225,10 @@ function setNewTargetPivot() {
 
 }
 
+
+function slowUpdate() {
+  setNewTargetPivot();
+}
 function initPivotTween(startYaw, endYaw) {
   var safeAngle = {
     x: eulerPivotStartRotation.x,
