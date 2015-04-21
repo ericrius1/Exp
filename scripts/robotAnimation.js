@@ -6,6 +6,7 @@ var pivotJoint = "LeftUpLeg";
 var lineLength = 10;
 var wheelStartRotation = MyAvatar.getJointRotation(wheelJoint);
 var pivotStartRotation = MyAvatar.getJointRotation(pivotJoint);
+var pivotSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/robotTurn.wav?version=3");
 var eulerPivotStartRotation = Quat.safeEulerAngles(pivotStartRotation);
 eulerPivotStartRotation.y = 0;
 MyAvatar.setJointData(pivotJoint, Quat.fromVec3Degrees(eulerPivotStartRotation));
@@ -29,7 +30,6 @@ if (debug) {
   setUpDebugLines();
 }
 Script.setInterval(setNewTargetPivot, 100);
-var count = 0;
 
 
 
@@ -48,14 +48,6 @@ function update(deltaTime) {
     rotation.x += Vec3.length(velocity) * dir;
     MyAvatar.setJointData(wheelJoint, Quat.fromVec3Degrees(rotation));
   }
-
-
-  //slerp based on dot product - closer dot product is to 0, the closer to default joint we set
-
-  //constantly slerp towards target orientation 
-  //keep pivot at same rotation
-
-
 }
 
 function cleanup() {
@@ -92,11 +84,7 @@ function setUpDebugLines() {
     },
     lineWidth: 5
   });
-
-
-
 }
-
 function updateDebugLines() {
    Overlays.editOverlay(targetLine, {
     start: MyAvatar.position,
@@ -107,7 +95,6 @@ function updateDebugLines() {
     end: previousAvatarForward
   });
 }
-
 
 function setNewTargetPivot() {
   avatarYaw = MyAvatar.bodyYaw;
@@ -136,7 +123,6 @@ function setNewTargetPivot() {
     initPivotTween(currentYaw, eulerPivotStartRotation.y + PIVOT_ANGLE_OFFSET * angleDirection);
     isTurned = true;
   } else if( Math.abs(angleOffset) < PIVOT_ANGLE_THRESHOLD && isTurned){
-    print("TWEEN")
     initPivotTween(currentYaw, eulerPivotStartRotation.y);
     isTurned = false;
   }
@@ -144,7 +130,6 @@ function setNewTargetPivot() {
 }
 
 function initPivotTween(startYaw, endYaw) {
-
   var safeAngle = {
     x: eulerPivotStartRotation.x,
     y: eulerPivotStartRotation.y,
@@ -164,6 +149,8 @@ function initPivotTween(startYaw, endYaw) {
       MyAvatar.setJointData(pivotJoint, Quat.fromVec3Degrees(safeAngle));
     }).start();
 
+  Audio.playSound(pivotSound, {position: MyAvatar.position, volume: 0.6});
+  print("PLAY SOUND  " + Math.random())
 }
 
 
