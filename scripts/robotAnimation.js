@@ -19,11 +19,14 @@ var previousAvatarYaw = avatarYaw;
 var previousAvatarOrientation = MyAvatar.orientation;
 var previousPivotRotation = pivotStartRotation;
 var targetPivotRotation = pivotStartRotation;
+var RADIAN_TO_ANGLE_CONVERSION_FACTOR = 57;
+var PIVOT_ANGLE_OFFSET = 50;
+var PIVOT_ANGLE_THRESHOLD = 3;
+var isTurned = false;
 if (debug) {
   setUpDebugLines();
 }
-Script.setTimeout(setNewTargetPivot, 3000);
-// Script.setInterval(setNewTargetPivot, 1000);
+Script.setInterval(setNewTargetPivot, 100);
 var count = 0;
 
 
@@ -32,18 +35,18 @@ function update(deltaTime) {
   if (debug) {
     updateDebugLines();
   }
-  velocity = MyAvatar.getVelocity();
-  if(Vec3.length(velocity) < .2 ) {
-    return;
-  }
-  forward = Quat.getFront(MyAvatar.orientation);
-  dot = Vec3.dot(Vec3.normalize(velocity), forward );
-  dot > 0 ? dir = -1 : dir = 1;
-  rotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(wheelJoint));
-  rotation.x += Vec3.length(velocity) * dir;
-  MyAvatar.setJointData(wheelJoint, Quat.fromVec3Degrees(rotation));
-
   TWEEN.update();
+  velocity = MyAvatar.getVelocity();
+  //We don't need to show the wheel moving if robot is barely moving
+  if (Vec3.length(velocity) > .2) {
+    forward = Quat.getFront(MyAvatar.orientation);
+    dot = Vec3.dot(Vec3.normalize(velocity), forward);
+    dot > 0 ? dir = -1 : dir = 1;
+    rotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(wheelJoint));
+    rotation.x += Vec3.length(velocity) * dir;
+    MyAvatar.setJointData(wheelJoint, Quat.fromVec3Degrees(rotation));
+  }
+
 
   //slerp based on dot product - closer dot product is to 0, the closer to default joint we set
 
@@ -75,7 +78,7 @@ function setUpDebugLines() {
     lineWidth: 5
   });
 
-    targetLine = Overlays.addOverlay("line3d", {
+  targetLine = Overlays.addOverlay("line3d", {
     start: MyAvatar.position,
     end: end,
     color: {
@@ -95,44 +98,62 @@ function updateDebugLines() {
 }
 
 
-function setNewTargetPivot(){
+function setNewTargetPivot() {
   avatarYaw = MyAvatar.bodyYaw;
   var avatarForward = Vec3.sum(MyAvatar.position, Vec3.multiply(lineLength, Quat.getFront(MyAvatar.orientation)));
   var previousAvatarForward = Vec3.sum(MyAvatar.position, Vec3.multiply(lineLength, Quat.getFront(previousAvatarOrientation)));
-  Overlays.editOverlay(targetLine, {start: MyAvatar.position, end: avatarForward});
-  Overlays.editOverlay(startLine, {start: MyAvatar.position, end: previousAvatarForward});
+  Overlays.editOverlay(targetLine, {
+    start: MyAvatar.position,
+    end: avatarForward
+  });
+  Overlays.editOverlay(startLine, {
+    start: MyAvatar.position,
+    end: previousAvatarForward
+  });
   avatarForward = Vec3.normalize(avatarForward);
   previousAvatarForward = Vec3.normalize(previousAvatarForward);
   angleDirection = Math.atan2(avatarForward.y, avatarForward.z) - Math.atan2(previousAvatarForward.y, previousAvatarForward.z);
   angleOffset = Math.acos(Math.min(1, Vec3.dot(Quat.getFront(MyAvatar.orientation), Quat.getFront(previousAvatarOrientation))));
-  angleDirection > 0 ? angleOffset *=-1 : angleOffset *= 1;
+  angleDirection > 0 ? angleOffset *= -1 : angleOffset *= 1;
 
   //we need to account for angle changes when changing from negative to positive (or vica versa) and un-reverse direction
-  if(avatarYaw > 0 && avatarYaw < 180){
-    angleOffset *= -1;
+  if (avatarYaw > 0 && avatarYaw < 180) {
+    angleDirection *= -1;
   }
-  angleOffset *=57;
-  // print("AVATAR YAW" + Quat.safeEulerAngles(MyAvatar.orientation).y);
+  angleDirection = angleDirection < 0 ? 1 : -1;
+  angleOffset *= RADIAN_TO_ANGLE_CONVERSION_FACTOR;
   previousAvatarOrientation = MyAvatar.orientation;
   previousAvatarYaw = avatarYaw;
-  //rotate yaw of pivot by angle offset
-  var safeAngle = {x: eulerPivotStartRotation.x, y: eulerPivotStartRotation.y, z: eulerPivotStartRotation.z};
-  // print(eulerPivotStartRotation.y);
-  // safeAngle.y += angleOffset;
-  // MyAvatar.setJointData(pivotJoint, Quat.fromVec3Degrees(safeAngle));
+  // print("ANGLE OFFSET " + angleOffset);
+  if(Math.abs(angleOffset) > PIVOT_ANGLE_THRESHOLD && !isTurned){
+    initPivotTween(eulerPivotStartRotation.y, eulerPivotStartRotation.y + PIVOT_ANGLE_OFFSET * angleDirection);
+    isTurned = true;
+  } else if( Math.abs(angleOffset) < PIVOT_ANGLE_THRESHOLD && isTurned){
+    print("TWEEN")
+    initPivotTween(eulerPivotStartRotation.y + PIVOT_ANGLE_OFFSET, eulerPivotStartRotation.y);
+    isTurned = false;
+  }
 
+}
+
+function initPivotTween(startYaw, endYaw) {
+
+  var safeAngle = {
+    x: eulerPivotStartRotation.x,
+    y: eulerPivotStartRotation.y,
+    z: eulerPivotStartRotation.z
+  };
   var currentProps = {
-    yRot: safeAngle.y
+    yRot: startYaw
   }
   var endProps = {
-    yRot: safeAngle.y + angleOffset
+    yRot: endYaw
   }
   var pivotTween = new TWEEN.Tween(currentProps).
     to(endProps, 1000).
     easing(TWEEN.Easing.Back.InOut).
-    onUpdate(function(){
-      // print('yaaah')
-      safeAngle.y = currentProps.yRot
+    onUpdate(function() {
+      safeAngle.y = currentProps.yRot;
       MyAvatar.setJointData(pivotJoint, Quat.fromVec3Degrees(safeAngle));
     }).start();
 
@@ -140,7 +161,7 @@ function setNewTargetPivot(){
 
 
 function map(value, min1, max1, min2, max2) {
-    return min2 + (max2 - min2) * ((value - min1) / (max1 - min1));
+  return min2 + (max2 - min2) * ((value - min1) / (max1 - min1));
 }
 
 
