@@ -1,6 +1,6 @@
 Script.include("https://hifi-public.s3.amazonaws.com/eric/scripts/tween.js");
 
-var debug = true
+var debug = false;
 var wheelJoint = "LeftToeBase"
 var pivotJoint = "LeftUpLeg";
 var lineLength = 10;
@@ -17,9 +17,11 @@ var test = 0;
 var avatarYaw = MyAvatar.bodyYaw;
 var previousAvatarYaw = avatarYaw;
 var previousAvatarOrientation = MyAvatar.orientation;
+var avatarForward, previousAvatarForward;
 var previousPivotRotation = pivotStartRotation;
 var targetPivotRotation = pivotStartRotation;
 var RADIAN_TO_ANGLE_CONVERSION_FACTOR = 57;
+var PIVOT_TIME = 1100;
 var PIVOT_ANGLE_OFFSET = 50;
 var PIVOT_ANGLE_THRESHOLD = 3;
 var isTurned = false;
@@ -57,8 +59,10 @@ function update(deltaTime) {
 }
 
 function cleanup() {
-  Overlays.deleteOverlay(startLine);
-  Overlays.deleteOverlay(targetLine);
+  if(debug){
+    Overlays.deleteOverlay(startLine);
+    Overlays.deleteOverlay(targetLine);
+  }
   MyAvatar.setJointData(wheelJoint, wheelStartRotation);
   MyAvatar.setJointData(pivotJoint, pivotStartRotation);
   MyAvatar.clearJoinData(wheelJoint);
@@ -94,15 +98,7 @@ function setUpDebugLines() {
 }
 
 function updateDebugLines() {
-  // Overlays.editOverlay(startLine, {start: MyAvatar.position, end: Vec3.sum(MyAvatar.position, Vec3.multiply(lineLength, Quat.getFront(MyAvatar.orientation)))});
-}
-
-
-function setNewTargetPivot() {
-  avatarYaw = MyAvatar.bodyYaw;
-  var avatarForward = Vec3.sum(MyAvatar.position, Vec3.multiply(lineLength, Quat.getFront(MyAvatar.orientation)));
-  var previousAvatarForward = Vec3.sum(MyAvatar.position, Vec3.multiply(lineLength, Quat.getFront(previousAvatarOrientation)));
-  Overlays.editOverlay(targetLine, {
+   Overlays.editOverlay(targetLine, {
     start: MyAvatar.position,
     end: avatarForward
   });
@@ -110,6 +106,16 @@ function setNewTargetPivot() {
     start: MyAvatar.position,
     end: previousAvatarForward
   });
+}
+
+
+function setNewTargetPivot() {
+  avatarYaw = MyAvatar.bodyYaw;
+  avatarForward = Vec3.sum(MyAvatar.position, Vec3.multiply(lineLength, Quat.getFront(MyAvatar.orientation)));
+  previousAvatarForward = Vec3.sum(MyAvatar.position, Vec3.multiply(lineLength, Quat.getFront(previousAvatarOrientation)));
+  if(debug){
+    updateDebugLines();
+  }
   avatarForward = Vec3.normalize(avatarForward);
   previousAvatarForward = Vec3.normalize(previousAvatarForward);
   angleDirection = Math.atan2(avatarForward.y, avatarForward.z) - Math.atan2(previousAvatarForward.y, previousAvatarForward.z);
@@ -125,12 +131,13 @@ function setNewTargetPivot() {
   previousAvatarOrientation = MyAvatar.orientation;
   previousAvatarYaw = avatarYaw;
   // print("ANGLE OFFSET " + angleOffset);
+  var currentYaw = Quat.safeEulerAngles(MyAvatar.getJointRotation(pivotJoint)).y;
   if(Math.abs(angleOffset) > PIVOT_ANGLE_THRESHOLD && !isTurned){
-    initPivotTween(eulerPivotStartRotation.y, eulerPivotStartRotation.y + PIVOT_ANGLE_OFFSET * angleDirection);
+    initPivotTween(currentYaw, eulerPivotStartRotation.y + PIVOT_ANGLE_OFFSET * angleDirection);
     isTurned = true;
   } else if( Math.abs(angleOffset) < PIVOT_ANGLE_THRESHOLD && isTurned){
     print("TWEEN")
-    initPivotTween(eulerPivotStartRotation.y + PIVOT_ANGLE_OFFSET, eulerPivotStartRotation.y);
+    initPivotTween(currentYaw, eulerPivotStartRotation.y);
     isTurned = false;
   }
 
@@ -150,7 +157,7 @@ function initPivotTween(startYaw, endYaw) {
     yRot: endYaw
   }
   var pivotTween = new TWEEN.Tween(currentProps).
-    to(endProps, 1000).
+    to(endProps, PIVOT_TIME).
     easing(TWEEN.Easing.Back.InOut).
     onUpdate(function() {
       safeAngle.y = currentProps.yRot;
