@@ -29,7 +29,7 @@ var STRAFING_PIVOT_OFFSET = 90;
 var PIVOT_ANGLE_THRESHOLD = 3;
 var NEW_PIVOT_CHECK__POLL_TIME = 100;
 var MIN_SOUND_INTERVAL = NEW_PIVOT_CHECK__POLL_TIME * 2;
-var VELOCITY_THRESHOLD = 0.2;
+var VELOCITY_THRESHOLD = 1;
 var targetAngle;
 var isStrafing = false
 var canPlaySound = true;
@@ -140,7 +140,6 @@ function setNewTargetPivot() {
   if(velocityLength > VELOCITY_THRESHOLD){
     normalizedVelocity = Vec3.normalize(velocity);
     var velocityOrientationAngle = Math.acos(avatarOrientationVelocityDotProduct);
-    // print("VEL ORIENTATION DIR " + velocityOrientationDirection);
     if( Math.abs(avatarOrientationVelocityDotProduct - 0) < 0.01){
       velocityOrientationDirection = Math.atan2(avatarForward.y, avatarForward.x) - Math.atan2(normalizedVelocity.y, normalizedVelocity.x);
       isStrafing = true;
@@ -156,7 +155,6 @@ function setNewTargetPivot() {
 
       targetAngle = (eulerPivotStartRotation.y + STRAFING_PIVOT_OFFSET) * strafingDir;
       if(previousStrafingDir !== strafingDir){
-        print("SWICTH")
         isTurned = false;
       }
       previousStrafingDir = strafingDir;
@@ -164,7 +162,6 @@ function setNewTargetPivot() {
   } else{
     isStrafing = false;
   }
-  // print("ANGLE OFFSET " + angleOffset);
 
   //We need to check to see if robot velocity is moving perpendicular to avatrs rotation(ie avatar is strafing)
   //If so we need to turn robot that way
