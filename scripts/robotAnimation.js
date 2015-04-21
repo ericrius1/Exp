@@ -1,3 +1,4 @@
+Script.include('tween.js');
 
 var debug = true
 var wheelJoint = "LeftToeBase"
@@ -21,7 +22,9 @@ var targetPivotRotation = pivotStartRotation;
 if (debug) {
   setUpDebugLines();
 }
-Script.setInterval(setNewTargetPivot, 500);
+// Script.setTimeout(setNewTargetPivot, 100);
+Script.setInterval(setNewTargetPivot, 1000);
+var count = 0;
 
 
 
@@ -39,6 +42,8 @@ function update(deltaTime) {
   rotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(wheelJoint));
   rotation.x += Vec3.length(velocity) * dir;
   MyAvatar.setJointData(wheelJoint, Quat.fromVec3Degrees(rotation));
+
+  TWEEN.update();
 
   //slerp based on dot product - closer dot product is to 0, the closer to default joint we set
 
