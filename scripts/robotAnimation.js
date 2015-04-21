@@ -43,32 +43,56 @@ Script.setInterval(setNewTargetPivot, NEW_PIVOT_CHECK__POLL_TIME);
 
 
 //an array of cape joints to get more fluid cape waving
-var capeJoints = [{ name: "RightUpLeg"}, {name: "RightFoot"}, {name:"RightToeBase"}];
-capeJoints.forEach(function(joint){
-  joint.startingRotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(joint.name)); 
+var capeJoints = [{
+  name: "RightUpLeg"
+}, {
+  name: "RightLeg"
+}, {
+  name: "RightFoot"
+}, {
+  name: "RightToeBase"
+}, {
+  name: "RightToe_End"
+}];
+capeJoints.forEach(function(joint) {
+  joint.startingRotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(joint.name));
 });
 
+var capeJointIndex = 0;
+var capeRotation = 100;
+var capeTweenTime = 700;
 flapCape();
 
-function flapCape(){
-  var joint = capeJoints[0];
+function flapCape() {
+  if (capeJointIndex === capeJoints.length) {
+    capeRotation = 100;
+    capeTweenTime = 100;
+    return;
+  }
+  var joint = capeJoints[capeJointIndex++];
+
   var curRot = Quat.safeEulerAngles(MyAvatar.getJointRotation(joint.name));
   var currentProps = {
     rotX: curRot.x
   }
   var endProps = {
-    rotX: curRot.x - 100
+    rotX: curRot.x - capeRotation
   }
   var flapTween = new TWEEN.Tween(currentProps).
-    to(endProps, 2000).
-    onUpdate(function(){
+    to(endProps, capeTweenTime).
+    easing(TWEEN.Easing.Cubic.InOut).
+    onUpdate(function() {
       curRot.x = currentProps.rotX
       MyAvatar.setJointData(joint.name, Quat.fromVec3Degrees(curRot));
     }).start()
 
+  Script.setTimeout(function() {
+    capeRotation++;
+    capeRotation *= 0.3;
+    capeTweenTime *= 0.5;
+    flapCape()
+  }, capeTweenTime/2)
 }
-
-
 
 
 function update(deltaTime) {
@@ -82,7 +106,12 @@ function update(deltaTime) {
   if (velocityLength > VELOCITY_THRESHOLD) {
     forward = Quat.getFront(MyAvatar.orientation);
     avatarOrientationVelocityDotProduct = Vec3.dot(Vec3.normalize(velocity), forward);
-    avatarOrientationVelocityDotProduct > 0 ? dir = -1 : dir = 1;
+    if(isStrafing){
+      dir = -1;
+    }
+    else{
+      avatarOrientationVelocityDotProduct > 0 ? dir = -1 : dir = 1;
+    }
     rotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(wheelJoint));
     rotation.x += Vec3.length(velocity) * dir;
     MyAvatar.setJointData(wheelJoint, Quat.fromVec3Degrees(rotation));
@@ -90,7 +119,7 @@ function update(deltaTime) {
 }
 
 function cleanup() {
-  if(debug){
+  if (debug) {
     Overlays.deleteOverlay(startLine);
     Overlays.deleteOverlay(targetLine);
   }
@@ -98,7 +127,7 @@ function cleanup() {
   MyAvatar.setJointData(pivotJoint, pivotStartRotation);
   // MyAvatar.clearJoinData(wheelJoint);
   // MyAvatar.clearJointData(pivotJoint);
-  capeJoints.forEach(function(joint){
+  capeJoints.forEach(function(joint) {
     MyAvatar.setJointData(joint.name, Quat.fromVec3Degrees(joint.startingRotation));
     // MyAvatar.clearJointData(joint.jointName);
   })
@@ -129,7 +158,7 @@ function setUpDebugLines() {
   });
 }
 function updateDebugLines() {
-   Overlays.editOverlay(targetLine, {
+  Overlays.editOverlay(targetLine, {
     start: MyAvatar.position,
     end: avatarForward
   });
@@ -143,7 +172,7 @@ function setNewTargetPivot() {
   avatarYaw = MyAvatar.bodyYaw;
   avatarForward = Vec3.sum(MyAvatar.position, Vec3.multiply(lineLength, Quat.getFront(MyAvatar.orientation)));
   previousAvatarForward = Vec3.sum(MyAvatar.position, Vec3.multiply(lineLength, Quat.getFront(previousAvatarOrientation)));
-  if(debug){
+  if (debug) {
     updateDebugLines();
   }
   avatarForward = Vec3.normalize(avatarForward);
@@ -156,35 +185,35 @@ function setNewTargetPivot() {
   if (avatarYaw > 0 && avatarYaw < 180) {
     angleDirection *= -1;
   }
-  angleDirection = angleDirection < 0 ? 1 : -1;
+  angleDirection = angleDirection < 0 ? -1 : 1;
   angleOffset *= RADIAN_TO_ANGLE_CONVERSION_FACTOR;
   previousAvatarOrientation = MyAvatar.orientation;
   previousAvatarYaw = avatarYaw;
   targetAngle = eulerPivotStartRotation.y + PIVOT_ANGLE_OFFSET * angleDirection;
 
-  if(velocityLength > VELOCITY_THRESHOLD){
+  if (velocityLength > VELOCITY_THRESHOLD) {
     normalizedVelocity = Vec3.normalize(velocity);
     var velocityOrientationAngle = Math.acos(avatarOrientationVelocityDotProduct);
-    if( Math.abs(avatarOrientationVelocityDotProduct - 0) < 0.01){
+    if (Math.abs(avatarOrientationVelocityDotProduct - 0) < 0.01) {
       velocityOrientationDirection = Math.atan2(avatarForward.y, avatarForward.x) - Math.atan2(normalizedVelocity.y, normalizedVelocity.x);
       isStrafing = true;
 
       //LEFT STRAFING
-      if(Math.abs(velocityOrientationDirection) > .1 && (avatarYaw > -90 && avatarYaw < 90 )){
+      if (Math.abs(velocityOrientationDirection) > .1 && (avatarYaw > -90 && avatarYaw < 90)) {
         strafingDir = -1;
-      } else if(Math.abs(velocityOrientationDirection) < .1 && (avatarYaw < -90 || avatarYaw > 90)){
+      } else if (Math.abs(velocityOrientationDirection) < .1 && (avatarYaw < -90 || avatarYaw > 90)) {
         strafingDir = -1;
-      } else{
+      } else {
         strafingDir = 1;
       }
 
       targetAngle = (eulerPivotStartRotation.y + STRAFING_PIVOT_OFFSET) * strafingDir;
-      if(previousStrafingDir !== strafingDir){
+      if (previousStrafingDir !== strafingDir) {
         isTurned = false;
       }
       previousStrafingDir = strafingDir;
     }
-  } else{
+  } else {
     isStrafing = false;
   }
 
@@ -192,10 +221,10 @@ function setNewTargetPivot() {
   //If so we need to turn robot that way
 
   var currentYaw = Quat.safeEulerAngles(MyAvatar.getJointRotation(pivotJoint)).y;
-  if( (Math.abs(angleOffset) > PIVOT_ANGLE_THRESHOLD || isStrafing) && !isTurned){
+  if ((Math.abs(angleOffset) > PIVOT_ANGLE_THRESHOLD || isStrafing) && !isTurned) {
     initPivotTween(currentYaw, targetAngle);
     isTurned = true;
-  } else if( Math.abs(angleOffset) < PIVOT_ANGLE_THRESHOLD &&!isStrafing && isTurned){
+  } else if (Math.abs(angleOffset) < PIVOT_ANGLE_THRESHOLD && !isStrafing && isTurned) {
     initPivotTween(currentYaw, eulerPivotStartRotation.y);
     isTurned = false;
   }
@@ -222,11 +251,11 @@ function initPivotTween(startYaw, endYaw) {
       MyAvatar.setJointData(pivotJoint, Quat.fromVec3Degrees(safeAngle));
     }).start();
 
-  if(canPlaySound){
+  if (canPlaySound) {
     // Audio.playSound(pivotSound, {position: MyAvatar.position, volume: 0.6});
     canPlaySound = false;
   }
-  Script.setTimeout(function(){
+  Script.setTimeout(function() {
     canPlaySound = true;
   }, MIN_SOUND_INTERVAL);
 }
