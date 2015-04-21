@@ -1,4 +1,4 @@
-Script.include('tween.js');
+Script.include("https://hifi-public.s3.amazonaws.com/eric/scripts/tween.js");
 
 var debug = true
 var wheelJoint = "LeftToeBase"
@@ -22,8 +22,8 @@ var targetPivotRotation = pivotStartRotation;
 if (debug) {
   setUpDebugLines();
 }
-// Script.setTimeout(setNewTargetPivot, 100);
-Script.setInterval(setNewTargetPivot, 1000);
+Script.setTimeout(setNewTargetPivot, 3000);
+// Script.setInterval(setNewTargetPivot, 1000);
 var count = 0;
 
 
@@ -107,22 +107,37 @@ function setNewTargetPivot(){
   angleOffset = Math.acos(Math.min(1, Vec3.dot(Quat.getFront(MyAvatar.orientation), Quat.getFront(previousAvatarOrientation))));
   angleDirection > 0 ? angleOffset *=-1 : angleOffset *= 1;
 
-  //we need to account for angle changes between the poles and un-reverse direction
+  //we need to account for angle changes when changing from negative to positive (or vica versa) and un-reverse direction
   if(avatarYaw > 0 && avatarYaw < 180){
-    print("OFFSET CHAE")
     angleOffset *= -1;
   }
   angleOffset *=57;
   // print("AVATAR YAW" + Quat.safeEulerAngles(MyAvatar.orientation).y);
-  print("ANGLE " + angleOffset);
   previousAvatarOrientation = MyAvatar.orientation;
   previousAvatarYaw = avatarYaw;
   //rotate yaw of pivot by angle offset
   var safeAngle = {x: eulerPivotStartRotation.x, y: eulerPivotStartRotation.y, z: eulerPivotStartRotation.z};
   // print(eulerPivotStartRotation.y);
-  safeAngle.y += angleOffset;
-  MyAvatar.setJointData(pivotJoint, Quat.fromVec3Degrees(safeAngle));
+  // safeAngle.y += angleOffset;
+  // MyAvatar.setJointData(pivotJoint, Quat.fromVec3Degrees(safeAngle));
+
+  var currentProps = {
+    yRot: safeAngle.y
+  }
+  var endProps = {
+    yRot: safeAngle.y + angleOffset
+  }
+  var pivotTween = new TWEEN.Tween(currentProps).
+    to(endProps, 1000).
+    easing(TWEEN.Easing.Back.InOut).
+    onUpdate(function(){
+      // print('yaaah')
+      safeAngle.y = currentProps.yRot
+      MyAvatar.setJointData(pivotJoint, Quat.fromVec3Degrees(safeAngle));
+    }).start();
+
 }
+
 
 function map(value, min1, max1, min2, max2) {
     return min2 + (max2 - min2) * ((value - min1) / (max1 - min1));
