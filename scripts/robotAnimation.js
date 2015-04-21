@@ -25,11 +25,14 @@ var RADIAN_TO_ANGLE_CONVERSION_FACTOR = 57;
 var PIVOT_TIME = 1100;
 var PIVOT_ANGLE_OFFSET = 50;
 var PIVOT_ANGLE_THRESHOLD = 3;
+var NEW_PIVOT_CHECK__POLL_TIME = 100;
+var MIN_SOUND_INTERVAL = NEW_PIVOT_CHECK__POLL_TIME * 2;
+var canPlaySound = true;
 var isTurned = false;
 if (debug) {
   setUpDebugLines();
 }
-Script.setInterval(setNewTargetPivot, 100);
+Script.setInterval(setNewTargetPivot, NEW_PIVOT_CHECK__POLL_TIME);
 
 
 
@@ -149,7 +152,13 @@ function initPivotTween(startYaw, endYaw) {
       MyAvatar.setJointData(pivotJoint, Quat.fromVec3Degrees(safeAngle));
     }).start();
 
-  Audio.playSound(pivotSound, {position: MyAvatar.position, volume: 0.6});
+  if(canPlaySound){
+    Audio.playSound(pivotSound, {position: MyAvatar.position, volume: 0.6});
+    canPlaySound = false;
+  }
+  Script.setTimeout(function(){
+    canPlaySound = true;
+  }, MIN_SOUND_INTERVAL);
   print("PLAY SOUND  " + Math.random())
 }
 
