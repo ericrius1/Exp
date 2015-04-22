@@ -6,7 +6,10 @@ var capeJoint = "RightToeBase";
 var lineLength = 10;
 var wheelStartRotation = MyAvatar.getJointRotation(wheelJoint);
 var pivotStartRotation = MyAvatar.getJointRotation(pivotJoint);
-var pivotSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/robotTurn.wav?verison=1");
+var pivotSounds = [
+  SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/robotTurn.wav"),
+  SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/robotTurn2.wav"),
+];
 var eulerPivotStartRotation = Quat.safeEulerAngles(pivotStartRotation);
 eulerPivotStartRotation.y = 0;
 MyAvatar.setJointData(pivotJoint, Quat.fromVec3Degrees(eulerPivotStartRotation));
@@ -210,7 +213,7 @@ function initPivotTween(startYaw, endYaw) {
     }).start();
 
   if(canPlaySound){
-    Audio.playSound(pivotSound, {position: MyAvatar.position, volume: 0.4});
+    Audio.playSound(pivotSounds[randInt(0, pivotSounds.length-1)], {position: MyAvatar.position, volume: 0.4});
     Script.setTimeout(function(){
       canPlaySound = true;
     }, MIN_SOUND_INTERVAL);
@@ -221,6 +224,14 @@ function initPivotTween(startYaw, endYaw) {
 
 function map(value, min1, max1, min2, max2) {
   return min2 + (max2 - min2) * ((value - min1) / (max1 - min1));
+}
+
+function randInt(min, max){
+  if (max == null) {
+      max = min;
+      min = 0;
+    }
+    return min + Math.floor(Math.random() * (max - min + 1));
 }
 
 
