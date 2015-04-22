@@ -7,12 +7,12 @@ var capeJoint = "RightToeBase";
 var lineLength = 10;
 var wheelStartRotation = MyAvatar.getJointRotation(wheelJoint);
 var pivotStartRotation = MyAvatar.getJointRotation(pivotJoint);
-var pivotSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/robotTurn.wav?version=3");
+var pivotSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/robotTurn.wav");
 var eulerPivotStartRotation = Quat.safeEulerAngles(pivotStartRotation);
 eulerPivotStartRotation.y = 0;
 MyAvatar.setJointData(pivotJoint, Quat.fromVec3Degrees(eulerPivotStartRotation));
 pivotStartRotation = MyAvatar.getJointRotation(pivotJoint);
-var forward, velocity, velocityLength, normalizedVelocity, targetRotation, rotation, targetLine, startLine, dotP, dir;
+var forward, velocity, velocityLength, previousVelocityLength, normalizedVelocity, targetRotation, rotation, targetLine, startLine, dotP, dir;
 var angleOffset = 0;
 var angleDirection;
 var test = 0;
@@ -28,7 +28,7 @@ var PIVOT_ANGLE_OFFSET = 50;
 var STRAFING_PIVOT_OFFSET = 90;
 var PIVOT_ANGLE_THRESHOLD = 3;
 var SLOW_UPDATE_TIME = 100;
-var MIN_SOUND_INTERVAL = SLOW_UPDATE_TIME * 2;
+var MIN_SOUND_INTERVAL = 100;
 var VELOCITY_THRESHOLD = 1;
 var targetAngle;
 var isStrafing = false
@@ -64,25 +64,31 @@ var capeJointIndex = 0;
 var capeRotation = 100;
 var capeTweenTime = 700;
 var capeTerminalVelocity = 10;
-var autoCapeOpen = false;
+var autoCapeOpen = true;
+var capeFlapping = false;
 
 if(autoCapeOpen){
   flapCape()
 }
 
 function flapCape() {
-  var joint = capeJoints[0];
-  var maxRotation = joint.startingRotation.x - 100;
-  var capeRotationX = Math.max(map(velocityLength, 0, capeTerminalVelocity, joint.startingRotation.x, maxRotation), maxRotation);
-  if(velocityLength > capeTerminalVelocity){
-    //the robot's moving fast, so flap cape with perlin noise (eventually)
-    capeRotationX += Math.random();
+  // var joint = capeJoints[0];
+  var rotFactor = 100;
+  for(var i = 0 ; i < capeJoints.length; i++){
+    var joint = capeJoints[i];
+    var maxRotation = joint.startingRotation.x - rotFactor;
+    var capeRotationX = Math.max(map(velocityLength, VELOCITY_THRESHOLD, capeTerminalVelocity, joint.startingRotation.x, maxRotation), maxRotation);
+    if(velocityLength > capeTerminalVelocity){
+      //the robot's moving fast, so flap cape with some noise to simulate fluttering in wind
+      capeRotationX += Math.random();
+    }
+    if(autoCapeOpen){
+      capeRotationX = 100;
+    }
+    joint.currentRotation.x = capeRotationX;
+    MyAvatar.setJointData(joint.name, Quat.fromVec3Degrees(joint.currentRotation));
+    rotFactor *= .5;
   }
-  if(autoCapeOpen){
-    capeRotationX = 100;
-  }
-  joint.currentRotation.x = capeRotationX;
-  MyAvatar.setJointData(joint.name, Quat.fromVec3Degrees(joint.currentRotation));
 
 }
 
@@ -101,13 +107,25 @@ function update(deltaTime) {
     if (isStrafing) {
       dir = -1;
     } else {
-      avatarOrientationVelocityDotProduct > 0 ? dir = -1 : dir = 1;
+      if(avatarOrientationVelocityDotProduct > 0){
+        dir = -1;
+        //we only want to flap cape if we're moving forward
+        flapCape();
+        capeFlapping = true;
+      } else{
+        dir = 1;
+      }
+      //or if we're slowing down and our cape is up
+      if(previousVelocityLength > velocityLength && capeFlapping){
+        flapCape();
+      }
     }
+    previousVelocityLength = velocityLength;
     rotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(wheelJoint));
     rotation.x += Vec3.length(velocity) * dir;
     MyAvatar.setJointData(wheelJoint, Quat.fromVec3Degrees(rotation));
-    flapCape();
-
+  } else {
+    capeFlapping = false
   }
 }
 
@@ -188,15 +206,19 @@ function setNewTargetPivot() {
     normalizedVelocity = Vec3.normalize(velocity);
     var velocityOrientationAngle = Math.acos(avatarOrientationVelocityDotProduct);
     if (Math.abs(avatarOrientationVelocityDotProduct - 0) < 0.01) {
-      velocityOrientationDirection = Math.atan2(avatarForward.y, avatarForward.x) - Math.atan2(normalizedVelocity.y, normalizedVelocity.x);
+      velocityOrientationDirection = Math.atan2(avatarForward.y, avatarForward.z) - Math.atan2(normalizedVelocity.y, normalizedVelocity.z);
       isStrafing = true;
 
       //LEFT STRAFING
-      if (Math.abs(velocityOrientationDirection) > .1 && (avatarYaw > -90 && avatarYaw < 90)) {
+      print("VEL OR " + velocityOrientationDirection)
+      if (velocityOrientationDirection > .1 && (avatarYaw > -90 && avatarYaw < 90)) {
         strafingDir = -1;
-      } else if (Math.abs(velocityOrientationDirection) < .1 && (avatarYaw < -90 || avatarYaw > 90)) {
+        print("shnuur")
+      } else if (velocityOrientationDirection < .1 && (avatarYaw < -90 || avatarYaw > 90)) {
+        print('waaah')
         strafingDir = -1;
       } else {
+        //RIGHT STRAFING
         strafingDir = 1;
       }
 
