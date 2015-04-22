@@ -7,7 +7,7 @@ var capeJoint = "RightToeBase";
 var lineLength = 10;
 var wheelStartRotation = MyAvatar.getJointRotation(wheelJoint);
 var pivotStartRotation = MyAvatar.getJointRotation(pivotJoint);
-var pivotSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/robotTurn.wav");
+var pivotSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/robotTurn.wav?verison=1");
 var eulerPivotStartRotation = Quat.safeEulerAngles(pivotStartRotation);
 eulerPivotStartRotation.y = 0;
 MyAvatar.setJointData(pivotJoint, Quat.fromVec3Degrees(eulerPivotStartRotation));
@@ -26,14 +26,15 @@ var RADIAN_TO_ANGLE_CONVERSION_FACTOR = 57;
 var PIVOT_TIME = 1100;
 var PIVOT_ANGLE_OFFSET = 50;
 var STRAFING_PIVOT_OFFSET = 90;
-var PIVOT_ANGLE_THRESHOLD = 3;
+var PIVOT_ANGLE_THRESHOLD = .1;
 var SLOW_UPDATE_TIME = 100;
-var MIN_SOUND_INTERVAL = 100;
+var MIN_SOUND_INTERVAL = 1000;
 var VELOCITY_THRESHOLD = 1;
 var targetAngle;
 var isStrafing = false
 var canPlaySound = true;
 var isTurned = false;
+var audioTimeout;
 var avatarOrientationVelocityDotProduct, velocityOrientationDirection, normalizedVelocity;
 var strafingDir, previousStrafingDir;
 if (debug) {
@@ -186,42 +187,29 @@ function setNewTargetPivot() {
   if (debug) {
     updateDebugLines();
   }
-  avatarForward = Vec3.normalize(avatarForward);
-  previousAvatarForward = Vec3.normalize(previousAvatarForward);
-  angleDirection = Math.atan2(avatarForward.y, avatarForward.z) - Math.atan2(previousAvatarForward.y, previousAvatarForward.z);
-  angleOffset = Math.acos(Math.min(1, Vec3.dot(Quat.getFront(MyAvatar.orientation), Quat.getFront(previousAvatarOrientation))));
-  angleDirection > 0 ? angleOffset *= -1 : angleOffset *= 1;
-
-  //we need to account for angle changes when changing from negative to positive (or vica versa) and un-reverse direction
-  if (avatarYaw > 0 && avatarYaw < 180) {
-    angleDirection *= -1;
-  }
-  angleDirection = angleDirection < 0 ? 1 : -1;
-  angleOffset *= RADIAN_TO_ANGLE_CONVERSION_FACTOR;
+  var avatarUp = Quat.getUp(MyAvatar.orientation);
+  avatarForward = Quat.getFront(MyAvatar.orientation);
+  previousAvatarForward = Quat.getFront(previousAvatarOrientation);
+  var prevCurOrientationCrossDot = Vec3.dot(Vec3.cross(previousAvatarForward, avatarForward), avatarUp);
+  //Turning left
+  print(prevCurOrientationCrossDot)
+  angleDirection = prevCurOrientationCrossDot < 0 ? 1: -1;
   previousAvatarOrientation = MyAvatar.orientation;
-  previousAvatarYaw = avatarYaw;
   targetAngle = eulerPivotStartRotation.y + PIVOT_ANGLE_OFFSET * angleDirection;
 
   if (velocityLength > VELOCITY_THRESHOLD) {
     normalizedVelocity = Vec3.normalize(velocity);
-    var velocityOrientationAngle = Math.acos(avatarOrientationVelocityDotProduct);
-    if (Math.abs(avatarOrientationVelocityDotProduct - 0) < 0.01) {
-      velocityOrientationDirection = Math.atan2(avatarForward.y, avatarForward.z) - Math.atan2(normalizedVelocity.y, normalizedVelocity.z);
+    //we need to take dot product of cross product in order to account for arbitrary avatar pitch in future
+    if (Math.abs(avatarOrientationVelocityDotProduct) < 0.01) {
+      var orientationVelCrossDot = Vec3.dot(Vec3.cross(avatarForward, normalizedVelocity), avatarUp);
       isStrafing = true;
-
       //LEFT STRAFING
-      print("VEL OR " + velocityOrientationDirection)
-      if (velocityOrientationDirection > .1 && (avatarYaw > -90 && avatarYaw < 90)) {
-        strafingDir = -1;
-        print("shnuur")
-      } else if (velocityOrientationDirection < .1 && (avatarYaw < -90 || avatarYaw > 90)) {
-        print('waaah')
+      if (orientationVelCrossDot > 0) {
         strafingDir = -1;
       } else {
         //RIGHT STRAFING
         strafingDir = 1;
       }
-
       targetAngle = (eulerPivotStartRotation.y + STRAFING_PIVOT_OFFSET) * strafingDir;
       if (previousStrafingDir !== strafingDir) {
         isTurned = false;
@@ -237,10 +225,14 @@ function setNewTargetPivot() {
   //If so we need to turn robot that way
 
   var currentYaw = Quat.safeEulerAngles(MyAvatar.getJointRotation(pivotJoint)).y;
-  if ((Math.abs(angleOffset) > PIVOT_ANGLE_THRESHOLD || isStrafing) && !isTurned) {
+  if ((Math.abs(prevCurOrientationCrossDot) > PIVOT_ANGLE_THRESHOLD || isStrafing) && !isTurned) {
+    // print("TURN")
+    //turn wheel left or right 
     initPivotTween(currentYaw, targetAngle);
     isTurned = true;
-  } else if (Math.abs(angleOffset) < PIVOT_ANGLE_THRESHOLD && !isStrafing && isTurned) {
+  } else if (Math.abs(prevCurOrientationCrossDot) < PIVOT_ANGLE_THRESHOLD && !isStrafing && isTurned) {
+    //Turn wheel back to default position
+    // print("RETURN")
     initPivotTween(currentYaw, eulerPivotStartRotation.y);
     isTurned = false;
   }
@@ -271,13 +263,8 @@ function initPivotTween(startYaw, endYaw) {
       MyAvatar.setJointData(pivotJoint, Quat.fromVec3Degrees(safeAngle));
     }).start();
 
-  if (canPlaySound) {
-    // Audio.playSound(pivotSound, {position: MyAvatar.position, volume: 0.6});
-    canPlaySound = false;
-  }
-  Script.setTimeout(function() {
-    canPlaySound = true;
-  }, MIN_SOUND_INTERVAL);
+  Audio.playSound(pivotSound, {position: MyAvatar.position, volume: 0.6});
+  // print("PLAY SOUND "  + Math.random());
 }
 
 
