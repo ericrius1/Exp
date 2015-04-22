@@ -1,6 +1,5 @@
 Script.include("https://hifi-public.s3.amazonaws.com/eric/scripts/tween.js");
 
-var debug = false;
 var wheelJoint = "LeftToeBase"
 var pivotJoint = "LeftUpLeg";
 var capeJoint = "RightToeBase";
@@ -15,18 +14,14 @@ pivotStartRotation = MyAvatar.getJointRotation(pivotJoint);
 var forward, velocity, velocityLength, previousVelocityLength, normalizedVelocity, targetRotation, rotation, targetLine, startLine, dotP, dir;
 var angleOffset = 0;
 var angleDirection;
-var test = 0;
 var avatarYaw = MyAvatar.bodyYaw;
 var previousAvatarYaw = avatarYaw;
 var previousAvatarOrientation = MyAvatar.orientation;
 var avatarForward, previousAvatarForward;
-var previousPivotRotation = pivotStartRotation;
-var targetPivotRotation = pivotStartRotation;
-var RADIAN_TO_ANGLE_CONVERSION_FACTOR = 57;
 var PIVOT_TIME = 1100;
 var PIVOT_ANGLE_OFFSET = 50;
 var STRAFING_PIVOT_OFFSET = 90;
-var PIVOT_ANGLE_THRESHOLD = .1;
+var PIVOT_ANGLE_THRESHOLD = .05;
 var SLOW_UPDATE_TIME = 100;
 var MIN_SOUND_INTERVAL = 1000;
 var VELOCITY_THRESHOLD = 1;
@@ -34,12 +29,9 @@ var targetAngle;
 var isStrafing = false
 var canPlaySound = true;
 var isTurned = false;
-var audioTimeout;
-var avatarOrientationVelocityDotProduct, velocityOrientationDirection, normalizedVelocity;
+var avatarOrientationVelocityDotProduct, normalizedVelocity;
+var prevCurOrientationCrossDot, orientationVelCrossDot;
 var strafingDir, previousStrafingDir;
-if (debug) {
-  setUpDebugLines();
-}
 Script.setInterval(slowUpdate, SLOW_UPDATE_TIME);
 
 
@@ -95,9 +87,6 @@ function flapCape() {
 
 
 function update(deltaTime) {
-  if (debug) {
-    updateDebugLines();
-  }
   TWEEN.update();
   velocity = MyAvatar.getVelocity();
   velocityLength = Vec3.length(velocity);
@@ -145,54 +134,16 @@ function cleanup() {
   })
 }
 
-function setUpDebugLines() {
-  var end = Vec3.sum(MyAvatar.position, Vec3.multiply(lineLength, Quat.getFront(MyAvatar.orientation)));
-  startLine = Overlays.addOverlay("line3d", {
-    start: MyAvatar.position,
-    end: end,
-    color: {
-      red: 200,
-      green: 0,
-      blue: 0
-    },
-    lineWidth: 5
-  });
-
-  targetLine = Overlays.addOverlay("line3d", {
-    start: MyAvatar.position,
-    end: end,
-    color: {
-      red: 0,
-      green: 200,
-      blue: 0
-    },
-    lineWidth: 5
-  });
-}
-function updateDebugLines() {
-  Overlays.editOverlay(targetLine, {
-    start: MyAvatar.position,
-    end: avatarForward
-  });
-  Overlays.editOverlay(startLine, {
-    start: MyAvatar.position,
-    end: previousAvatarForward
-  });
-}
 
 function setNewTargetPivot() {
   avatarYaw = MyAvatar.bodyYaw;
   avatarForward = Vec3.sum(MyAvatar.position, Vec3.multiply(lineLength, Quat.getFront(MyAvatar.orientation)));
   previousAvatarForward = Vec3.sum(MyAvatar.position, Vec3.multiply(lineLength, Quat.getFront(previousAvatarOrientation)));
-  if (debug) {
-    updateDebugLines();
-  }
   var avatarUp = Quat.getUp(MyAvatar.orientation);
   avatarForward = Quat.getFront(MyAvatar.orientation);
   previousAvatarForward = Quat.getFront(previousAvatarOrientation);
-  var prevCurOrientationCrossDot = Vec3.dot(Vec3.cross(previousAvatarForward, avatarForward), avatarUp);
+  prevCurOrientationCrossDot = Vec3.dot(Vec3.cross(previousAvatarForward, avatarForward), avatarUp);
   //Turning left
-  print(prevCurOrientationCrossDot)
   angleDirection = prevCurOrientationCrossDot < 0 ? 1: -1;
   previousAvatarOrientation = MyAvatar.orientation;
   targetAngle = eulerPivotStartRotation.y + PIVOT_ANGLE_OFFSET * angleDirection;
@@ -201,15 +152,9 @@ function setNewTargetPivot() {
     normalizedVelocity = Vec3.normalize(velocity);
     //we need to take dot product of cross product in order to account for arbitrary avatar pitch in future
     if (Math.abs(avatarOrientationVelocityDotProduct) < 0.01) {
-      var orientationVelCrossDot = Vec3.dot(Vec3.cross(avatarForward, normalizedVelocity), avatarUp);
+      orientationVelCrossDot = Vec3.dot(Vec3.cross(avatarForward, normalizedVelocity), avatarUp);
       isStrafing = true;
-      //LEFT STRAFING
-      if (orientationVelCrossDot > 0) {
-        strafingDir = -1;
-      } else {
-        //RIGHT STRAFING
-        strafingDir = 1;
-      }
+      strafingDir = orientationVelCrossDot > 0 ? -1 : 1
       targetAngle = (eulerPivotStartRotation.y + STRAFING_PIVOT_OFFSET) * strafingDir;
       if (previousStrafingDir !== strafingDir) {
         isTurned = false;
@@ -225,6 +170,7 @@ function setNewTargetPivot() {
   //If so we need to turn robot that way
 
   var currentYaw = Quat.safeEulerAngles(MyAvatar.getJointRotation(pivotJoint)).y;
+  print("prev cur or " + prevCurOrientationCrossDot);
   if ((Math.abs(prevCurOrientationCrossDot) > PIVOT_ANGLE_THRESHOLD || isStrafing) && !isTurned) {
     // print("TURN")
     //turn wheel left or right 
@@ -263,8 +209,13 @@ function initPivotTween(startYaw, endYaw) {
       MyAvatar.setJointData(pivotJoint, Quat.fromVec3Degrees(safeAngle));
     }).start();
 
-  Audio.playSound(pivotSound, {position: MyAvatar.position, volume: 0.6});
-  // print("PLAY SOUND "  + Math.random());
+  if(canPlaySound){
+    Audio.playSound(pivotSound, {position: MyAvatar.position, volume: 0.4});
+    Script.setTimeout(function(){
+      canPlaySound = true;
+    }, MIN_SOUND_INTERVAL);
+    canPlaySound = false;
+  }
 }
 
 
