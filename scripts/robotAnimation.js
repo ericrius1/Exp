@@ -78,19 +78,20 @@ capeStates.current = "still";
 function updateCape() {
   capeAnimDetails = MyAvatar.getAnimationDetails(capeFlappingAnim);
   if(capeStates.current === "flowingUp" && capeStates.previous === "still"){
-    MyAvatar.startAnimation(capeFlappingAnim, capeFPS, 1.0, false, false, capeStates[capeStates.current].start, capeStates[capeStates.current].end);
+    MyAvatar.startAnimation(capeFlappingAnim, capeFPS, 1.0, false, false, capeAnimDetails.frameIndex, capeStates["flowingUp"].end);
   }
-  if(capeStates.current === "flowingUp" && capeAnimDetails.frameIndex === capeAnimDetails.lastFrame){
+  else if(capeStates.current === "flowingUp" && capeAnimDetails.frameIndex === capeAnimDetails.lastFrame){
     MyAvatar.stopAnimation(capeFlappingAnim);
     capeStates.current = "fluttering";
-    MyAvatar.startAnimation(capeFlappingAnim, capeFPS, 1.0, true, false, capeStates[capeStates.current].start, capeStates[capeStates.current].end);
+    MyAvatar.startAnimation(capeFlappingAnim, capeFPS, 1.0, true, false, capeAnimDetails.frameIndex, capeStates["fluttering"].end);
   }
   if(capeStates.current === "flowingDown" && capeStates.previous!== "flowingDown"){
     MyAvatar.stopAnimation(capeFlappingAnim);
-    MyAvatar.startAnimation(capeFlappingAnim, capeFPS, 1.0, false, false, capeStates["flowingDown"].start, capeStates["flowingDown"].end);
+    MyAvatar.startAnimation(capeFlappingAnim, capeFPS, 1.0, false, false, capeAnimDetails.frameIndex, capeStates["flowingDown"].end);
   }
   if(capeStates.current === "flowingDown" && capeAnimDetails.frameIndex === capeAnimDetails.lastFrame){
     capeStates.current = "still";
+    MyAvatar.stopAnimation(capeFlappingAnim);
   }
   capeStates.previous = capeStates.current;
 }
