@@ -37,22 +37,22 @@ Script.setInterval(slowUpdate, SLOW_UPDATE_TIME);
 
 //********* CAPE *******************************************
 //an array of cape joints to get more fluid cape waving
-var capeJoints = [{
-  name: "RightUpLeg"
-}, {
-  name: "RightLeg"
-}, {
-  name: "RightFoot"
-}, {
-  name: "RightToeBase"
-}, {
-  name: "RightToe_End"
-}];
-capeJoints.forEach(function(joint) {
-  joint.startingRotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(joint.name));
-  joint.currentRotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(joint.name));
+// var capeJoints = [{
+//   name: "RightUpLeg"
+// }, {
+//   name: "RightLeg"
+// }, {
+//   name: "RightFoot"
+// }, {
+//   name: "RightToeBase"
+// }, {
+//   name: "RightToe_End"
+// }];
+// capeJoints.forEach(function(joint) {
+//   joint.startingRotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(joint.name));
+//   joint.currentRotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(joint.name));
 
-});
+// });
 
 var capeJointIndex = 0;
 var capeRotation = 100;
@@ -60,22 +60,39 @@ var capeTweenTime = 700;
 var capeTerminalVelocity = 10;
 var autoCapeOpen = true;
 var capeFlapping = false;
-var capeFlappingAnimation = "https://hifi-public.s3.amazonaws.com/eric/models/coatTailAnim_v2.fbx";
-
-
-if(autoCapeOpen){
-  Script.setTimeout(function(){
-    flapCape()
-  }, 500)
+var flapStartFrame = 32;
+var flapEndFrame = 63;
+var capeFPS = 30;
+var capeFlappingAnim = "https://hifi-public.s3.amazonaws.com/eric/models/coatTailAnim_v2.fbx";
+var capeAnimDetails;
+//cape states: still, flowingUp, flowingDow, fluttering
+//map states to which animation frames to display
+var capeStates = {
+  "still": null,
+  "fluttering": {start: 32, end: 63},
+  "flowingUp": {start: 0, end: 31},
+  "flowingDown": {start: 64, end: 90}
 }
+capeStates.current = "still";
 
-function flapCape() {
-  // var joint = capeJoints[0];
-  print("FLAP!!!!");
-  MyAvatar.startAnimation(capeFlappingAnimation, 30, 1.0, true, false );
-  var details = MyAvatar.getAnimationDetails(capeFlappingAnimation);
-  print("DETAILS " + JSON.stringify(details));
-
+function updateCape() {
+  capeAnimDetails = MyAvatar.getAnimationDetails(capeFlappingAnim);
+  if(capeStates.current === "flowingUp" && capeStates.previous === "still"){
+    MyAvatar.startAnimation(capeFlappingAnim, capeFPS, 1.0, false, false, capeStates[capeStates.current].start, capeStates[capeStates.current].end);
+  }
+  if(capeStates.current === "flowingUp" && capeAnimDetails.frameIndex === capeAnimDetails.lastFrame){
+    MyAvatar.stopAnimation(capeFlappingAnim);
+    capeStates.current = "fluttering";
+    MyAvatar.startAnimation(capeFlappingAnim, capeFPS, 1.0, true, false, capeStates[capeStates.current].start, capeStates[capeStates.current].end);
+  }
+  if(capeStates.current === "flowingDown" && capeStates.previous!== "flowingDown"){
+    MyAvatar.stopAnimation(capeFlappingAnim);
+    MyAvatar.startAnimation(capeFlappingAnim, capeFPS, 1.0, false, false, capeStates["flowingDown"].start, capeStates["flowingDown"].end);
+  }
+  if(capeStates.current === "flowingDown" && capeAnimDetails.frameIndex === capeAnimDetails.lastFrame){
+    capeStates.current = "still";
+  }
+  capeStates.previous = capeStates.current;
 }
 
 
@@ -91,6 +108,9 @@ function update(deltaTime) {
       dir = -1;
     } else {
       if(avatarOrientationVelocityDotProduct > 0){
+        if(capeStates.current === "still"){
+          capeStates.current = "flowingUp";
+        }
         dir = -1;
       } else{
         dir = 1;
@@ -100,14 +120,19 @@ function update(deltaTime) {
     rotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(wheelJoint));
     rotation.x += Vec3.length(velocity) * dir;
     MyAvatar.setJointData(wheelJoint, Quat.fromVec3Degrees(rotation));
+  } else{
+    if(capeStates.current !== "still"){
+      capeStates.current = "flowingDown";
+    }
   }
+  updateCape();
   
 }
 
 function cleanup() {
   MyAvatar.setJointData(wheelJoint, wheelStartRotation);
   MyAvatar.setJointData(pivotJoint, pivotStartRotation);
-  MyAvatar.stopAnimation(capeFlappingAnimation);
+  MyAvatar.stopAnimation(capeFlappingAnim);
   // MyAvatar.clearJoinData(wheelJoint);
   // MyAvatar.clearJointData(pivotJoint);
 }
