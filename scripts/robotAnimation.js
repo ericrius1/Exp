@@ -2,8 +2,6 @@ Script.include("https://hifi-public.s3.amazonaws.com/eric/scripts/tween.js");
 
 var wheelJoint = "LeftToeBase"
 var pivotJoint = "LeftUpLeg";
-var capeJoint = "RightToeBase";
-var lineLength = 10;
 var wheelStartRotation = MyAvatar.getJointRotation(wheelJoint);
 var pivotStartRotation = MyAvatar.getJointRotation(pivotJoint);
 var pivotSounds = [
@@ -14,13 +12,13 @@ var eulerPivotStartRotation = Quat.safeEulerAngles(pivotStartRotation);
 eulerPivotStartRotation.y = 0;
 MyAvatar.setJointData(pivotJoint, Quat.fromVec3Degrees(eulerPivotStartRotation));
 pivotStartRotation = MyAvatar.getJointRotation(pivotJoint);
-var forward, velocity, velocityLength, previousVelocityLength, normalizedVelocity, targetRotation, rotation, targetLine, startLine, dotP, dir;
+var velocity, velocityLength, previousVelocityLength, normalizedVelocity, targetRotation, rotation, targetLine, startLine, dotP, dir;
 var angleOffset = 0;
 var angleDirection;
 var avatarYaw = MyAvatar.bodyYaw;
 var previousAvatarYaw = avatarYaw;
 var previousAvatarOrientation = MyAvatar.orientation;
-var avatarForward, previousAvatarForward;
+var avatarForward, previousAvatarForward, avatarUp;
 var PIVOT_TIME = 1100;
 var PIVOT_ANGLE_OFFSET = 50;
 var STRAFING_PIVOT_OFFSET = 90;
@@ -37,7 +35,7 @@ var prevCurOrientationCrossDot, orientationVelCrossDot;
 var strafingDir, previousStrafingDir;
 Script.setInterval(slowUpdate, SLOW_UPDATE_TIME);
 
-
+//********* CAPE *******************************************
 //an array of cape joints to get more fluid cape waving
 var capeJoints = [{
   name: "RightUpLeg"
@@ -62,29 +60,21 @@ var capeTweenTime = 700;
 var capeTerminalVelocity = 10;
 var autoCapeOpen = true;
 var capeFlapping = false;
+var capeFlappingAnimation = "https://hifi-public.s3.amazonaws.com/eric/models/coatTailAnim_v2.fbx";
+
 
 if(autoCapeOpen){
-  flapCape()
+  Script.setTimeout(function(){
+    flapCape()
+  }, 500)
 }
 
 function flapCape() {
   // var joint = capeJoints[0];
-  var rotFactor = 100;
-  for(var i = 0 ; i < capeJoints.length; i++){
-    var joint = capeJoints[i];
-    var maxRotation = joint.startingRotation.x - rotFactor;
-    var capeRotationX = Math.max(map(velocityLength, VELOCITY_THRESHOLD, capeTerminalVelocity, joint.startingRotation.x, maxRotation), maxRotation);
-    if(velocityLength > capeTerminalVelocity){
-      //the robot's moving fast, so flap cape with some noise to simulate fluttering in wind
-      capeRotationX += Math.random();
-    }
-    if(autoCapeOpen){
-      capeRotationX = 100;
-    }
-    joint.currentRotation.x = capeRotationX;
-    MyAvatar.setJointData(joint.name, Quat.fromVec3Degrees(joint.currentRotation));
-    rotFactor *= .5;
-  }
+  print("FLAP!!!!");
+  MyAvatar.startAnimation(capeFlappingAnimation, 30, 1.0, true, false );
+  var details = MyAvatar.getAnimationDetails(capeFlappingAnimation);
+  print("DETAILS " + JSON.stringify(details));
 
 }
 
@@ -95,54 +85,37 @@ function update(deltaTime) {
   velocityLength = Vec3.length(velocity);
   //We don't need to show the wheel moving if robot is barely moving
   if (velocityLength > VELOCITY_THRESHOLD) {
-    forward = Quat.getFront(MyAvatar.orientation);
-    avatarOrientationVelocityDotProduct = Vec3.dot(Vec3.normalize(velocity), forward);
+    avatarForward = Quat.getFront(MyAvatar.orientation);
+    avatarOrientationVelocityDotProduct = Vec3.dot(Vec3.normalize(velocity), avatarForward);
     if (isStrafing) {
       dir = -1;
     } else {
       if(avatarOrientationVelocityDotProduct > 0){
         dir = -1;
-        //we only want to flap cape if we're moving forward
-        flapCape();
-        capeFlapping = true;
       } else{
         dir = 1;
-      }
-      //or if we're slowing down and our cape is up
-      if(previousVelocityLength > velocityLength && capeFlapping){
-        flapCape();
       }
     }
     previousVelocityLength = velocityLength;
     rotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(wheelJoint));
     rotation.x += Vec3.length(velocity) * dir;
     MyAvatar.setJointData(wheelJoint, Quat.fromVec3Degrees(rotation));
-  } else {
-    capeFlapping = false
   }
+  
 }
 
 function cleanup() {
-  if (debug) {
-    Overlays.deleteOverlay(startLine);
-    Overlays.deleteOverlay(targetLine);
-  }
   MyAvatar.setJointData(wheelJoint, wheelStartRotation);
   MyAvatar.setJointData(pivotJoint, pivotStartRotation);
+  MyAvatar.stopAnimation(capeFlappingAnimation);
   // MyAvatar.clearJoinData(wheelJoint);
   // MyAvatar.clearJointData(pivotJoint);
-  capeJoints.forEach(function(joint) {
-    MyAvatar.setJointData(joint.name, Quat.fromVec3Degrees(joint.startingRotation));
-    // MyAvatar.clearJointData(joint.jointName);
-  })
 }
 
 
 function setNewTargetPivot() {
   avatarYaw = MyAvatar.bodyYaw;
-  avatarForward = Vec3.sum(MyAvatar.position, Vec3.multiply(lineLength, Quat.getFront(MyAvatar.orientation)));
-  previousAvatarForward = Vec3.sum(MyAvatar.position, Vec3.multiply(lineLength, Quat.getFront(previousAvatarOrientation)));
-  var avatarUp = Quat.getUp(MyAvatar.orientation);
+  avatarUp = Quat.getUp(MyAvatar.orientation);
   avatarForward = Quat.getFront(MyAvatar.orientation);
   previousAvatarForward = Quat.getFront(previousAvatarOrientation);
   prevCurOrientationCrossDot = Vec3.dot(Vec3.cross(previousAvatarForward, avatarForward), avatarUp);
@@ -173,15 +146,12 @@ function setNewTargetPivot() {
   //If so we need to turn robot that way
 
   var currentYaw = Quat.safeEulerAngles(MyAvatar.getJointRotation(pivotJoint)).y;
-  print("prev cur or " + prevCurOrientationCrossDot);
   if ((Math.abs(prevCurOrientationCrossDot) > PIVOT_ANGLE_THRESHOLD || isStrafing) && !isTurned) {
-    // print("TURN")
     //turn wheel left or right 
     initPivotTween(currentYaw, targetAngle);
     isTurned = true;
   } else if (Math.abs(prevCurOrientationCrossDot) < PIVOT_ANGLE_THRESHOLD && !isStrafing && isTurned) {
     //Turn wheel back to default position
-    // print("RETURN")
     initPivotTween(currentYaw, eulerPivotStartRotation.y);
     isTurned = false;
   }
