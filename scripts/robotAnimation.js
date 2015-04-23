@@ -105,10 +105,11 @@ function update(deltaTime) {
   if (velocityLength > VELOCITY_THRESHOLD) {
     avatarForward = Quat.getFront(MyAvatar.orientation);
     avatarOrientationVelocityDotProduct = Vec3.dot(Vec3.normalize(velocity), avatarForward);
+    print("OR VEL " + avatarOrientationVelocityDotProduct);
     if (isStrafing) {
       dir = -1;
     } else {
-      if(avatarOrientationVelocityDotProduct > 0){
+      if(avatarOrientationVelocityDotProduct > Math.abs(0.001)){
         if(capeStates.current === "still"){
           capeStates.current = "flowingUp";
         }
@@ -209,7 +210,7 @@ function initPivotTween(startYaw, endYaw) {
     }).start();
 
   if(canPlaySound){
-    Audio.playSound(pivotSounds[randInt(0, pivotSounds.length-1)], {position: MyAvatar.position, volume: 0.4});
+    Audio.playSound(pivotSounds[randInt(0, pivotSounds.length-1)], {position: MyAvatar.position, volume: 0.2});
     Script.setTimeout(function(){
       canPlaySound = true;
     }, MIN_SOUND_INTERVAL);

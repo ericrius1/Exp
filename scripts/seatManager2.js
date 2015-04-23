@@ -14,15 +14,16 @@
 (function() {
   var self = this;
   this.preload = function(entityId) {
+    this.seatHeight = 0.5;
+    this.seatOffsetFactor = 0.1
+    this.targetAvatarToChairDistance = 0.02;
     this.entityId = entityId;
     this.buttonImageURL = "https://s3.amazonaws.com/hifi-public/images/tools/sit.svg";
     this.addStandButton();
     this.totalAnimationTime = 0.7;
-    this.targetAvatarToChairDistance = 0.1;
     this.properties = Entities.getEntityProperties(this.entityId);
-    this.seatHeight = 0;
     this.seatPosition = {x: this.properties.position.x, y: this.properties.position.y + this.seatHeight, z: this.properties.position.z};
-    this.seatPosition = Vec3.sum(this.seatPosition, Vec3.multiply(0.8, Quat.getFront(this.properties.rotation)))
+    this.seatPosition = Vec3.sum(this.seatPosition, Vec3.multiply(this.seatOffsetFactor, Quat.getFront(this.properties.rotation)))
     this.isSittingSettingHandle = "AvatarSittingState";
     Settings.setValue(this.isSittingSettingHandle, false);
     this.startPoseAndTransition = [];
@@ -128,14 +129,17 @@ this.seatedPose = [
     }
   }
 
-  this.clickDownOnEntity = function(entityId, mouseEvent) {
-    if (mouseEvent.isLeftButton && Settings.getValue(this.isSittingSettingHandle, false) == "false") {
+  this.clickReleaseOnEntity = function(entityId, mouseEvent) {
+    var isStanding = false;
+    if(Settings.getValue(this.isSittingSettingHandle, false) === false){
+      isStanding = true;
+    }
+    if (mouseEvent.isLeftButton && isStanding) {
       this.initMoveToSeat();
     }
   }
 
   this.initMoveToSeat = function() {
-
     this.assignSeat();
     if (this.mySeatIndex !== null) {
       //first we need to move avatar towards seat

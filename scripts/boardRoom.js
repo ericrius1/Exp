@@ -10,12 +10,17 @@
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 //
-
+var isAC = false;
 var NUM_CHAIRS = 15
 var chairs = [];
-var seatURL = "https://hifi-public.s3.amazonaws.com/eric/models/chair.fbx"
-var seatManagerURL = "https://hifi-public.s3.amazonaws.com/eric/scripts/seatManager2.js"
-var center = {x: 6924, y: 295, z: 4834};
+var seatURL = "https://hifi-public.s3.amazonaws.com/models/props/MidCenturyModernLivingRoom/Interior/BarStool.fbx"
+var seatManagerURL = "file:///Users/ericlevin1/MyHiFiStuff/scripts/seatManager2.js"
+var center;
+if(isAC){
+  center = {x: 6924, y: 295, z: 4834};
+} else {
+  center = MyAvatar.position;
+}
 var radius = 7;
 var defaultRotationOffset = 0
 var seatFront = {x: 0, y: 0, z: -1}
@@ -53,7 +58,7 @@ function init() {
     modelURL: seatURL,
     position: seatPosition,
     rotation: seatRotation,
-    dimensions: {x: 1.39, y: 1.17, z: 1.94},
+    dimensions: {x: .52, y: 1.1, z: .56},
     script: seatManagerURL
   }));
 }
