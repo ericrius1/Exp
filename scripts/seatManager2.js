@@ -14,8 +14,10 @@
 (function() {
   var self = this;
   this.preload = function(entityId) {
+    print("SHNUUR")
     this.seatHeight = 0.5;
     this.seatOffsetFactor = 0.1
+    this.shouldSetReferential = true;
     this.targetAvatarToChairDistance = 0.02;
     this.entityId = entityId;
     this.buttonImageURL = "https://s3.amazonaws.com/hifi-public/images/tools/sit.svg";
@@ -184,7 +186,7 @@ this.seatedPose = [
       Overlays.editOverlay(self.standUpButton, {
         visible: true
       });
-      // MyAvatar.setModelReferential(self.properties.id);
+      MyAvatar.setModelReferential(self.properties.id);
     }
   }
 
@@ -223,7 +225,7 @@ this.seatedPose = [
   }
 
   this.clearAvatarAnimation = function() {
-    // MyAvatar.clearReferential();
+    MyAvatar.clearReferential();
     for (var i = 0; i < self.seatedPose.length; i++) {
       MyAvatar.clearJointData(this.seatedPose[i].joint);
     }
@@ -260,7 +262,7 @@ this.seatedPose = [
   this.initStandUp = function() {
     this.elapsedTime = 0;
     this.activeUpdate = this.standUp;
-    // MyAvatar.clearReferential();
+    MyAvatar.clearReferential();
     Overlays.editOverlay(self.standUpButton, {
       visible: false
     });

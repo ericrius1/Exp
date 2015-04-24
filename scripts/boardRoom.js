@@ -12,16 +12,16 @@
 //
 var isAC = false;
 var NUM_CHAIRS = 15
+var radius = 2;
 var chairs = [];
 var seatURL = "https://hifi-public.s3.amazonaws.com/models/props/MidCenturyModernLivingRoom/Interior/BarStool.fbx"
-var seatManagerURL = "file:///Users/ericlevin1/MyHiFiStuff/scripts/seatManager2.js"
+var seatManagerURL = "https://hifi-public.s3.amazonaws.com/eric/scripts/seatManager2.js?version=2"
 var center;
 if(isAC){
   center = {x: 6924, y: 295, z: 4834};
 } else {
   center = MyAvatar.position;
 }
-var radius = 7;
 var defaultRotationOffset = 0
 var seatFront = {x: 0, y: 0, z: -1}
 var targetRotation;
