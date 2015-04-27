@@ -16,7 +16,7 @@ var radius = 2;
 var chairs = [];
 var debugBoxes = [];
 var seatURL = "https://s3.amazonaws.com/hifi-public/cozza13/planets/skybox/stool/BarStool.fbx"
-// var seatManagerURL = "https://hifi-public.s3.amazonaws.com/eric/scripts/seatManager2.js?version=6"
+// var seatManagerURL = "https://hifi-public.s3.amazonaws.com/eric/scripts/seatManager2.js?v2";
 var seatManagerURL = "file:///Users/ericlevin1/MyHiFiStuff/scripts/seatManager2.js";
 var center;
 if (isAC) {
@@ -109,7 +109,7 @@ function checkOccupiedSeats() {
     var userData = JSON.parse(props.userData);
     print("user data " + JSON.stringify(userData));
     if (userData.seats[0] === 1) {
-      print("OCCUPIED! " + chair.debugBox);
+      print("OCCUPIED!");
       Entities.editEntity(chair.debugBox, {visible: true});
     } else {
       Entities.editEntity(chair.debugBox, {visible: false});

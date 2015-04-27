@@ -169,7 +169,7 @@ this.seatedPose = [
       MyAvatar.orientation = Quat.mix(MyAvatar.orientation, self.sanitizedRotation, 0.1);
       MyAvatar.position = Vec3.mix(MyAvatar.position, self.seatPosition, 0.05);
     } else {
-      //otherwise we made it to chair, now sit down should be out active update function
+      //otherwise we made it to chair, now sit down should be our active update function
       this.elapsedTime = 0
       self.activeUpdate = self.sitDown;
     }
@@ -182,7 +182,8 @@ this.seatedPose = [
     if (self.elapsedTime < self.totalAnimationTime) {
       self.updateJoints();
     } else {
-      //We've sat, now we don't need to update any longer;
+      //We've sat, now we need to check to poll to ensure there is still an avatar close by- otherwise we may have crashed;
+      Script.setInterval(self.checkForAvatar, 1000);
       self.activeUpdate = null;
       Settings.setValue(self.isSittingSettingHandle, true);
       Overlays.editOverlay(self.standUpButton, {
@@ -192,6 +193,11 @@ this.seatedPose = [
         MyAvatar.setModelReferential(self.properties.id);
       }
     }
+  }
+
+  this.checkForAvatar = function(){
+    print("AVATAR CHECK " + print(JSON.stringify(MyAvatar)));
+
   }
 
   this.standUp = function(deltaTime) {
