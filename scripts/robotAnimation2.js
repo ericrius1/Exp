@@ -1,6 +1,7 @@
 Script.include("https://hifi-public.s3.amazonaws.com/eric/scripts/tween.js");
 
-var tireAnim = "https://hifi-public.s3.amazonaws.com/eric/models/tireAnim.fbx";
+var tireAnim = "https://hifi-public.s3.amazonaws.com/eric/models/tireAnim.fbx?v1";
+var tireFPS = 30;
 var wheelJoint = "LeftToeBase"
 var pivotJoint = "LeftUpLeg";
 var wheelStartRotation = MyAvatar.getJointRotation(wheelJoint);
@@ -37,32 +38,13 @@ var prevCurOrientationCrossDot, orientationVelCrossDot;
 var strafingDir, previousStrafingDir;
 Script.setInterval(slowUpdate, SLOW_UPDATE_TIME);
 
-//********* CAPE *******************************************
-//an array of cape joints to get more fluid cape waving
-// var capeJoints = [{
-//   name: "RightUpLeg"
-// }, {
-//   name: "RightLeg"
-// }, {
-//   name: "RightFoot"
-// }, {
-//   name: "RightToeBase"
-// }, {
-//   name: "RightToe_End"
-// }];
-// capeJoints.forEach(function(joint) {
-//   joint.startingRotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(joint.name));
-//   joint.currentRotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(joint.name));
 
-// });
 
-var capeJointIndex = 0;
-var capeRotation = 100;
-var capeTweenTime = 700;
-var capeTerminalVelocity = 10;
-var capeFlapping = false;
-var flapStartFrame = 32;
-var flapEndFrame = 63;
+//************WHEEL STUFF****************************
+var wheelAnimating = false;
+
+//************CAPE STUFF*****************************************
+var autoCapeOpen = true;
 var capeFPS = 30;
 var capeFlappingAnim = "https://hifi-public.s3.amazonaws.com/eric/models/coatTailAnim_v2.fbx";
 var capeAnimDetails;
@@ -83,8 +65,9 @@ var capeStates = {
     end: 90
   }
 }
+var startCapeRot;
 capeStates.current = "still";
-var autoCapeOpen = true;
+
 if(autoCapeOpen){
   startCapeRot = Quat.safeEulerAngles(MyAvatar.getJointRotation('RightLeg'));
   startCapeRot.x -= 200;
@@ -127,6 +110,11 @@ function update(deltaTime) {
       if (avatarOrientationVelocityDotProduct > Math.abs(0.001)) {
         if (capeStates.current === "still") {
           capeStates.current = "flowingUp";
+          if(!wheelAnimating){
+            print("ANIMATE")
+            MyAvatar.startAnimation(tireAnim, tireFPS, 1.0, true, false);
+            wheelAnimating = true
+          }
         }
         dir = -1;
       } else {
@@ -134,9 +122,6 @@ function update(deltaTime) {
       }
     }
     previousVelocityLength = velocityLength;
-    rotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(wheelJoint));
-    rotation.x += Vec3.length(velocity) * dir * TIRE_ROT_FACTOR;
-    MyAvatar.setJointData(wheelJoint, Quat.fromVec3Degrees(rotation));
   } else {
     if (capeStates.current !== "still") {
       capeStates.current = "flowingDown";
@@ -149,11 +134,11 @@ function update(deltaTime) {
 }
 
 function cleanup() {
-  MyAvatar.setJointData(wheelJoint, wheelStartRotation);
+  MyAvatar.setJointData(pivotJoint, pivotStartRotation);
   startCapeRot.x+=200;
   MyAvatar.setJointData("RightLeg", Quat.fromVec3Degrees(startCapeRot))
-  MyAvatar.setJointData(pivotJoint, pivotStartRotation);
   MyAvatar.stopAnimation(capeFlappingAnim);
+  MyAvatar.stopAnimation(tireAnim);
   // MyAvatar.clearJoinData(wheelJoint);
   // MyAvatar.clearJointData(pivotJoint);
 }

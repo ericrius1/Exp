@@ -14,11 +14,11 @@
 (function() {
   var self = this;
   this.preload = function(entityId) {
-    print("SHNUUR")
+    print('updated');
+    this.shouldSetReferential = false;
     this.seatHeight = 0.5;
-    this.seatOffsetFactor = 0.1
-    this.shouldSetReferential = true;
-    this.targetAvatarToChairDistance = 0.02;
+    this.seatOffsetFactor = -.07
+    this.targetAvatarToChairDistance = 0.05;
     this.entityId = entityId;
     this.buttonImageURL = "https://s3.amazonaws.com/hifi-public/images/tools/sit.svg";
     this.addStandButton();
@@ -132,10 +132,12 @@ this.seatedPose = [
   }
 
   this.clickReleaseOnEntity = function(entityId, mouseEvent) {
+    //clicked on seat
     var isStanding = false;
     if(Settings.getValue(this.isSittingSettingHandle, false) === false){
       isStanding = true;
     }
+    print("AM I STANDING? " + isStanding);
     if (mouseEvent.isLeftButton && isStanding) {
       this.initMoveToSeat();
     }
@@ -186,7 +188,9 @@ this.seatedPose = [
       Overlays.editOverlay(self.standUpButton, {
         visible: true
       });
-      MyAvatar.setModelReferential(self.properties.id);
+      if(this.shouldSetReferential){
+        MyAvatar.setModelReferential(self.properties.id);
+      }
     }
   }
 
@@ -225,7 +229,9 @@ this.seatedPose = [
   }
 
   this.clearAvatarAnimation = function() {
-    MyAvatar.clearReferential();
+    if(this.shouldSetReferential){
+      MyAvatar.clearReferential();
+    }
     for (var i = 0; i < self.seatedPose.length; i++) {
       MyAvatar.clearJointData(this.seatedPose[i].joint);
     }
@@ -235,7 +241,9 @@ this.seatedPose = [
 
   }
 
+
   this.unload = function() {
+    print("UNLOAD!!")
     var isSitting = Settings.getValue(this.isSittingSettingHandle)
     this.entityId = null;
     if (isSitting === "true") {
@@ -262,7 +270,9 @@ this.seatedPose = [
   this.initStandUp = function() {
     this.elapsedTime = 0;
     this.activeUpdate = this.standUp;
-    MyAvatar.clearReferential();
+    if(this.shouldSetReferential){
+      MyAvatar.clearReferential();
+    }
     Overlays.editOverlay(self.standUpButton, {
       visible: false
     });

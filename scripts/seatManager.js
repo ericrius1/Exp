@@ -188,8 +188,12 @@
     }
   }
 
-  this.clickDownOnEntity = function(entityId, mouseEvent) {
-    if (mouseEvent.isLeftButton && Settings.getValue(this.isSittingSettingHandle, false) == "false") {
+  this.clickReleaseOnEntity = function(entityId, mouseEvent) {
+    var isStanding = false;
+    if(Settings.getValue(this.isSittingSettingHandle, false) === false){
+      isStanding = true;
+    }
+    if (mouseEvent.isLeftButton && isStanding) {
       this.initMoveToSeat();
     }
   }

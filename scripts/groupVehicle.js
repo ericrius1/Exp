@@ -34,7 +34,7 @@ if (!isAssignmentScript) {
 }
 
 var shipModelURL = "https://hifi-public.s3.amazonaws.com/ryan/lobby_platform4.fbx";
-var seatManagerScriptURL = "https://hifi-public.s3.amazonaws.com/eric/scripts/seatManager.js";
+var seatManagerScriptURL = "https://hifi-public.s3.amazonaws.com/eric/scripts/seatManager.js?v3";
 var shipSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/spaceship.wav");
 
 var shipDimensions = {
