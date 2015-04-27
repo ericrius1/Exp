@@ -2,10 +2,13 @@
 var isGrabbing = false;
 var grabbedEntity = null;
 var prevMouse = {};
-var deltaMouse = {}
-var curProps;
+var deltaMouse = {z: 0}
+var entityProps;
 var box;
-var baseMoveFactor = .01;
+var baseMoveFactor = .001;
+var finalMoveMultiplier;
+var avatarEntityDistance;
+var camYaw, dv;
 
 
 var autoBox = true;
@@ -37,11 +40,16 @@ function mouseReleaseEntity(){
 
 function mouseMoveEvent(event){
   if(isGrabbing){
-    curProps = Entities.getEntityProperties(grabbedEntity);
+    entityProps = Entities.getEntityProperties(grabbedEntity);
+    avatarEntityDistance = Vec3.distance(MyAvatar.position, entityProps.position);
+    finalMoveMultiplier = baseMoveFactor * Math.pow(avatarEntityDistance, 1.5);
     deltaMouse.x = event.x - prevMouse.x;
-    deltaMouse.y = event.y - prevMouse.y;
-    print("DELTA MOUSE " + JSON.stringify(deltaMouse))
-    Entities.editEntity(grabbedEntity, {position: {x: curProps.position.x + deltaMouse.x * baseMoveFactor, y: curProps.position.y, z: curProps.position.z + deltaMouse.y * baseMoveFactor }});
+    deltaMouse.z = event.y - prevMouse.y;
+    finalMoveMultiplier = baseMoveFactor * Math.pow(avatarEntityDistance, 1.5);
+    deltaMouse = Vec3.multiply(deltaMouse,  finalMoveMultiplier);
+    camYaw = Quat.safeEulerAngles(Camera.getOrientation()).y;
+    dv = Vec3.multiplyQbyV(Quat.fromPitchYawRollDegrees(0, camYaw, 0), deltaMouse);
+    Entities.editEntity(grabbedEntity, {position: Vec3.sum(entityProps.position, dv)});
   }
   prevMouse.x = event.x;
   prevMouse.y = event.y;
