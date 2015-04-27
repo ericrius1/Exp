@@ -1,4 +1,4 @@
-var SIZE = 1000;
+var SIZE = 200;
 
 var floor = Entities.addEntity({
   type: "Model",
