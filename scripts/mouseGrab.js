@@ -12,6 +12,12 @@ var finalMoveMultiplier;
 var avatarEntityDistance;
 var camYaw, dv;
 var raiseAmount = 1;
+var prevPosition;
+var newPosition;
+var flingVelocity;
+var flingMultiplier = .2;
+var DAMPING = 0.95;
+var startingHeight;
 
 
 var autoBox = true;
@@ -29,7 +35,7 @@ if (autoBox) {
       red: 200,
       green: 50,
       blue: 192
-    }
+    },
   });
 }
 
@@ -44,6 +50,7 @@ function mousePressEvent(event) {
     isGrabbing = true;
     // print("intersection props " + JSON.stringify(intersection))
     grabbedEntity = intersection.entityID;
+    prevPosition = Entities.getEntityProperties(grabbedEntity).position;
     raise();
   }
 
@@ -51,15 +58,16 @@ function mousePressEvent(event) {
 
 function raise() {
   entityProps = Entities.getEntityProperties(grabbedEntity);
+  startingHeight = entityProps.position.y;
   var curProps = {
-    y: entityProps.position.y
+    y: startingHeight
   }
   var endProps = {
     y: entityProps.position.y + raiseAmount
   }
   var raiseTween = new TWEEN.Tween(curProps).
-    to(endProps, 500).
-    easing(TWEEN.Easing.Cubic.InOut).
+    to(endProps, 300).
+    easing(TWEEN.Easing.Cubic.In).
     onUpdate(function() {
       entityProps = Entities.getEntityProperties(grabbedEntity);
       entityProps.position.y = curProps.y;
@@ -75,35 +83,49 @@ function lower() {
     y: entityProps.position.y
   }
   var endProps = {
-    y: entityProps.position.y - raiseAmount
+    y: startingHeight
   }
   var lowerTween = new TWEEN.Tween(curProps).
-    to(endProps, 500).
-    easing(TWEEN.Easing.Cubic.InOut).
+    to(endProps, 1000).
+    easing(TWEEN.Easing.Cubic.Out).
     onUpdate(function() {
       entityProps = Entities.getEntityProperties(grabbedEntity);
       entityProps.position.y = curProps.y;
+      entityProps.position.x += flingVelocity.x;
+      entityProps.position.z += flingVelocity.z;
+      flingVelocity = Vec3.multiply(DAMPING, flingVelocity);
       Entities.editEntity(grabbedEntity, {
         position: entityProps.position
       });
     }).start()
 
-  lowerTween.onComplete(function() {
-    grabbedEntity = null;
-  })
+
 
 }
 
 function mouseReleaseEvent() {
-  isGrabbing = false;
-  if(grabbedEntity){
+  if(isGrabbing){
     lower();
+    flingObject();
   }
+  isGrabbing = false;
+}
+
+function flingObject(){
+  //calculate velocity to give object base on current and previous position
+  entityProps = Entities.getEntityProperties(grabbedEntity);
+
+  flingVelocity = Vec3.subtract(entityProps.position, prevPosition);
+  flingVelocity = Vec3.multiply(flingMultiplier, flingVelocity);
+  // flingVelocity.y = -1;
+  // Entities.editEntity(grabbedEntity, {velocity: flingVelocity});
+  // Entities.editEntity(grabbedEntity, {velocity: {x: 1, y: 0, z: 0}});
 }
 
 function mouseMoveEvent(event) {
   if (isGrabbing) {
     entityProps = Entities.getEntityProperties(grabbedEntity);
+    prevPosition = entityProps.position;
     avatarEntityDistance = Vec3.distance(MyAvatar.position, entityProps.position);
     finalMoveMultiplier = baseMoveFactor * Math.pow(avatarEntityDistance, 1.5);
     deltaMouse.x = event.x - prevMouse.x;
@@ -112,8 +134,9 @@ function mouseMoveEvent(event) {
     deltaMouse = Vec3.multiply(deltaMouse, finalMoveMultiplier);
     camYaw = Quat.safeEulerAngles(Camera.getOrientation()).y;
     dv = Vec3.multiplyQbyV(Quat.fromPitchYawRollDegrees(0, camYaw, 0), deltaMouse);
+    newPosition = Vec3.sum(entityProps.position, dv);
     Entities.editEntity(grabbedEntity, {
-      position: Vec3.sum(entityProps.position, dv)
+      position: newPosition
     });
   }
   prevMouse.x = event.x;
