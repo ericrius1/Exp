@@ -105,12 +105,15 @@ function init() {
 
 function checkOccupiedSeats() {
   chairs.forEach(function(chair) {
-    var props = Entities.getEntityProperties(chair);
-    var userData = JSON.parse(props.userData);
+    var userData = getUserData(chair);
     if (userData.seats[0] === 1) {
-      Entities.editEntity(chair.debugBox, {visible: true});
+      Entities.editEntity(chair.debugBox, {
+        visible: true
+      });
     } else {
-      Entities.editEntity(chair.debugBox, {visible: false});
+      Entities.editEntity(chair.debugBox, {
+        visible: false
+      });
     }
   });
 }
@@ -120,6 +123,23 @@ function keyPressed(event) {
     checkOccupiedSeats();
   }
 }
+
+function getUserData(entity) {
+  var entityProps = Entities.getEntityProperties(entity);
+  if (entityProps.userData) {
+    userData = JSON.parse(entityProps.userData);
+  } else {
+    userData = {};
+  }
+  return userData
+}
+
+function updateUserData(entity, userData) {
+  Entities.editEntity(entity, {
+    userData: JSON.stringify(userData)
+  });
+}
+
 
 
 function cleanup() {
