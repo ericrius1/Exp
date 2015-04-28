@@ -107,9 +107,7 @@ function checkOccupiedSeats() {
   chairs.forEach(function(chair) {
     var props = Entities.getEntityProperties(chair);
     var userData = JSON.parse(props.userData);
-    print("user data " + JSON.stringify(userData));
     if (userData.seats[0] === 1) {
-      print("OCCUPIED!");
       Entities.editEntity(chair.debugBox, {visible: true});
     } else {
       Entities.editEntity(chair.debugBox, {visible: false});
