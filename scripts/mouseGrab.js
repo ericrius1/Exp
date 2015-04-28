@@ -94,9 +94,11 @@ function lower() {
 
 }
 
-function mouseReleaseEntity() {
+function mouseReleaseEvent() {
   isGrabbing = false;
-  lower();
+  if(grabbedEntity){
+    lower();
+  }
 }
 
 function mouseMoveEvent(event) {
@@ -124,6 +126,6 @@ function cleanup() {
 
 Controller.mouseMoveEvent.connect(mouseMoveEvent);
 Controller.mousePressEvent.connect(mousePressEvent);
-Controller.mouseReleaseEvent.connect(mouseReleaseEntity);
+Controller.mouseReleaseEvent.connect(mouseReleaseEvent);
 Script.update.connect(update);
 Script.scriptEnding.connect(cleanup);
