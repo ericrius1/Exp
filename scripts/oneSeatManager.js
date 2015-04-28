@@ -14,7 +14,6 @@
 (function() {
   var self = this;
   this.preload = function(entityId) {
-    print('updated');
     this.shouldSetReferential = false;
     this.seatHeight = 0.5;
     this.seatOffsetFactor = -.07
@@ -41,7 +40,6 @@
       z: -1
     };
 
-
     // This is the pose we would like to end up
     this.createSeatedPose();
     this.storeStartPoseAndTransition();
@@ -54,7 +52,9 @@
   }
 
   this.assignSeat = function() {
+    this.properties = Entities.getEntityProperties(this.entityId);
     this.getUserData();
+    print("USER DATA SEAT" + this.userData.seat)
       if (this.userData.seat === 0) {
         this.userData.seat = 1;
         this.updateUserData();
@@ -80,16 +80,12 @@
     });
   }
 
-
-
-
   this.clickReleaseOnEntity = function(entityId, mouseEvent) {
     //clicked on seat
     var isStanding = false;
     if (Settings.getValue(this.isSittingSettingHandle, false) === false) {
       isStanding = true;
     }
-    print("AM I STANDING? " + isStanding);
     if (mouseEvent.isLeftButton && isStanding) {
       this.initMoveToSeat();
     }
@@ -100,7 +96,6 @@
       //first we need to move avatar towards seat
       this.activeUpdate = this.moveToSeat;
     } else {
-      print("NO SEAT AVAILABLE AT THIS TIME *************************");
     }
 
   }
@@ -164,7 +159,6 @@
       //make sure we set avatar head yaw back to 0.
       MyAvatar.headYaw = 0
       this.userData.seat = 0;
-      this.mySeatIndex = null;
       this.updateUserData();
       //make sure we free up this seat
       this.clearAvatarAnimation();
@@ -193,9 +187,7 @@
 
   }
 
-
   this.unload = function() {
-    print("UNLOAD!!")
     var isSitting = Settings.getValue(this.isSittingSettingHandle)
     this.entityId = null;
     if (isSitting === "true") {

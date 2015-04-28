@@ -11,13 +11,13 @@
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 //
 var isAC = false;
-var NUM_CHAIRS = 15
+var NUM_CHAIRS = 1
 var radius = 2;
 var chairs = [];
 var debugBoxes = [];
 var seatURL = "https://s3.amazonaws.com/hifi-public/cozza13/planets/skybox/stool/BarStool.fbx"
-// var seatManagerURL = "https://hifi-public.s3.amazonaws.com/eric/scripts/seatManager2.js?v2";
-var seatManagerURL = "file:///Users/ericlevin1/MyHiFiStuff/scripts/seatManager2.js";
+var seatManagerURL = "https://hifi-public.s3.amazonaws.com/eric/scripts/oneSeatManager.js?v2";
+// var seatManagerURL = "file:///Users/ericlevin1/MyHiFiStuff/scripts/oneSeatManager.js";
 var center;
 if (isAC) {
   center = {
@@ -57,14 +57,12 @@ function init() {
     //seat to center vector
     var seatToCenterVector = Vec3.normalize(Vec3.subtract(center, seatPosition));
     var angle = Math.acos(Vec3.dot(seatFront, seatToCenterVector));
-    // print("ANGLE   ********************" + angle)
     if (seatPosition.x < center.x) {
       targetRotation = Quat.fromPitchYawRollRadians(0, -angle, 0);
     } else {
       targetRotation = Quat.fromPitchYawRollRadians(0, angle, 0);
     }
     seatRotation = Quat.multiply(targetRotation, seatRotation);
-    // print("SEAT ROTATION ********* " + JSON.stringify(seatRotation));
 
 
     var chair = Entities.addEntity({
@@ -106,7 +104,7 @@ function init() {
 function checkOccupiedSeats() {
   chairs.forEach(function(chair) {
     var userData = getUserData(chair);
-    if (userData.seats[0] === 1) {
+    if (userData.seat === 1) {
       Entities.editEntity(chair.debugBox, {
         visible: true
       });
@@ -127,6 +125,7 @@ function keyPressed(event) {
 function getUserData(entity) {
   var entityProps = Entities.getEntityProperties(entity);
   if (entityProps.userData) {
+    print("USER DATA " + entityProps.userData)
     userData = JSON.parse(entityProps.userData);
   } else {
     userData = {};

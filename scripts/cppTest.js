@@ -1,12 +1,2 @@
-var box = Entities.addEntity({
-  type: "Model",
-  position: MyAvatar.position,
-  color: {red: 200, green: 10, blue: 11},
-  shnur: "bdur",
-  modelURL: "Waaah"
-});
-
-
-Script.scriptEnding.connect(function(){
-  Entities.deleteEntity(box);
-});
+var inRange = AvatarList.isAvatarInRange({x: 8113, y: 1111, z: 8111}, 10);
+print("IN RANGE ? " + inRange);
