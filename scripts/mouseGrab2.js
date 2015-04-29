@@ -16,6 +16,7 @@ var flingVelocity;
 var flingMultiplier = 10;
 var DAMPING = 0.95;
 var startingHeight;
+var moveUpDown = false;
 
 
 var autoBox = true;
@@ -102,7 +103,11 @@ function mouseMoveEvent(event) {
     avatarEntityDistance = Vec3.distance(MyAvatar.position, entityProps.position);
     finalMoveMultiplier = baseMoveFactor * Math.pow(avatarEntityDistance, 1.5);
     deltaMouse.x = event.x - prevMouse.x;
-    deltaMouse.z = event.y - prevMouse.y;
+    if(!moveUpDown){
+      deltaMouse.z = event.y - prevMouse.y;
+    } else {
+      deltaMouse.y = (event.y - prevMouse.y) * -1;
+    }
     finalMoveMultiplier = baseMoveFactor * Math.pow(avatarEntityDistance, 1.5);
     deltaMouse = Vec3.multiply(deltaMouse, finalMoveMultiplier);
     camYaw = Quat.safeEulerAngles(Camera.getOrientation()).y;
@@ -116,6 +121,18 @@ function mouseMoveEvent(event) {
   prevMouse.y = event.y;
 }
 
+function keyReleaseEvent(event){
+  if(event.text === "SHIFT"){
+    moveUpDown = false;
+  }
+}
+
+function keyPressEvent(event){
+  if(event.text === "SHIFT"){
+    moveUpDown = true;
+  }
+}
+
 function cleanup() {
   Entities.deleteEntity(box);
   Entities.deleteEntity(box2);
@@ -125,4 +142,6 @@ function cleanup() {
 Controller.mouseMoveEvent.connect(mouseMoveEvent);
 Controller.mousePressEvent.connect(mousePressEvent);
 Controller.mouseReleaseEvent.connect(mouseReleaseEvent);
+Controller.keyPressEvent.connect(keyPressEvent);
+Controller.keyReleaseEvent.connect(keyReleaseEvent);
 Script.scriptEnding.connect(cleanup);
