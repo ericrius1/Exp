@@ -26,7 +26,7 @@ var DROP_COLOR = {
 var DROP_WIDTH = 4;
 
 
-var autoBox = true;
+var autoBox = false;
 if (autoBox) {
   setUpTestObjects();
 }
@@ -58,7 +58,9 @@ function mousePressEvent(event) {
     prevPosition = props.position;
     isGrabbing = true;
     savedGravity = props.gravity;
-    Overlays.editOverlay(dropLine, {visible: true});
+    Overlays.editOverlay(dropLine, {
+      visible: true
+    });
     Entities.editEntity(grabbedEntity, {
       gravity: {
         x: 0,
@@ -81,7 +83,9 @@ function mouseReleaseEvent() {
     });
   }
   isGrabbing = false;
-  Overlays.editOverlay(dropLine, {visible: false});
+  Overlays.editOverlay(dropLine, {
+    visible: false
+  });
 }
 
 function flingObject() {
@@ -116,7 +120,14 @@ function mouseMoveEvent(event) {
     Entities.editEntity(grabbedEntity, {
       position: newPosition
     });
-    Overlays.editOverlay(dropLine, {start: newPosition, end: Vec3.sum(newPosition, {x: 0, y: -DROP_DISTANCE, z: 0}) });
+    Overlays.editOverlay(dropLine, {
+      start: newPosition,
+      end: Vec3.sum(newPosition, {
+        x: 0,
+        y: -DROP_DISTANCE,
+        z: 0
+      })
+    });
   }
   prevMouse.x = event.x;
   prevMouse.y = event.y;
