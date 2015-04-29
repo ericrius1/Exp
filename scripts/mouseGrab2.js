@@ -17,6 +17,7 @@ var flingMultiplier = 10;
 var DAMPING = 0.95;
 var startingHeight;
 var moveUpDown = false;
+var savedGravity;
 
 
 var autoBox = true;
@@ -70,10 +71,13 @@ function mousePressEvent(event) {
   var intersection = Entities.findRayIntersection(pickRay);
   if (intersection.intersects && intersection.properties.collisionsWillMove) {
     grabbedEntity = intersection.entityID;
-    var props = prevPosition = Entities.getEntityProperties(grabbedEntity)
-    //hacky way to not grab floor for testing...
+    var props = Entities.getEntityProperties(grabbedEntity)
     prevPosition = props.position;
     isGrabbing = true;
+    savedGravity = props.gravity;
+    Entities.editEntity(grabbedEntity, {gravity: {x: 0, y: 0, z: 0}});
+    //We need to store entity's current gravity, and then disable it while we move
+
   }
 
 }
@@ -82,6 +86,7 @@ function mousePressEvent(event) {
 function mouseReleaseEvent() {
   if(isGrabbing){
     flingObject();
+    Entities.editEntity(grabbedEntity, {gravity: savedGravity});
   }
   isGrabbing = false;
 }
