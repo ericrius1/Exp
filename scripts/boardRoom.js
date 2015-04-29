@@ -16,8 +16,8 @@ var radius = 2;
 var chairs = [];
 var debugBoxes = [];
 var seatURL = "https://s3.amazonaws.com/hifi-public/cozza13/planets/skybox/stool/BarStool.fbx"
-var seatManagerURL = "https://hifi-public.s3.amazonaws.com/eric/scripts/oneSeatManager.js?v2";
-// var seatManagerURL = "file:///Users/ericlevin1/MyHiFiStuff/scripts/oneSeatManager.js";
+// var seatManagerURL = "https://hifi-public.s3.amazonaws.com/eric/scripts/oneSeatManager.js?v8";
+var seatManagerURL = "file:///Users/ericlevin1/MyHiFiStuff/scripts/seatManager2.js";
 var center;
 if (isAC) {
   center = {

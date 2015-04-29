@@ -1,4 +1,3 @@
-Script.include("https://hifi-public.s3.amazonaws.com/eric/scripts/tween.js")
 var isGrabbing = false;
 var grabbedEntity = null;
 var prevMouse = {};
@@ -11,7 +10,6 @@ var baseMoveFactor = .001;
 var finalMoveMultiplier;
 var avatarEntityDistance;
 var camYaw, dv;
-var raiseAmount = 1;
 var prevPosition;
 var newPosition;
 var flingVelocity;
@@ -65,77 +63,23 @@ if (autoBox) {
    })
 }
 
-function update() {
-  TWEEN.update()
-}
 
 function mousePressEvent(event) {
   var pickRay = Camera.computePickRay(event.x, event.y);
   var intersection = Entities.findRayIntersection(pickRay);
-  if (intersection.intersects) {
+  if (intersection.intersects && intersection.properties.collisionsWillMove) {
     grabbedEntity = intersection.entityID;
     var props = prevPosition = Entities.getEntityProperties(grabbedEntity)
     //hacky way to not grab floor for testing...
-    if(props.dimensions.x > 50){
-      return
-    }
     prevPosition = props.position;
     isGrabbing = true;
-    raise();
   }
 
 }
 
-function raise() {
-  entityProps = Entities.getEntityProperties(grabbedEntity);
-  startingHeight = entityProps.position.y;
-  var curProps = {
-    y: startingHeight
-  }
-  var endProps = {
-    y: entityProps.position.y + raiseAmount
-  }
-  var raiseTween = new TWEEN.Tween(curProps).
-    to(endProps, 300).
-    easing(TWEEN.Easing.Cubic.In).
-    onUpdate(function() {
-      entityProps = Entities.getEntityProperties(grabbedEntity);
-      entityProps.position.y = curProps.y;
-      Entities.editEntity(grabbedEntity, {
-        position: entityProps.position
-      });
-    }).start()
-}
-
-function lower() {
-  entityProps = Entities.getEntityProperties(grabbedEntity);
-  var curProps = {
-    y: entityProps.position.y
-  }
-  var endProps = {
-    y: startingHeight
-  }
-  var lowerTween = new TWEEN.Tween(curProps).
-    to(endProps, 1000).
-    easing(TWEEN.Easing.Cubic.Out).
-    onUpdate(function() {
-      entityProps = Entities.getEntityProperties(grabbedEntity);
-      entityProps.position.y = curProps.y;
-      entityProps.position.x += flingVelocity.x;
-      entityProps.position.z += flingVelocity.z;
-      flingVelocity = Vec3.multiply(DAMPING, flingVelocity);
-      Entities.editEntity(grabbedEntity, {
-        position: entityProps.position
-      });
-    }).start()
-
-
-
-}
 
 function mouseReleaseEvent() {
   if(isGrabbing){
-    // lower();
     flingObject();
   }
   isGrabbing = false;
@@ -181,5 +125,4 @@ function cleanup() {
 Controller.mouseMoveEvent.connect(mouseMoveEvent);
 Controller.mousePressEvent.connect(mousePressEvent);
 Controller.mouseReleaseEvent.connect(mouseReleaseEvent);
-Script.update.connect(update);
 Script.scriptEnding.connect(cleanup);
