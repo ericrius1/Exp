@@ -9,7 +9,7 @@
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
-//
+//  userData.seat: 0 = empty; 1 = occupied, 2=user is moving towards it but not there yet
 
 (function() {
   var self = this;
@@ -17,7 +17,8 @@
     this.shouldSetReferential = false;
     this.seatHeight = 0.5;
     this.seatOffsetFactor = -.07
-    this.targetAvatarToChairDistance = 0.05;
+    this.targetAvatarToChairDistance = 0.5;
+    this.seatPollIntervalTime = 500;
     this.entityId = entityId;
     this.buttonImageURL = "https://s3.amazonaws.com/hifi-public/images/tools/sit.svg";
     this.addStandButton();
@@ -44,6 +45,21 @@
     this.createSeatedPose();
     this.storeStartPoseAndTransition();
     this.getUserData();
+    this.avatarPoller = Script.setInterval(self.pollAvatar, self.seatPollIntervalTime);
+
+
+  }
+
+  this.pollAvatar = function() {
+    self.properties = Entities.getEntityProperties(self.entityId);
+    self.getUserData();
+    var inRange = AvatarList.isAvatarInRange(self.properties.position, 0.5 );
+    // if(self.userData.seat === 1 && !inRange){
+    //   print("AVATAR NOT IN RANGE")
+    //   //The avatar who was sitting on this seat either quit or crashed without standing up, so free up this seat
+    //   self.userData.seat = 0;
+    //   self.updateUserData();
+    // };
   }
 
   this.initSeats = function() {
@@ -55,11 +71,11 @@
     this.properties = Entities.getEntityProperties(this.entityId);
     this.getUserData();
     print("USER DATA SEAT" + this.userData.seat)
-      if (this.userData.seat === 0) {
-        this.userData.seat = 1;
-        this.updateUserData();
-        return true;
-      }
+    if (this.userData.seat === 0) {
+      this.userData.seat = 2;
+      this.updateUserData();
+      return true;
+    }
     return false;
   }
 
@@ -93,9 +109,8 @@
 
   this.initMoveToSeat = function() {
     if (this.assignSeat()) {
-      //first we need to move avatar towards seat
+      //we found a seat, so move avatar towards seat
       this.activeUpdate = this.moveToSeat;
-    } else {
     }
 
   }
@@ -110,13 +125,14 @@
 
   this.moveToSeat = function(deltaTime) {
     self.distance = Vec3.distance(MyAvatar.position, self.seatPosition);
-    if (self.distance > self.targetAvatarToChairDistance) {
+    if (self.distance > self.targetAvatarToChairDistance){
       self.sanitizedRotation = Quat.fromPitchYawRollDegrees(0, this.targetRotation, 0);
       MyAvatar.orientation = Quat.mix(MyAvatar.orientation, self.sanitizedRotation, 0.1);
-      MyAvatar.position = Vec3.mix(MyAvatar.position, self.seatPosition, 0.05);
+      MyAvatar.position = Vec3.mix(MyAvatar.position, self.seatPosition, 0.1);
+      print("SIIT")
     } else {
       //otherwise we made it to chair, now sit down should be our active update function
-      this.elapsedTime = 0
+      self.elapsedTime = 0
       self.activeUpdate = self.sitDown;
     }
 
@@ -128,13 +144,15 @@
     if (self.elapsedTime < self.totalAnimationTime) {
       self.updateJoints();
     } else {
-      //We've sat, now we need to check to poll to ensure there is still an avatar close by- otherwise we may have crashed;
+      //We've sat!
       self.activeUpdate = null;
       Settings.setValue(self.isSittingSettingHandle, true);
+      this.userData.seat = 1;
+      this.updateUserData();
       Overlays.editOverlay(self.standUpButton, {
         visible: true
       });
-      if (this.shouldSetReferential) {
+      if (self.shouldSetReferential) {
         MyAvatar.setModelReferential(self.properties.id);
       }
     }
@@ -150,7 +168,7 @@
     } else {
       //We're done with standing animation
       self.activeUpdate = null;
-      Settings.setValue(this.isSittingSettingHandle, false);
+      Settings.setValue(self.isSittingSettingHandle, false);
       //We just finished a standup after deleting the entity the avatar was sitting on
       if (self.disconnectAfterStanding) {
         Overlays.deleteOverlay(this.standUpButton);
@@ -158,10 +176,10 @@
       }
       //make sure we set avatar head yaw back to 0.
       MyAvatar.headYaw = 0
-      this.userData.seat = 0;
-      this.updateUserData();
+      self.userData.seat = 0;
+      self.updateUserData();
       //make sure we free up this seat
-      this.clearAvatarAnimation();
+      self.clearAvatarAnimation();
 
     }
   }
@@ -188,6 +206,8 @@
   }
 
   this.unload = function() {
+    print("UNLOAD " + this.avatarPoller);
+    Script.clearInterval(this.avatarPoller);
     var isSitting = Settings.getValue(this.isSittingSettingHandle)
     this.entityId = null;
     if (isSitting === "true") {
