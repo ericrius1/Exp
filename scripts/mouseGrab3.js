@@ -83,6 +83,7 @@ function mouseReleaseEvent() {
   Overlays.editOverlay(dropLine, {
     visible: false
   });
+  newPosition = null;
 }
 
 
@@ -121,6 +122,7 @@ function update(deltaTime){
   if(!isGrabbing ||!newPosition){
     return;
   }
+  print("WAAAAH")
   entityProps = Entities.getEntityProperties(grabbedEntity);
   dVelocity =(Vec3.subtract(newPosition, entityProps.position));
   // dVelocity = Vec3.multiply(dVelocity,deltaTime);
