@@ -9,11 +9,10 @@ var box, box2, ground;
 var baseMoveFactor = .001;
 var finalMoveMultiplier;
 var avatarEntityDistance;
-var camYaw, dPosition;
+var camYaw, dPosition, dVelocity, newVelocity;
 var prevPosition;
 var newPosition;
 var moveUpDown = false;
-var savedGravity;
 
 var grabSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/sounds/Switches%20and%20sliders/lamp_switch_3.wav");
 
@@ -60,7 +59,6 @@ function mousePressEvent(event) {
     var props = Entities.getEntityProperties(grabbedEntity)
     prevPosition = props.position;
     isGrabbing = true;
-    savedGravity = props.gravity;
     Overlays.editOverlay(dropLine, {
       visible: true,
       start: props.position,
@@ -75,18 +73,12 @@ function mousePressEvent(event) {
       position: props.position,
       volume: 1
     });
-
   }
-
 }
 
 
 function mouseReleaseEvent() {
-  if (isGrabbing) {
-    Entities.editEntity(grabbedEntity, {
-      gravity: savedGravity
-    });
-  }
+
   isGrabbing = false;
   Overlays.editOverlay(dropLine, {
     visible: false
@@ -118,12 +110,23 @@ function mouseMoveEvent(event) {
         z: 0
       })
     });
-
-
     prevPosition = entityProps.position;
   }
   prevMouse.x = event.x;
   prevMouse.y = event.y;
+
+}
+
+function update(deltaTime){
+  if(!isGrabbing ||!newPosition){
+    return;
+  }
+  entityProps = Entities.getEntityProperties(grabbedEntity);
+  dVelocity =(Vec3.subtract(newPosition, entityProps.position));
+  // dVelocity = Vec3.multiply(dVelocity,deltaTime);
+  dVelocity = Vec3.multiply(dVelocity, 0.5);
+  newVelocity = Vec3.sum(entityProps.velocity, dVelocity);
+  Entities.editEntity(grabbedEntity, {velocity: newVelocity})
 
 }
 
@@ -161,11 +164,7 @@ function setUpTestObjects() {
       blue: 192
     },
     collisionsWillMove: true,
-    gravity: {
-      x: 0,
-      y: -1,
-      z: 0
-    }
+    gravity: {x: 1, y: 0, z: 0}
   });
 
   box2 = Entities.addEntity({
@@ -179,12 +178,12 @@ function setUpTestObjects() {
     color: {
       red: 200,
       green: 50,
-      blue: 192
+      blue: 0
     },
     collisionsWillMove: true,
-    gravity: {
-      x: 0,
-      y: -1,
+    velocity: {
+      x: 0, 
+      y: .1, 
       z: 0
     }
   });
@@ -215,3 +214,4 @@ Controller.mouseReleaseEvent.connect(mouseReleaseEvent);
 Controller.keyPressEvent.connect(keyPressEvent);
 Controller.keyReleaseEvent.connect(keyReleaseEvent);
 Script.scriptEnding.connect(cleanup);
+Script.update.connect(update);
