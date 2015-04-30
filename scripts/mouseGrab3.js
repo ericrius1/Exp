@@ -9,15 +9,13 @@ var box, box2, ground;
 var baseMoveFactor = .001;
 var finalMoveMultiplier;
 var avatarEntityDistance;
-var camYaw, dv;
+var camYaw, dPosition;
 var prevPosition;
 var newPosition;
-var flingVelocity;
-var flingMultiplier = 10;
 var moveUpDown = false;
 var savedGravity;
 
-var grabSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/sounds/Switches%20and%20sliders/lamp_switch_2.wav");
+var grabSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/sounds/Switches%20and%20sliders/lamp_switch_3.wav");
 
 var DROP_DISTANCE = 5.0;
 var DROP_COLOR = {
@@ -28,7 +26,7 @@ var DROP_COLOR = {
 var DROP_WIDTH = 4;
 
 
-var autoBox = true;
+var autoBox = false;
 if (autoBox) {
   setUpTestObjects();
 }
@@ -72,15 +70,10 @@ function mousePressEvent(event) {
         z: 0
       })
     });
-    Entities.editEntity(grabbedEntity, {
-      gravity: {
-        x: 0,
-        y: 0,
-        z: 0
-      }
-    });
+
     Audio.playSound(grabSound, {
-      position: props.position
+      position: props.position,
+      volume: 1
     });
 
   }
@@ -90,7 +83,6 @@ function mousePressEvent(event) {
 
 function mouseReleaseEvent() {
   if (isGrabbing) {
-    // flingObject();
     Entities.editEntity(grabbedEntity, {
       gravity: savedGravity
     });
@@ -101,16 +93,6 @@ function mouseReleaseEvent() {
   });
 }
 
-function flingObject() {
-  //calculate velocity to give object base on current and previous position
-  entityProps = Entities.getEntityProperties(grabbedEntity);
-
-  flingVelocity = Vec3.subtract(entityProps.position, prevPosition);
-  flingVelocity = Vec3.multiply(flingMultiplier, flingVelocity);
-  Entities.editEntity(grabbedEntity, {
-    velocity: flingVelocity
-  });
-}
 
 function mouseMoveEvent(event) {
   if (isGrabbing) {
@@ -126,11 +108,8 @@ function mouseMoveEvent(event) {
     finalMoveMultiplier = baseMoveFactor * Math.pow(avatarEntityDistance, 1.5);
     deltaMouse = Vec3.multiply(deltaMouse, finalMoveMultiplier);
     camYaw = Quat.safeEulerAngles(Camera.getOrientation()).y;
-    dv = Vec3.multiplyQbyV(Quat.fromPitchYawRollDegrees(0, camYaw, 0), deltaMouse);
-    newPosition = Vec3.sum(entityProps.position, dv);
-    Entities.editEntity(grabbedEntity, {
-      position: newPosition
-    });
+    dPosition = Vec3.multiplyQbyV(Quat.fromPitchYawRollDegrees(0, camYaw, 0), deltaMouse);
+    newPosition = Vec3.sum(entityProps.position, dPosition);
     Overlays.editOverlay(dropLine, {
       start: newPosition,
       end: Vec3.sum(newPosition, {
@@ -140,11 +119,7 @@ function mouseMoveEvent(event) {
       })
     });
 
-    flingVelocity = Vec3.subtract(entityProps.position, prevPosition);
-    flingVelocity = Vec3.multiply(flingMultiplier, flingVelocity);
-    Entities.editEntity(grabbedEntity, {
-      velocity: flingVelocity
-    });
+
     prevPosition = entityProps.position;
   }
   prevMouse.x = event.x;

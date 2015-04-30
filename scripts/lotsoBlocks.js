@@ -2,27 +2,33 @@ var NUM_BLOCKS = 200;
 var size;
 var SPAWN_RANGE = 10;
 var boxes = [];
+var basePosition, avatarRot;
+var isAssignmentScript = false;
+if(isAssignmentScript){
+  basePosition = {x: 8000, y: 8000, z: 8000};
+}
+else {
+  avatarRot = Quat.fromPitchYawRollDegrees(0, MyAvatar.bodyYaw, 0.0);
+  basePosition = Vec3.sum(MyAvatar.position, Vec3.multiply(SPAWN_RANGE * 3, Quat.getFront(avatarRot)));
+}
+basePosition.y -= SPAWN_RANGE;
 
 var ground = Entities.addEntity({
   type: "Model",
   modelURL: "https://hifi-public.s3.amazonaws.com/eric/models/woodFloor.fbx",
   dimensions: {
-    x: 1000,
+    x: 100,
     y: 2,
-    z: 1000
+    z: 100
   },
-  position: Vec3.subtract(MyAvatar.position, {
-    x: 0,
-    y: SPAWN_RANGE,
-    z: 0
-  })
+  position: basePosition,
+  shapeType: 'box'
 });
 
-var avatarRot = Quat.fromPitchYawRollDegrees(0, MyAvatar.bodyYaw, 0.0);
-var basePosition = Vec3.sum(MyAvatar.position, Vec3.multiply(SPAWN_RANGE * 3, Quat.getFront(avatarRot)));
-basePosition.y += 2;
+
+basePosition.y += SPAWN_RANGE + 2;
 for (var i = 0; i < NUM_BLOCKS; i++) {
-  size = randFloat(0.5, 2);
+  size = randFloat(-.2, 0.7);
   boxes.push(Entities.addEntity({
     type: 'Box',
     dimensions: {
@@ -36,7 +42,8 @@ for (var i = 0; i < NUM_BLOCKS; i++) {
       z: basePosition.z + randFloat(-SPAWN_RANGE, SPAWN_RANGE)
     },
     color: {red: Math.random() * 255, green: Math.random() * 255, blue: Math.random() * 255},
-    collisionsWillMove: true
+    collisionsWillMove: true,
+    gravity: {x: 0, y: 0, z: 0}
   }));
 }
 
@@ -52,5 +59,5 @@ function cleanup() {
 Script.scriptEnding.connect(cleanup);
 
 function randFloat(low, high) {
-  return Math.floor(low + Math.random() * (high - low));
+  return low + Math.random() * ( high - low );
 }
