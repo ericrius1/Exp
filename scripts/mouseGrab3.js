@@ -103,6 +103,12 @@ function mouseMoveEvent(event) {
     camYaw = Quat.safeEulerAngles(Camera.getOrientation()).y;
     dPosition = Vec3.multiplyQbyV(Quat.fromPitchYawRollDegrees(0, camYaw, 0), deltaMouse);
     newPosition = Vec3.sum(entityProps.position, dPosition);
+    dVelocity = (Vec3.subtract(newPosition, entityProps.position));
+    dVelocity = Vec3.multiply(dVelocity, 0.5);
+    newVelocity = Vec3.sum(entityProps.velocity, dVelocity);
+    Entities.editEntity(grabbedEntity, {
+      velocity: newVelocity
+    })
     Overlays.editOverlay(dropLine, {
       start: newPosition,
       end: Vec3.sum(newPosition, {
@@ -115,20 +121,6 @@ function mouseMoveEvent(event) {
   }
   prevMouse.x = event.x;
   prevMouse.y = event.y;
-
-}
-
-function update(deltaTime){
-  if(!isGrabbing ||!newPosition){
-    return;
-  }
-  print("WAAAAH")
-  entityProps = Entities.getEntityProperties(grabbedEntity);
-  dVelocity =(Vec3.subtract(newPosition, entityProps.position));
-  // dVelocity = Vec3.multiply(dVelocity,deltaTime);
-  dVelocity = Vec3.multiply(dVelocity, 0.5);
-  newVelocity = Vec3.sum(entityProps.velocity, dVelocity);
-  Entities.editEntity(grabbedEntity, {velocity: newVelocity})
 
 }
 
@@ -145,9 +137,11 @@ function keyPressEvent(event) {
 }
 
 function cleanup() {
-  Entities.deleteEntity(box);
-  Entities.deleteEntity(box2);
-  Entities.deleteEntity(ground);
+  if(autoBox){
+    Entities.deleteEntity(box);
+    Entities.deleteEntity(box2);
+    Entities.deleteEntity(ground);
+  }
 }
 
 function setUpTestObjects() {
@@ -166,7 +160,11 @@ function setUpTestObjects() {
       blue: 192
     },
     collisionsWillMove: true,
-    gravity: {x: 1, y: 0, z: 0}
+    gravity: {
+      x: 1,
+      y: 0,
+      z: 0
+    }
   });
 
   box2 = Entities.addEntity({
@@ -184,8 +182,8 @@ function setUpTestObjects() {
     },
     collisionsWillMove: true,
     velocity: {
-      x: 0, 
-      y: .1, 
+      x: 0,
+      y: .1,
       z: 0
     }
   });
@@ -216,4 +214,3 @@ Controller.mouseReleaseEvent.connect(mouseReleaseEvent);
 Controller.keyPressEvent.connect(keyPressEvent);
 Controller.keyReleaseEvent.connect(keyReleaseEvent);
 Script.scriptEnding.connect(cleanup);
-Script.update.connect(update);

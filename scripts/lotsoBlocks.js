@@ -43,7 +43,7 @@ for (var i = 0; i < NUM_BLOCKS; i++) {
     },
     color: {red: Math.random() * 255, green: Math.random() * 255, blue: Math.random() * 255},
     collisionsWillMove: true,
-    gravity: {x: 0, y: 0, z: 0}
+    gravity: {x: 0, y: -3, z: 0}
   }));
 }
 
