@@ -8,7 +8,7 @@ var entityProps;
 var targetPosition;
 var moveUpDown = false;
 
-var currentPosition, currentVelocity; 
+var currentPosition, currentVelocity, dragVelocity; 
 
 var grabSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/CloseClamp.wav");
 var releaseSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/ReleaseClamp.wav");
@@ -19,21 +19,23 @@ var DROP_COLOR = {
   green: 200,
   blue: 200
 };
+var VELOCITY_COLOR = {
+  red: 0,
+  green: 255,
+  blue: 255
+};
+
 var DROP_WIDTH = 2;
 
-
 var dropLine = Overlays.addOverlay("line3d", {
-  start: {
-    x: 0,
-    y: 0,
-    z: 0
-  },
-  end: {
-    x: 0,
-    y: 0,
-    z: 0
-  },
   color: DROP_COLOR,
+  alpha: 1,
+  visible: false,
+  lineWidth: DROP_WIDTH
+});
+
+var velocityLine = Overlays.addOverlay("line3d", {
+  color: VELOCITY_COLOR,
   alpha: 1,
   visible: false,
   lineWidth: DROP_WIDTH
@@ -53,7 +55,8 @@ function mousePressEvent(event) {
     targetPosition = props.position;
     currentPosition = props.position; 
     currentVelocity = props.velocity; 
-    updateDropLine(targetPosition);
+    dragVelocity = { x: 0, y: 0, z: 0 };
+    updateDropLine(targetPosition, dragVelocity);
     Audio.playSound(grabSound, {
       position: props.position,
       volume: 0.4
@@ -61,15 +64,20 @@ function mousePressEvent(event) {
   }
 }
 
-function updateDropLine(position) { 
+function updateDropLine(position, velocity) { 
       Overlays.editOverlay(dropLine, {
       visible: true,
-      start: position,
+      start: { x: position.x, y: position.y + DROP_DISTANCE, z: position.z },
       end: Vec3.sum(position, {
         x: 0,
         y: -DROP_DISTANCE,
         z: 0
       })
+    })
+    Overlays.editOverlay(velocityLine, {
+      visible: true,
+      start: position,
+      end: Vec3.sum(position, velocity)
     })
 }
 
@@ -78,6 +86,9 @@ function mouseReleaseEvent() {
   if (isGrabbing) {
     isGrabbing = false;
     Overlays.editOverlay(dropLine, {
+      visible: false
+    });
+    Overlays.editOverlay(velocityLine, {
       visible: false
     });
     targetPosition = null;
@@ -136,15 +147,21 @@ function update(deltaTime) {
 
     var dPosition = Vec3.subtract(targetPosition, currentPosition);
     var CLOSE_ENOUGH = 0.001;
-    if (Vec3.length(dPosition) > CLOSE_ENOUGH) {
+    var FULL_STRENGTH = 0.025;
+    var distanceToTarget = Vec3.length(dPosition);
+    if (distanceToTarget > CLOSE_ENOUGH) {
       //  compute current velocity in the direction we want to move 
       var velocityTowardTarget = Vec3.dot(currentVelocity, Vec3.normalize(dPosition));
       //  compute the speed we would like to be going toward the target position 
-      var SPRING_RATE = 0.35;
-      var DAMPING_RATE = 0.55;
+      var SPRING_RATE = 1.5;
+      var DAMPING_RATE = 0.70;
       var desiredVelocity = Vec3.multiply(dPosition, (1.0 / deltaTime) * SPRING_RATE);
       //  compute how much we want to add to the existing velocity
       var addedVelocity = Vec3.subtract(desiredVelocity, velocityTowardTarget);
+      //  If target is too far, roll off the force as inverse square of distance
+      if (distanceToTarget > FULL_STRENGTH) {
+        addedVelocity = Vec3.multiply(addedVelocity, Math.pow(FULL_STRENGTH / distanceToTarget, 2.0));
+      }
       var newVelocity = Vec3.sum(currentVelocity, addedVelocity); 
       //  Add Damping 
       newVelocity = Vec3.subtract(newVelocity, Vec3.multiply(newVelocity, DAMPING_RATE));
@@ -153,7 +170,7 @@ function update(deltaTime) {
       velocity: newVelocity
       })
     } 
-    updateDropLine(currentPosition);
+    updateDropLine(targetPosition, dragVelocity);
   }
 }
 

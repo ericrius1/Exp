@@ -5,10 +5,10 @@ var deltaMouse = {
   z: 0
 }
 var entityProps;
-var targetPosition;
+var targetPosition, targetRotation;
 var moveUpDown = false;
-
-var currentPosition, currentVelocity; 
+var DEFAULT_ORIENTATION = Quat.fromPitchYawRollDegrees(0, 0, 0);
+var currentPosition, currentVelocity, currentRotation; 
 
 var grabSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/CloseClamp.wav");
 var releaseSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/ReleaseClamp.wav");
@@ -20,6 +20,8 @@ var DROP_COLOR = {
   blue: 200
 };
 var DROP_WIDTH = 2;
+var shouldRotate = false
+
 
 
 var dropLine = Overlays.addOverlay("line3d", {
@@ -51,7 +53,9 @@ function mousePressEvent(event) {
     var props = Entities.getEntityProperties(grabbedEntity)
     isGrabbing = true;
     targetPosition = props.position;
+    targetRotation = props.rotation;
     currentPosition = props.position; 
+    currentRotation = props.rotation;
     currentVelocity = props.velocity; 
     updateDropLine(targetPosition);
     Audio.playSound(grabSound, {
@@ -81,6 +85,7 @@ function mouseReleaseEvent() {
       visible: false
     });
     targetPosition = null;
+    targetRotation  = null;
     Audio.playSound(grabSound, {
       position: entityProps.position,
       volume: 0.25
@@ -99,15 +104,20 @@ function mouseMoveEvent(event) {
       deltaMouse.y = (event.y - prevMouse.y) * -1;
       deltaMouse.z = 0;
     }
-    //  Update the target position by the amount the mouse moved
-    var camYaw = Quat.safeEulerAngles(Camera.getOrientation()).y;
-    var dPosition = Vec3.multiplyQbyV(Quat.fromPitchYawRollDegrees(0, camYaw, 0), deltaMouse);
-    //  Adjust target position for the object by the mouse move 
-    var avatarEntityDistance = Vec3.distance(Camera.getPosition(), currentPosition);
-      //  Scale distance we want to move by the distance from the camera to the grabbed object 
-      //  TODO:  Correct SCREEN_TO_METERS to be correct for the actual FOV, resolution
-    var SCREEN_TO_METERS = 0.001;
-    targetPosition = Vec3.sum(targetPosition, Vec3.multiply(dPosition, avatarEntityDistance * SCREEN_TO_METERS));
+    if(!shouldRotate){
+      //  Update the target position by the amount the mouse moved
+      var camYaw = Quat.safeEulerAngles(Camera.getOrientation()).y;
+      var dPosition = Vec3.multiplyQbyV(Quat.fromPitchYawRollDegrees(0, camYaw, 0), deltaMouse);
+      //  Adjust target position for the object by the mouse move 
+      var avatarEntityDistance = Vec3.distance(Camera.getPosition(), currentPosition);
+        //  Scale distance we want to move by the distance from the camera to the grabbed object 
+        //  TODO:  Correct SCREEN_TO_METERS to be correct for the actual FOV, resolution
+      var SCREEN_TO_METERS = 0.001;
+      targetPosition = Vec3.sum(targetPosition, Vec3.multiply(dPosition, avatarEntityDistance * SCREEN_TO_METERS));
+    } else if(shouldRotate) {
+      var rotationChange = Quat.fromVec3Degrees({x: deltaMouse.y, y: deltaMouse.x, z: deltaMouse.z});
+      targetRotation = Quat.multiply(rotationChange, currentRotation);
+    }
   }
   prevMouse.x = event.x;
   prevMouse.y = event.y;
@@ -119,11 +129,17 @@ function keyReleaseEvent(event) {
   if (event.text === "SHIFT") {
     moveUpDown = false;
   }
+  if(event.text === "SPACE"){
+    shouldRotate = false
+  }
 }
 
 function keyPressEvent(event) {
   if (event.text === "SHIFT") {
     moveUpDown = true;
+  }
+  if(event.text === "SPACE"){
+    shouldRotate = true;
   }
 }
 
@@ -132,7 +148,9 @@ function update(deltaTime) {
 
     entityProps = Entities.getEntityProperties(grabbedEntity);
     currentPosition = entityProps.position; 
-    currentVelocity = entityProps.velocity; 
+    currentVelocity = entityProps.velocity;
+    currentRotation = entityProps.rotation; 
+
 
     var dPosition = Vec3.subtract(targetPosition, currentPosition);
     var CLOSE_ENOUGH = 0.001;
@@ -150,7 +168,8 @@ function update(deltaTime) {
       newVelocity = Vec3.subtract(newVelocity, Vec3.multiply(newVelocity, DAMPING_RATE));
       //  Update entity
       Entities.editEntity(grabbedEntity, {
-      velocity: newVelocity
+      velocity: newVelocity,
+      rotation: Quat.mix(currentRotation, targetRotation, 0.5)
       })
     } 
     updateDropLine(currentPosition);
