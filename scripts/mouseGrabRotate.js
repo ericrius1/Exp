@@ -104,19 +104,25 @@ function mouseMoveEvent(event) {
       deltaMouse.y = (event.y - prevMouse.y) * -1;
       deltaMouse.z = 0;
     }
+    var camYaw = Quat.safeEulerAngles(Camera.getOrientation()).y;
     if(!shouldRotate){
       //  Update the target position by the amount the mouse moved
-      var camYaw = Quat.safeEulerAngles(Camera.getOrientation()).y;
       var dPosition = Vec3.multiplyQbyV(Quat.fromPitchYawRollDegrees(0, camYaw, 0), deltaMouse);
       //  Adjust target position for the object by the mouse move 
       var avatarEntityDistance = Vec3.distance(Camera.getPosition(), currentPosition);
-        //  Scale distance we want to move by the distance from the camera to the grabbed object 
+        //  Scale distance we want to move by the dist                  ance from the camera to the grabbed object 
         //  TODO:  Correct SCREEN_TO_METERS to be correct for the actual FOV, resolution
       var SCREEN_TO_METERS = 0.001;
       targetPosition = Vec3.sum(targetPosition, Vec3.multiply(dPosition, avatarEntityDistance * SCREEN_TO_METERS));
     } else if(shouldRotate) {
+      
       var rotationChange = Quat.fromVec3Degrees({x: deltaMouse.y, y: deltaMouse.x, z: deltaMouse.z});
+      print("targetRotation " + JSON.stringify(targetRotation));
       targetRotation = Quat.multiply(rotationChange, currentRotation);
+      var theta = 2 * Math.acos(rotationChange)
+      Entities.editEntity(grabbedEntity, {
+                 rotation: Quat.mix(currentRotation, targetRotation, 0.5)  
+      })
     }
   }
   prevMouse.x = event.x;
@@ -157,6 +163,7 @@ function update(deltaTime) {
     if (Vec3.length(dPosition) > CLOSE_ENOUGH) {
       //  compute current velocity in the direction we want to move 
       var velocityTowardTarget = Vec3.dot(currentVelocity, Vec3.normalize(dPosition));
+      velocityTowardTarget = Vec3.multiply(dPosition, velocityTowardTarget);
       //  compute the speed we would like to be going toward the target position 
       var SPRING_RATE = 0.35;
       var DAMPING_RATE = 0.55;
@@ -169,7 +176,6 @@ function update(deltaTime) {
       //  Update entity
       Entities.editEntity(grabbedEntity, {
       velocity: newVelocity,
-      rotation: Quat.mix(currentRotation, targetRotation, 0.5)
       })
     } 
     updateDropLine(currentPosition);
