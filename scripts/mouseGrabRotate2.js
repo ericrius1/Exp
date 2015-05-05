@@ -18,7 +18,6 @@ var deltaMouse = {
   z: 0
 }
 var entityProps;
-var targetPosition;
 var moveUpDown = false;
 var CLOSE_ENOUGH = 0.001;
 var FULL_STRENGTH = 0.025;
@@ -26,8 +25,9 @@ var SPRING_RATE = 1.5;
 var DAMPING_RATE = 0.80;
 var SCREEN_TO_METERS = 0.001;
 var currentPosition, currentVelocity, cameraEntityDistance;
-var velocityTowardTarget, desiredVelocity, addedVelocity, newVelocity, dPosition, camYaw;
-var distanceToTarget;
+var velocityTowardTarget, desiredVelocity, addedVelocity, newVelocity, dPosition, camYaw, distanceToTarget, targetPosition;
+var shouldRotate = false;
+var dQ, theta, axisAngle, angularVelocity, dT;
 
 var grabSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/CloseClamp.wav");
 var releaseSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/ReleaseClamp.wav");
@@ -114,13 +114,22 @@ function mouseMoveEvent(event) {
     }
     //  Update the target position by the amount the mouse moved
     camYaw = Quat.safeEulerAngles(Camera.getOrientation()).y;
-    var dPosition = Vec3.multiplyQbyV(Quat.fromPitchYawRollDegrees(0, camYaw, 0), deltaMouse);
-    //  Adjust target position for the object by the mouse move 
-    cameraEntityDistance = Vec3.distance(Camera.getPosition(), currentPosition);
-    //  Scale distance we want to move by the distance from the camera to the grabbed object 
-    //  TODO:  Correct SCREEN_TO_METERS to be correct for the actual FOV, resolution
-
-    targetPosition = Vec3.sum(targetPosition, Vec3.multiply(dPosition, cameraEntityDistance * SCREEN_TO_METERS));
+    dPosition = Vec3.multiplyQbyV(Quat.fromPitchYawRollDegrees(0, camYaw, 0), deltaMouse);
+    if(!shouldRotate){
+      //  Adjust target position for the object by the mouse move 
+      cameraEntityDistance = Vec3.distance(Camera.getPosition(), currentPosition);
+      //  Scale distance we want to move by the distance from the camera to the grabbed object 
+      //  TODO:  Correct SCREEN_TO_METERS to be correct for the actual FOV, resolution
+      targetPosition = Vec3.sum(targetPosition, Vec3.multiply(dPosition, cameraEntityDistance * SCREEN_TO_METERS));
+    } else if(shouldRotate) {
+      dQ = Quat.fromVec3Degrees({x: deltaMouse.y, y: deltaMouse.x, z: deltaMouse.z});
+      theta = 2 * Math.acos(dQ.w);
+      axisAngle = Quat.axis(dQ);
+      angularVelocity = Vec3.multiply((theta/dT), axisAngle);
+      Entities.editEntity(grabbedEntity, {
+        angularVelocity: angularVelocity
+      });
+    }
   }
   prevMouse.x = event.x;
   prevMouse.y = event.y;
@@ -132,15 +141,22 @@ function keyReleaseEvent(event) {
   if (event.text === "SHIFT") {
     moveUpDown = false;
   }
+  if (event.text === "SPACE") {
+    shouldRotate = false;
+  }
 }
 
 function keyPressEvent(event) {
   if (event.text === "SHIFT") {
     moveUpDown = true;
   }
+  if (event.text === "SPACE") {
+    shouldRotate = true;
+  }
 }
 
 function update(deltaTime) {
+  dT = deltaTime;
   if (isGrabbing) {
 
     entityProps = Entities.getEntityProperties(grabbedEntity);
