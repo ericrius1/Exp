@@ -20,14 +20,16 @@ var deltaMouse = {
 var entityProps;
 var moveUpDown = false;
 var CLOSE_ENOUGH = 0.001;
-var FULL_STRENGTH = 0.025;
+var FULL_STRENGTH = 0.11;
 var SPRING_RATE = 1.5;
 var DAMPING_RATE = 0.80;
+var ANGULAR_DAMPING_RATE = 0.40;
 var SCREEN_TO_METERS = 0.001;
-var currentPosition, currentVelocity, cameraEntityDistance;
+var currentPosition, currentVelocity, cameraEntityDistance, currentRotation;
 var velocityTowardTarget, desiredVelocity, addedVelocity, newVelocity, dPosition, camYaw, distanceToTarget, targetPosition;
 var shouldRotate = false;
-var dQ, theta, axisAngle, angularVelocity, dT;
+var dQ, theta, axisAngle, dT;
+var angularVelocity = {x: 0, y: 0, z:0};
 
 var grabSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/CloseClamp.wav");
 var releaseSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/ReleaseClamp.wav");
@@ -122,13 +124,12 @@ function mouseMoveEvent(event) {
       //  TODO:  Correct SCREEN_TO_METERS to be correct for the actual FOV, resolution
       targetPosition = Vec3.sum(targetPosition, Vec3.multiply(dPosition, cameraEntityDistance * SCREEN_TO_METERS));
     } else if(shouldRotate) {
-      dQ = Quat.fromVec3Degrees({x: deltaMouse.y, y: deltaMouse.x, z: deltaMouse.z});
+      var transformedDeltaMouse = {x: deltaMouse.z, y: deltaMouse.x, z: deltaMouse.y};
+      transformedDeltaMouse = Vec3.multiplyQbyV(Quat.fromPitchYawRollDegrees(0, camYaw, 0), transformedDeltaMouse);
+      dQ = Quat.fromVec3Degrees(transformedDeltaMouse);
       theta = 2 * Math.acos(dQ.w);
       axisAngle = Quat.axis(dQ);
       angularVelocity = Vec3.multiply((theta/dT), axisAngle);
-      Entities.editEntity(grabbedEntity, {
-        angularVelocity: angularVelocity
-      });
     }
   }
   prevMouse.x = event.x;
@@ -162,6 +163,7 @@ function update(deltaTime) {
     entityProps = Entities.getEntityProperties(grabbedEntity);
     currentPosition = entityProps.position;
     currentVelocity = entityProps.velocity;
+    currentRotation = entityProps.rotation;
 
     var dPosition = Vec3.subtract(targetPosition, currentPosition);
 
@@ -177,16 +179,22 @@ function update(deltaTime) {
       addedVelocity = Vec3.subtract(desiredVelocity, velocityTowardTarget);
       //  If target is too far, roll off the force as inverse square of distance
       if (distanceToTarget / cameraEntityDistance > FULL_STRENGTH) {
-        // addedVelocity = Vec3.multiply(addedVelocity, Math.pow(FULL_STRENGTH / distanceToTarget, 2.0));
+        addedVelocity = Vec3.multiply(addedVelocity, Math.pow(FULL_STRENGTH / distanceToTarget, 2.0));
       }
       newVelocity = Vec3.sum(currentVelocity, addedVelocity);
       //  Add Damping 
       newVelocity = Vec3.subtract(newVelocity, Vec3.multiply(newVelocity, DAMPING_RATE));
       //  Update entity
-      Entities.editEntity(grabbedEntity, {
-        velocity: newVelocity
-      })
+
+      //add damping to angular velocity:
     }
+    if(shouldRotate){
+      angularVelocity = Vec3.subtract(angularVelocity, Vec3.multiply(angularVelocity, ANGULAR_DAMPING_RATE));
+    }
+    Entities.editEntity(grabbedEntity, {
+      velocity: newVelocity,
+      angularVelocity: angularVelocity
+    })
     updateDropLine(targetPosition);
   }
 }
