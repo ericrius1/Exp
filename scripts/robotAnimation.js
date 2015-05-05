@@ -202,15 +202,15 @@ function setNewTargetPivot() {
     isTurned = false;
   }
 
-  // if ((isStrafing) && !isTurned) {
-  //   //turn wheel left or right 
-  //   initPivotTween(currentYaw, targetAngle);
-  //   isTurned = true;
-  // } else if (!isStrafing && isTurned) {
-  //   //Turn wheel back to default position
-  //   initPivotTween(currentYaw, eulerPivotStartRotation.y);
-  //   isTurned = false;
-  // }
+  if ((isStrafing) && !isTurned) {
+    //turn wheel left or right 
+    initPivotTween(currentYaw, targetAngle);
+    isTurned = true;
+  } else if (!isStrafing && isTurned) {
+    //Turn wheel back to default position
+    initPivotTween(currentYaw, eulerPivotStartRotation.y);
+    isTurned = false;
+  }
 
 }
 

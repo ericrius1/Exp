@@ -16,7 +16,7 @@ var SPEED_OSCILLATION = 10;
 
 
 //********TIRE STUFF************************************************************
-var keyFrameAnim = true;
+var keyFrameAnim = false;
 if(keyFrameAnim){
   var tireAnim = "https://hifi-public.s3.amazonaws.com/eric/models/tireAnim.fbx?v1";
   var tireFPS = 30;
