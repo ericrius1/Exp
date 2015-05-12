@@ -7,15 +7,19 @@ var LASER_COLOR = {
 };
 var LASER_LENGTH_FACTOR = 500;
 
-
+function getRayIntersection(pickRay){
+  var intersection = Entities.findRayIntersection(pickRay);
+  return intersection;
+}
 
 
 function controller(side) {
+  this.triggerHeld = false;
+  this.triggerThreshold = 0.9;
   this.side = side;
   this.palm = 2 * side;
   this.tip = 2 * side + 1;
   this.trigger = side;
-  this.bumper = 6 * side + 5;
 
   this.laser = Overlays.addOverlay("line3d", {
     start: {
@@ -60,9 +64,36 @@ function controller(side) {
     this.rotation = this.oldRotation;
 
     this.triggerValue = Controller.getTriggerValue(this.trigger);
-    this.bumperValue = Controller.isButtonPressed(this.bumper);
+    this.checkTrigger();
 
+  }
 
+  this.checkTrigger = function() {
+    if (this.triggerValue > this.triggerThreshold && !this.triggerHeld) {
+      this.triggerHeld = true;
+      this.checkEntityIntersection();
+    } else if (this.triggerValue < this.triggerThreshold && this.triggerHeld) {
+      this.triggerHeld = false;
+    }
+  }
+
+  this.checkEntityIntersection = function() {
+
+    var pickRay = {
+      origin: this.palmPosition,
+      direction: Vec3.normalize(Vec3.subtract(this.tipPosition, this.palmPosition))
+    };
+    var intersection = getRayIntersection(pickRay);
+    if(intersection.intersects && intersection.properties.collisionsWillMove){
+      this.grab(intersection.entityId);
+    }
+  }
+
+  this.grab = function(entityId){
+    print("GRAB")
+    this.grabbing = true;
+    this.grabbedEntityId = entityId;
+    this.entityProperties = Entities.getEntityProperties(this.grabbedEntityId);
   }
 
   this.moveLaser = function() {
