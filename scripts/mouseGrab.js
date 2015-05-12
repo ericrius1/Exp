@@ -81,7 +81,7 @@ function mousePressEvent(event) {
     }
     prevPosition = props.position;
     isGrabbing = true;
-    raise();
+    // raise();
   }
 
 }
@@ -136,7 +136,7 @@ function lower() {
 function mouseReleaseEvent() {
   if(isGrabbing){
     // lower();
-    flingObject();
+    // flingObject();
   }
   isGrabbing = false;
 }
