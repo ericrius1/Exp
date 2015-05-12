@@ -192,11 +192,13 @@ var animationSettings = JSON.stringify({
 });
 var smokeEffect = Entities.addEntity({
   type: "ParticleEffect",
+  position: MyAvatar.position,
   animationSettings: animationSettings,
   emitRate: 100,
+  textures: "https://s3.amazonaws.com/hifi-public/cozza13/particle/orb_blue_glow.png",
   color: {red: 200, green: 200, blue: 200},
-  emitStrength: 1,
-  localGravity: {x: 0, y:0, z: 0}
+  emitStrength: 5,
+  localGravity: {x: 0, y: 0, z: 0},
 })
 
 function shootBullet(position, velocity, grenade) {
@@ -242,7 +244,8 @@ function shootBullet(position, velocity, grenade) {
   Entities.editEntity(smokeEffect, {
     position: position,
     animationIsPlaying: true,
-    emitDirection: smokeVelocity
+    emitDirection: smokeVelocity,
+    textures: "https://s3.amazonaws.com/hifi-public/cozza13/particle/orb_blue_glow.png",
   })
 
   // Play firing sounds 
