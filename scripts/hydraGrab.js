@@ -28,6 +28,9 @@ var DAMPING_RATE = 0.8;
 var SCREEN_TO_METERS = 0.001;
 var DISTANCE_SCALE_FACTOR = 1000
 
+var grabSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/CloseClamp.wav");
+var releaseSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/ReleaseClamp.wav");
+
 function getRayIntersection(pickRay) {
   var intersection = Entities.findRayIntersection(pickRay);
   return intersection;
@@ -111,7 +114,8 @@ function controller(side) {
       };
     }
     Entities.editEntity(this.grabbedEntity, {
-      velocity: this.newVelocity
+      velocity: this.newVelocity,
+      angularVelocity: Controller.getSpatialControlRawAngularVelocity(this.tip)
     });
 
     this.updateDropLine(this.targetPosition);
@@ -130,7 +134,9 @@ function controller(side) {
       this.triggerHeld = true;
     } else if (this.triggerValue < this.triggerThreshold && this.triggerHeld) {
       this.triggerHeld = false;
-      this.release();
+      if(this.grabbing){
+        this.release();
+      }
     }
   }
 
@@ -162,13 +168,13 @@ function controller(side) {
     var intersection = getRayIntersection(pickRay);
     if (intersection.intersects && intersection.properties.collisionsWillMove) {
       this.laserWasHovered = true;
-      if(this.triggerHeld){
+      if (this.triggerHeld && !this.grabbing) {
         this.grab(intersection.entityID);
       }
       Overlays.editOverlay(this.laser, {
         color: LASER_HOVER_COLOR
       });
-    } else if(this.laserWasHovered){
+    } else if (this.laserWasHovered) {
       this.laserWasHovered = false;
       Overlays.editOverlay(this.laser, {
         color: LASER_COLOR
@@ -186,6 +192,10 @@ function controller(side) {
     Overlays.editOverlay(this.laser, {
       visible: false
     });
+    Audio.playSound(grabSound, {
+      position: this.entityProps.position,
+      volume: 0.25
+    });
   }
 
   this.release = function() {
@@ -196,6 +206,11 @@ function controller(side) {
     });
     Overlays.editOverlay(this.dropLine, {
       visible: false
+    });
+
+    Audio.playSound(releaseSound, {
+      position: this.entityProps.position,
+      volume: 0.25
     });
   }
 
