@@ -44,10 +44,26 @@ function controller(side) {
     anchor: "MyAvatar"
   });
 
-  this.update = function() {
+  this.update = function(deltaTime) {
     this.updateControllerState();
     this.moveLaser();
     this.checkTrigger();
+    if(this.grabbing){
+      this.updateEntity()
+    }
+
+    this.oldPalmPosition = this.palmPosition;
+    this.oldTipPosition = this.tipPosition;
+  }
+
+  this.updateEntity = function(){
+    this.dControllerPosition = Vec3.subtract(this.palmPosition, this.oldPalmPosition);
+    this.cameraEntityDistance = Vec3.distance(Camera.getPosition(), this.currentPosition);
+    this.targetPosition = Vec3.sum(this.targetPosition, Vec3.multiply(this.dControllerPosition, this.cameraEntityDistance));
+    Entities.editEntity(this.grabbedEntity, {position: this.targetPosition});
+
+
+    this.entityProps = Entities.getEntityProperties(this.grabbedEntity);
   }
 
 
@@ -55,8 +71,6 @@ function controller(side) {
     this.palmPosition = Controller.getSpatialControlPosition(this.palm);
     this.tipPosition = Controller.getSpatialControlPosition(this.tip);
     this.triggerValue = Controller.getTriggerValue(this.trigger);
-
-
   }
 
   this.checkTrigger = function() {
@@ -65,6 +79,7 @@ function controller(side) {
       this.checkEntityIntersection();
     } else if (this.triggerValue < this.triggerThreshold && this.triggerHeld) {
       this.triggerHeld = false;
+      this.release();
     }
   }
 
@@ -76,7 +91,7 @@ function controller(side) {
     };
     var intersection = getRayIntersection(pickRay);
     if(intersection.intersects && intersection.properties.collisionsWillMove){
-      this.grab(intersection.entityId);
+      this.grab(intersection.entityID);
     }
   }
 
@@ -84,9 +99,15 @@ function controller(side) {
     print("GRAB")
     this.grabbing = true;
     this.grabbedEntity = entityId;
-    this.entityProperties = Entities.getEntityProperties(this.grabbedEntity);
-    this.targetPosition = this.entityProperties.position;
+    this.entityProps = Entities.getEntityProperties(this.grabbedEntity);
+    this.targetPosition = this.entityProps.position;
     this.currentPosition = this.targetPosition;
+    this.oldPalmPosition = this.palmPosition;
+  }
+
+  this.release = function(){
+    this.grabbing = false;
+    this.grabbedEntity = null;
   }
 
   this.moveLaser = function() {
@@ -112,7 +133,7 @@ function controller(side) {
 
 
 function update(deltaTime) {
-  rightController.update();
+  rightController.update(deltaTime);
 }
 
 function scriptEnding() {

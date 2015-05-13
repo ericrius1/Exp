@@ -36,6 +36,9 @@ var angularVelocity = {
   z: 0
 };
 
+// Script.load('hydraGrab.js');
+
+
 var grabSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/CloseClamp.wav");
 var releaseSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/ReleaseClamp.wav");
 
