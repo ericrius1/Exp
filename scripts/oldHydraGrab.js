@@ -45,20 +45,48 @@ function controller(side) {
   });
 
   this.update = function() {
-    this.updateControllerState();
+    this.updateState();
     this.moveLaser();
+    if(this.grabbing){
+      this.entityProperties = Entities.getEntityProperties(this.grabbedEntity);
+    }
     this.checkTrigger();
   }
 
-
-  this.updateControllerState = function() {
+  this.updateState = function() {
     this.palmPosition = Controller.getSpatialControlPosition(this.palm);
-    this.tipPosition = Controller.getSpatialControlPosition(this.tip);
+    if(this.grabbing){
+      this.calculateTargetPosition();
+    }
+    this.oldPalmPosition = this.palmPosition;
+
+
+    this.oldTipPosition = Controller.getSpatialControlPosition(this.tip);
+    this.tipPosition = this.oldTipPosition;
+
+    this.oldUp = Controller.getSpatialControlNormal(this.palm);
+    this.up = this.oldUp;
+
+    this.oldFront = Vec3.normalize(Vec3.subtract(this.tipPosition, this.palmPosition));
+    this.front = this.oldFront;
+
+    this.oldRight = Vec3.cross(this.front, this.up);
+    this.right = this.oldRight;
+
+    this.oldRotation = Quat.multiply(MyAvatar.orientation, Controller.getSpatialControlRawRotation(this.palm));
+    this.rotation = this.oldRotation;
+
     this.triggerValue = Controller.getTriggerValue(this.trigger);
 
 
   }
 
+  this.calculateTargetPosition = function(){
+    var dControllerPosition= Vec3.subtract(this.palmPosition, this.oldPalmPosition);
+    cameraEntityDistance = Vec3.distance(Camera.getPosition(), this.currentPosition
+    this.targetPosition = Vec3.sum(this.targetPosition, Vec3.multiply(dControllerPosition))
+
+  }
   this.checkTrigger = function() {
     if (this.triggerValue > this.triggerThreshold && !this.triggerHeld) {
       this.triggerHeld = true;
@@ -109,10 +137,37 @@ function controller(side) {
   }
 }
 
+function moveEntity(deltaTime){
+  if(rightController.grabbing){
+    entityProps = Entities.getEntityProperties(rightController.grabbedEntity);
+    currentPosition = entityProps.position;
+    currentVelocity = entityProps.velocity;
+    currentRotation = entityProps.rotation;
+    var dPosition = Vec3.subtract(rightController.targetPosition, currentPosition);
+    distanceToTarget = Vec3.length(dPosition);
+    if(distanceToTarget > CLOSE_ENOUGH){
+      //compute current velocity in direction we want to move
+      velocityTowardTarget = Vec3.dot(currentVelocity, Vec3.normalize(dPosition), velocityTowardTarget);
+      velocityTowardTarget = Vec3.multiply(Vec3.normalize(dPosition), velocityTowardTarget);
 
+      //compute the speed we would like to be going towards target position
+      desiredVelocity = Vec3.multiply(dPosition, (1.0/deltaTime) * SPRING_RATE);
+      addedVelocity = Vec3.subtract(desiredVelocity, velocityTowardTarget);
+      //TODO - If target is to far..
+
+      newVelocity = Vec3.sum(currentVelocity, addedVelocity);
+      newVelocity = Vec3.subtract(newVelocity, Vec3.multiply(newVelocity, DAMPING_RATE));
+
+      Entities.editEntity(rightController.grabbedEntity ,{
+        velocity: newVelocity
+      });
+    }
+  }
+}
 
 function update(deltaTime) {
   rightController.update();
+  moveEntity(deltaTime);
 }
 
 function scriptEnding() {
