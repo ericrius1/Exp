@@ -12,8 +12,9 @@ var CLOSE_ENOUGH = 0.001;
 var SPRING_RATE = 1.5;
 var DAMPING_RATE = 0.8;
 var SCREEN_TO_METERS = 0.001;
+var DISTANCE_SCALE_FACTOR = 1000
 
-function getRayIntersection(pickRay){
+function getRayIntersection(pickRay) {
   var intersection = Entities.findRayIntersection(pickRay);
   return intersection;
 }
@@ -48,22 +49,48 @@ function controller(side) {
     this.updateControllerState();
     this.moveLaser();
     this.checkTrigger();
-    if(this.grabbing){
-      this.updateEntity()
+    if (this.grabbing) {
+      this.updateEntity(deltaTime);
     }
 
     this.oldPalmPosition = this.palmPosition;
     this.oldTipPosition = this.tipPosition;
   }
 
-  this.updateEntity = function(){
+  this.updateEntity = function(deltaTime) {
     this.dControllerPosition = Vec3.subtract(this.palmPosition, this.oldPalmPosition);
     this.cameraEntityDistance = Vec3.distance(Camera.getPosition(), this.currentPosition);
-    this.targetPosition = Vec3.sum(this.targetPosition, Vec3.multiply(this.dControllerPosition, this.cameraEntityDistance));
-    Entities.editEntity(this.grabbedEntity, {position: this.targetPosition});
-
+    this.targetPosition = Vec3.sum(this.targetPosition, Vec3.multiply(this.dControllerPosition, this.cameraEntityDistance * SCREEN_TO_METERS * DISTANCE_SCALE_FACTOR));
 
     this.entityProps = Entities.getEntityProperties(this.grabbedEntity);
+    this.currentPosition = this.entityProps.position;
+    this.currentVelocity = this.entityProps.velocity;
+
+    var dPosition = Vec3.subtract(this.targetPosition, this.currentPosition);
+    this.distanceToTarget = Vec3.length(dPosition);
+    //When hydra gets too far from base it's position data becomes innacurate and can corrupt calculations
+    if (this.distanceToTarget > CLOSE_ENOUGH) {
+      //  compute current velocity in the direction we want to move 
+      this.velocityTowardTarget = Vec3.dot(this.currentVelocity, Vec3.normalize(dPosition));
+      this.velocityTowardTarget = Vec3.multiply(Vec3.normalize(dPosition), this.velocityTowardTarget);
+      //  compute the speed we would like to be going toward the target position 
+
+      this.desiredVelocity = Vec3.multiply(dPosition, (1.0 / deltaTime) * SPRING_RATE);
+      //  compute how much we want to add to the existing velocity
+      this.addedVelocity = Vec3.subtract(this.desiredVelocity, this.velocityTowardTarget);
+
+      this.newVelocity = Vec3.sum(this.currentVelocity, this.addedVelocity);
+      this.newVelocity = Vec3.subtract(this.newVelocity, Vec3.multiply(this.newVelocity, DAMPING_RATE));
+    } else {
+      this.newVelocity = {
+        x: 0,
+        y: 0,
+        z: 0
+      };
+    }
+    Entities.editEntity(this.grabbedEntity, {
+      velocity: this.newVelocity
+    });
   }
 
 
@@ -90,24 +117,29 @@ function controller(side) {
       direction: Vec3.normalize(Vec3.subtract(this.tipPosition, this.palmPosition))
     };
     var intersection = getRayIntersection(pickRay);
-    if(intersection.intersects && intersection.properties.collisionsWillMove){
+    if (intersection.intersects && intersection.properties.collisionsWillMove) {
       this.grab(intersection.entityID);
     }
   }
 
-  this.grab = function(entityId){
-    print("GRAB")
+  this.grab = function(entityId) {
     this.grabbing = true;
     this.grabbedEntity = entityId;
     this.entityProps = Entities.getEntityProperties(this.grabbedEntity);
     this.targetPosition = this.entityProps.position;
     this.currentPosition = this.targetPosition;
     this.oldPalmPosition = this.palmPosition;
+    Overlays.editOverlay(this.laser, {
+      visible: false
+    });
   }
 
-  this.release = function(){
+  this.release = function() {
     this.grabbing = false;
     this.grabbedEntity = null;
+    Overlays.editOverlay(this.laser, {
+      visible: true
+    });
   }
 
   this.moveLaser = function() {

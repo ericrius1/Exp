@@ -46,9 +46,10 @@ function controller(side) {
 
   this.update = function() {
     this.updateState();
-    this.moveLaser();
     if(this.grabbing){
       this.entityProperties = Entities.getEntityProperties(this.grabbedEntity);
+    } else{
+      this.moveLaser();
     }
     this.checkTrigger();
   }
@@ -109,7 +110,6 @@ function controller(side) {
   }
 
   this.grab = function(entityId){
-    print("GRAB")
     this.grabbing = true;
     this.grabbedEntity = entityId;
     this.entityProperties = Entities.getEntityProperties(this.grabbedEntity);
@@ -157,6 +157,11 @@ function moveEntity(deltaTime){
 
       newVelocity = Vec3.sum(currentVelocity, addedVelocity);
       newVelocity = Vec3.subtract(newVelocity, Vec3.multiply(newVelocity, DAMPING_RATE));
+
+      var newVelocityLength = Vec3.length(newVelocity);
+      if(newVelocityLength > 10){
+        print("WAAAAH")
+      }
 
       Entities.editEntity(rightController.grabbedEntity ,{
         velocity: newVelocity
