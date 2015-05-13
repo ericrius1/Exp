@@ -7,6 +7,20 @@ var LASER_COLOR = {
   green: 150,
   blue: 200
 };
+var LASER_HOVER_COLOR = {
+  red: 200,
+  green: 50,
+  blue: 50
+};
+
+var DROP_DISTANCE = 5.0;
+var DROP_COLOR = {
+  red: 200,
+  green: 200,
+  blue: 200
+};
+
+
 var LASER_LENGTH_FACTOR = 500;
 var CLOSE_ENOUGH = 0.001;
 var SPRING_RATE = 1.5;
@@ -45,10 +59,19 @@ function controller(side) {
     anchor: "MyAvatar"
   });
 
+  this.dropLine = Overlays.addOverlay("line3d", {
+    color: DROP_COLOR,
+    alpha: 1,
+    visible: false,
+    lineWidth: 2
+  });
+
+
   this.update = function(deltaTime) {
     this.updateControllerState();
     this.moveLaser();
     this.checkTrigger();
+    this.checkEntityIntersection();
     if (this.grabbing) {
       this.updateEntity(deltaTime);
     }
@@ -68,7 +91,6 @@ function controller(side) {
 
     var dPosition = Vec3.subtract(this.targetPosition, this.currentPosition);
     this.distanceToTarget = Vec3.length(dPosition);
-    //When hydra gets too far from base it's position data becomes innacurate and can corrupt calculations
     if (this.distanceToTarget > CLOSE_ENOUGH) {
       //  compute current velocity in the direction we want to move 
       this.velocityTowardTarget = Vec3.dot(this.currentVelocity, Vec3.normalize(dPosition));
@@ -91,6 +113,9 @@ function controller(side) {
     Entities.editEntity(this.grabbedEntity, {
       velocity: this.newVelocity
     });
+
+    this.updateDropLine(this.targetPosition);
+
   }
 
 
@@ -103,11 +128,29 @@ function controller(side) {
   this.checkTrigger = function() {
     if (this.triggerValue > this.triggerThreshold && !this.triggerHeld) {
       this.triggerHeld = true;
-      this.checkEntityIntersection();
     } else if (this.triggerValue < this.triggerThreshold && this.triggerHeld) {
       this.triggerHeld = false;
       this.release();
     }
+  }
+
+
+  this.updateDropLine = function(position) {
+
+    Overlays.editOverlay(this.dropLine, {
+      visible: true,
+      start: {
+        x: position.x,
+        y: position.y + DROP_DISTANCE,
+        z: position.z
+      },
+      end: {
+        x: position.x,
+        y: position.y + DROP_DISTANCE,
+        z: position.z
+      }
+    });
+
   }
 
   this.checkEntityIntersection = function() {
@@ -118,7 +161,18 @@ function controller(side) {
     };
     var intersection = getRayIntersection(pickRay);
     if (intersection.intersects && intersection.properties.collisionsWillMove) {
-      this.grab(intersection.entityID);
+      this.laserWasHovered = true;
+      if(this.triggerHeld){
+        this.grab(intersection.entityID);
+      }
+      Overlays.editOverlay(this.laser, {
+        color: LASER_HOVER_COLOR
+      });
+    } else if(this.laserWasHovered){
+      this.laserWasHovered = false;
+      Overlays.editOverlay(this.laser, {
+        color: LASER_COLOR
+      });
     }
   }
 
@@ -140,6 +194,9 @@ function controller(side) {
     Overlays.editOverlay(this.laser, {
       visible: true
     });
+    Overlays.editOverlay(this.dropLine, {
+      visible: false
+    });
   }
 
   this.moveLaser = function() {
@@ -159,10 +216,9 @@ function controller(side) {
 
   this.cleanup = function() {
     Overlays.deleteOverlay(this.laser);
+    Overlays.deleteOverlay(this.dropLine);
   }
 }
-
-
 
 function update(deltaTime) {
   rightController.update(deltaTime);
