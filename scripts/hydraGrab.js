@@ -120,7 +120,7 @@ function controller(side) {
     }
     this.transformedAngularVelocity = Controller.getSpatialControlRawAngularVelocity(this.tip);
     this.transformedAngularVelocity = Vec3.multiplyQbyV(Camera.getOrientation(), this.transformedAngularVelocity);
-    
+
     Entities.editEntity(this.grabbedEntity, {
       velocity: this.newVelocity,
       angularVelocity: this.transformedAngularVelocity
@@ -160,7 +160,7 @@ function controller(side) {
       },
       end: {
         x: position.x,
-        y: position.y + DROP_DISTANCE,
+        y: position.y - DROP_DISTANCE,
         z: position.z
       }
     });
