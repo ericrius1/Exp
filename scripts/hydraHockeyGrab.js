@@ -1,4 +1,5 @@
-//same as hydra grab 
+//hydraGrab script modified for air hockey- can only move object in x-z plane
+//and no rotation
 
 var entityProps, currentPosition, currentVelocity, currentRotation, distanceToTarget, velocityTowardTarget, desiredVelocity;
 var addedVelocity, newVelocity, angularVelocity, dT, cameraEntityDistance;
@@ -120,9 +121,9 @@ function controller(side) {
         z: 0
       };
     }
+
     Entities.editEntity(this.grabbedEntity, {
       velocity: this.newVelocity,
-      angularVelocity: Controller.getSpatialControlRawAngularVelocity(this.tip)
     });
 
     this.updateDropLine(this.targetPosition);
@@ -159,7 +160,7 @@ function controller(side) {
       },
       end: {
         x: position.x,
-        y: position.y + DROP_DISTANCE,
+        y: position.y - DROP_DISTANCE,
         z: position.z
       }
     });
