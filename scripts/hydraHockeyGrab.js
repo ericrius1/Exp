@@ -1,7 +1,6 @@
-//hydraGrab script modified for air hockey- can only move object in x-z plane
-//and no rotation
+//same as hydraGrab script, but only x-z plane and no rotation
+//Also tighter fall off force so can move puck faster
 
-var entityProps, currentPosition, currentVelocity, currentRotation, distanceToTarget, velocityTowardTarget, desiredVelocity;
 var addedVelocity, newVelocity, angularVelocity, dT, cameraEntityDistance;
 var RIGHT = 1;
 var LASER_WIDTH = 3;
@@ -23,7 +22,7 @@ var DROP_COLOR = {
   blue: 200
 };
 
-
+var FULL_STRENGTH = 0.2;
 var LASER_LENGTH_FACTOR = 500;
 var CLOSE_ENOUGH = 0.001;
 var SPRING_RATE = 1.5;
@@ -93,6 +92,7 @@ function controller(side) {
 
   this.updateEntity = function(deltaTime) {
     this.dControllerPosition = Vec3.subtract(this.palmPosition, this.oldPalmPosition);
+    this.dControllerPosition.y = 0;
     this.cameraEntityDistance = Vec3.distance(Camera.getPosition(), this.currentPosition);
     this.targetPosition = Vec3.sum(this.targetPosition, Vec3.multiply(this.dControllerPosition, this.cameraEntityDistance * SCREEN_TO_METERS * DISTANCE_SCALE_FACTOR));
 
@@ -111,7 +111,10 @@ function controller(side) {
       this.desiredVelocity = Vec3.multiply(dPosition, (1.0 / deltaTime) * SPRING_RATE);
       //  compute how much we want to add to the existing velocity
       this.addedVelocity = Vec3.subtract(this.desiredVelocity, this.velocityTowardTarget);
-
+       //If target is to far, roll off force as inverse square of distance
+      if(this.distanceToTarget/ this.cameraEntityDistance > FULL_STRENGTH) {
+         this.addedVelocity = Vec3.multiply(this.addedVelocity, Math.pow(FULL_STRENGTH/ this.distanceToTarget, 2.0));
+      }
       this.newVelocity = Vec3.sum(this.currentVelocity, this.addedVelocity);
       this.newVelocity = Vec3.subtract(this.newVelocity, Vec3.multiply(this.newVelocity, DAMPING_RATE));
     } else {
@@ -121,7 +124,6 @@ function controller(side) {
         z: 0
       };
     }
-
     Entities.editEntity(this.grabbedEntity, {
       velocity: this.newVelocity,
     });
