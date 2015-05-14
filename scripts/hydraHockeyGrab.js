@@ -1,3 +1,5 @@
+//same as hydra grab 
+
 var entityProps, currentPosition, currentVelocity, currentRotation, distanceToTarget, velocityTowardTarget, desiredVelocity;
 var addedVelocity, newVelocity, angularVelocity, dT, cameraEntityDistance;
 var RIGHT = 1;
@@ -118,12 +120,9 @@ function controller(side) {
         z: 0
       };
     }
-    this.transformedAngularVelocity = Controller.getSpatialControlRawAngularVelocity(this.tip);
-    this.transformedAngularVelocity = Vec3.multiplyQbyV(Camera.getOrientation(), this.transformedAngularVelocity);
-    
     Entities.editEntity(this.grabbedEntity, {
       velocity: this.newVelocity,
-      angularVelocity: this.transformedAngularVelocity
+      angularVelocity: Controller.getSpatialControlRawAngularVelocity(this.tip)
     });
 
     this.updateDropLine(this.targetPosition);
