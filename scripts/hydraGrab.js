@@ -20,7 +20,7 @@ var DROP_COLOR = {
   blue: 200
 };
 
-
+var FULL_STRENGTH = 0.05;
 var LASER_LENGTH_FACTOR = 500;
 var CLOSE_ENOUGH = 0.001;
 var SPRING_RATE = 1.5;
@@ -44,6 +44,11 @@ function controller(side) {
   this.palm = 2 * side;
   this.tip = 2 * side + 1;
   this.trigger = side;
+  this.originalGravity = {
+    x: 0,
+    y: 0,
+    z: 0
+  };
 
   this.laser = Overlays.addOverlay("line3d", {
     start: {
@@ -104,6 +109,11 @@ function controller(side) {
       //  compute how much we want to add to the existing velocity
       this.addedVelocity = Vec3.subtract(this.desiredVelocity, this.velocityTowardTarget);
 
+      //If target is to far, roll off force as inverse square of distance
+      if(this.distanceToTarget/ this.cameraEntityDistance > FULL_STRENGTH) {
+        this.addedVelocity = Vec3.multiply(this.addedVelocity, Math.pow(FULL_STRENGTH/ this.distanceToTarget, 2.0));
+      }
+
       this.newVelocity = Vec3.sum(this.currentVelocity, this.addedVelocity);
       this.newVelocity = Vec3.subtract(this.newVelocity, Vec3.multiply(this.newVelocity, DAMPING_RATE));
     } else {
@@ -134,7 +144,7 @@ function controller(side) {
       this.triggerHeld = true;
     } else if (this.triggerValue < this.triggerThreshold && this.triggerHeld) {
       this.triggerHeld = false;
-      if(this.grabbing){
+      if (this.grabbing) {
         this.release();
       }
     }
@@ -189,6 +199,14 @@ function controller(side) {
     this.targetPosition = this.entityProps.position;
     this.currentPosition = this.targetPosition;
     this.oldPalmPosition = this.palmPosition;
+    this.originalGravity = this.entityProps.gravity;
+    Entities.editEntity(this.grabbedEntity, {
+      gravity: {
+        x: 0,
+        y: 0,
+        z: 0
+      }
+    });
     Overlays.editOverlay(this.laser, {
       visible: false
     });
@@ -212,6 +230,18 @@ function controller(side) {
       position: this.entityProps.position,
       volume: 0.25
     });
+
+    // only restore the original gravity if it's not zero.  This is to avoid...
+    // 1. interface A grabs an entity and locally saves off its gravity
+    // 2. interface A sets the entity's gravity to zero
+    // 3. interface B grabs the entity and saves off its gravity (which is zero)
+    // 4. interface A releases the entity and puts the original gravity back
+    // 5. interface B releases the entity and puts the original gravity back (to zero)
+    if(vectorIsZero(this.originalGravity)) {
+      Entities.editEntity(this.grabbedEntity, {
+        gravity: this.originalGravity
+      });
+    }
   }
 
   this.moveLaser = function() {
@@ -241,6 +271,10 @@ function update(deltaTime) {
 
 function scriptEnding() {
   rightController.cleanup();
+}
+
+function vectorIsZero(v) {
+  return v.x === 0 && v.y === 0 && v.z === 0;
 }
 
 var rightController = new controller(RIGHT);

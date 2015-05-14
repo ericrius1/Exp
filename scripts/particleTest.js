@@ -50,17 +50,10 @@
 
         this.isPlaying = true;
 
-        // var self = this;
-        // this.timer = Script.setInterval(function () {
-        //     // flip is playing state
-        //     self.isPlaying = !self.isPlaying;
-        //     var animProp = { animationIsPlaying: self.isPlaying };
-        //     Entities.editEntity(self.entity, animProp);
-        // }, (1 / blinkRate) * 1000);
+
     }
 
     TestFx.prototype.Destroy = function () {
-        Script.clearInterval(this.timer);
         Entities.editEntity(this.entity, { locked: false });
         Entities.deleteEntity(this.entity);
     }
