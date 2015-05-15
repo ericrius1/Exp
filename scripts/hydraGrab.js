@@ -1,3 +1,21 @@
+//
+//  hydraGrab.js
+//  examples
+//
+//  Created by Clément Brisset on 4/24/14.
+//  Updated by Eric Levin on 5/14/15.
+//  Copyright 2014 High Fidelity, Inc.
+//
+//  This script allows you to grab and move/rotate physical objects with the hydra
+//
+//  Using the hydras :
+//  grab physical entities with the right trigger
+//
+//  Distributed under the Apache License, Version 2.0.
+//  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
+//
+
+
 var entityProps, currentPosition, currentVelocity, currentRotation, distanceToTarget, velocityTowardTarget, desiredVelocity;
 var addedVelocity, newVelocity, angularVelocity, dT, cameraEntityDistance;
 var RIGHT = 1;
@@ -238,7 +256,7 @@ function controller(side) {
     // 3. interface B grabs the entity and saves off its gravity (which is zero)
     // 4. interface A releases the entity and puts the original gravity back
     // 5. interface B releases the entity and puts the original gravity back (to zero)
-    if(vectorIsZero(this.originalGravity)) {
+    if(!vectorIsZero(this.originalGravity)) {
       Entities.editEntity(this.grabbedEntity, {
         gravity: this.originalGravity
       });
