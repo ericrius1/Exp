@@ -40,6 +40,14 @@ var MODEL_OFFSET = {
   z: 0
 };
 
+var LIGHT_OFFSET = {
+  x: 0,
+  y: 0.2,
+  z: 0
+};
+
+var LIGHT_FLASH_TIME = 700;
+
 var scoreSound = SoundCache.getSound("https://s3.amazonaws.com/hifi-public/sounds/Collisions-hitsandslaps/airhockey_score.wav");
 
 var polyTable = "https://hifi-public.s3.amazonaws.com/ozan/props/airHockeyTable/airHockeyTableForPolyworld.fbx"
@@ -62,7 +70,7 @@ var center;
 var edgeRestitution = 0.9;
 var floorFriction = 0.01;
 
-var names = ['floor', 'table', 'paddle', 'edge', 'puck'];
+var names = ['floor', 'table', 'paddle', 'edge', 'puck', 'hockeyLight'];
 
 var deleteButton = Overlays.addOverlay("image", {
   x: screenSize.x / 2 - BUTTON_SIZE,
@@ -94,7 +102,7 @@ var spawnButton = Overlays.addOverlay("image", {
 
 
 
-var floor, edge1, edge2, edge3a, edge3b, edge4a, edge4b;
+var floor, edge1, edge2, edge3a, edge3b, edge4a, edge4b, light;
 var puck;
 var paddle1, paddle2;
 
@@ -211,12 +219,7 @@ function update(deltaTime) {
     paddle1Props = Entities.getEntityProperties(paddle1);
     paddle2Props = Entities.getEntityProperties(paddle2);
     if (puckProps.position.y < (center.y - DROP_HEIGHT)) {
-      Audio.playSound(scoreSound, {
-        position: center,
-        volume: 1.0
-      });
-      Entities.deleteEntity(puck);
-      puck = makeNewProp("puck");
+      score();
     }
 
     if (paddle1Props.position.y < (center.y - DROP_HEIGHT)) {
@@ -228,6 +231,23 @@ function update(deltaTime) {
       paddle2 = makeNewProp("paddle2");
     }
   }
+}
+
+function score() {
+  Audio.playSound(scoreSound, {
+    position: center,
+    volume: 1.0
+  });
+  Entities.deleteEntity(puck);
+  puck = makeNewProp("puck");
+  Entities.editEntity(light, {
+    visible: true
+  });
+  Script.setTimeout(function() {
+    Entities.editEntity(light, {
+      visible: false
+    });
+  }, LIGHT_FLASH_TIME);
 }
 
 function mousePressEvent(event) {
@@ -475,17 +495,36 @@ function spawnAllTheThings() {
     locked: true,
     lifetime: LIFETIME
   });
+
+  light = Entities.addEntity({
+    name: "hockeyLight",
+    type: "Light",
+    dimensions: {
+      x: 5,
+      y: 5,
+      z: 5
+    },
+    position: Vec3.sum(center, LIGHT_OFFSET),
+    intensity: 5,
+    color: {
+      red: 200,
+      green: 20,
+      blue: 200
+    },
+    visible: false
+  });
   puck = makeNewProp("puck");
   paddle1 = makeNewProp("paddle1");
   paddle2 = makeNewProp("paddle2");
+
+  Script.update.connect(update);
 
 }
 
 function deleteAllTheThings() {
 
+  Script.update.disconnect(update);
   //delete all nearby entitites that are named any the names from our names array
-
-
   var nearbyEntities = Entities.findEntities(MyAvatar.position, ENTITY_SEARCH_RANGE);
   for (var i = 0; i < nearbyEntities.length; i++) {
     var entityName = Entities.getEntityProperties(nearbyEntities[i]).name;
@@ -500,9 +539,13 @@ function deleteAllTheThings() {
     }
   }
 
+
 }
 
 function scriptEnding() {
+
+  Overlays.deleteOverlay(spawnButton);
+  Overlays.deleteOverlay(deleteButton);
 
   Entities.editEntity(edge1, {
     locked: false
@@ -543,10 +586,7 @@ function scriptEnding() {
   Entities.deleteEntity(paddle2);
   Entities.deleteEntity(table);
 
-  Overlays.deleteOverlay(spawnButton);
-  Overlays.deleteOverlay(deleteButton);
 }
 
-// Script.update.connect(update);
 Controller.mousePressEvent.connect(mousePressEvent);
 Script.scriptEnding.connect(scriptEnding);
