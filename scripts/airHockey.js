@@ -70,6 +70,7 @@ var center;
 var edgeRestitution = 0.9;
 var floorFriction = 0.01;
 
+var paddle1Pos, paddle2Pos;
 var names = ['floor', 'table', 'paddle', 'edge', 'puck', 'hockeyLight'];
 
 var deleteButton = Overlays.addOverlay("image", {
@@ -108,7 +109,7 @@ var paddle1, paddle2;
 
 //  Create pucks 
 
-function makeNewProp(which) {
+function makeNewProp(which, position) {
   if (which == "puck") {
     return Entities.addEntity({
       name: 'puck',
@@ -143,17 +144,18 @@ function makeNewProp(which) {
       collisionsWillMove: true
     });
   } else if (which == "paddle1") {
+    paddle1Pos = Vec3.sum(center, {
+        x: 0,
+        y: DROP_HEIGHT * 1.5,
+        z: FIELD_LENGTH * 0.35
+      });
     return Entities.addEntity({
       name: "paddle",
       type: "Model",
       modelURL: paddleModel,
       compoundShapeURL: paddleCollisionModel,
       collisionSoundURL: hitSound2,
-      position: Vec3.sum(center, {
-        x: 0,
-        y: DROP_HEIGHT * 1.5,
-        z: FIELD_LENGTH * 0.35
-      }),
+      position: paddle1Pos,
       dimensions: {
         x: PADDLE_SIZE,
         y: PADDLE_THICKNESS,
@@ -176,17 +178,18 @@ function makeNewProp(which) {
       collisionsWillMove: true
     });
   } else if (which == "paddle2") {
+    paddle2Pos = Vec3.sum(center, {
+        x: 0,
+        y: DROP_HEIGHT * 1.5,
+        z: -FIELD_LENGTH * 0.35
+      });
     return Entities.addEntity({
       name: "paddle",
       type: "Model",
       modelURL: paddleModel,
       compoundShapeURL: paddleCollisionModel,
       collisionSoundURL: hitSound2,
-      position: Vec3.sum(center, {
-        x: 0,
-        y: DROP_HEIGHT * 1.5,
-        z: -FIELD_LENGTH * 0.35
-      }),
+      position: paddle2Pos,
       dimensions: {
         x: PADDLE_SIZE,
         y: PADDLE_THICKNESS,
@@ -238,8 +241,22 @@ function score() {
     position: center,
     volume: 1.0
   });
-  Entities.deleteEntity(puck);
-  puck = makeNewProp("puck");
+  puckDropPosition = Entities.getEntityProperties(puck).position;
+  var newPosition;
+  if (Vec3.distance(puckDropPosition, paddle1Pos) > Vec3.distance(puckDropPosition, paddle2Pos)) {
+    newPosition = paddle2Pos;
+  } else {
+    newPosition = paddle1Pos;
+  }
+  Entities.editEntity(puck, {
+    position: newPosition,
+    velocity: {
+      x: 0,
+      y: 0.05,
+      z: 0
+    }
+  });
+
   Entities.editEntity(light, {
     visible: true
   });
@@ -585,6 +602,7 @@ function scriptEnding() {
   Entities.deleteEntity(paddle1);
   Entities.deleteEntity(paddle2);
   Entities.deleteEntity(table);
+  Entities.deleteEntity(light);
 
 }
 
