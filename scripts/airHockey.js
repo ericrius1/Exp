@@ -23,6 +23,8 @@ var PUCK_THICKNESS = 0.05;
 var PADDLE_SIZE = 0.15;
 var PADDLE_THICKNESS = 0.05;
 
+var ENTITY_SEARCH_RANGE = 500;
+
 var GOAL_WIDTH = 0.35;
 
 var GRAVITY = -9.8;
@@ -55,12 +57,12 @@ var screenSize = Controller.getViewportDimensions();
 var BUTTON_SIZE = 32;
 var PADDING = 3;
 
-var center = Vec3.sum(MyAvatar.position, Vec3.multiply((FIELD_WIDTH + FIELD_LENGTH) * 0.60, Quat.getFront(Camera.getOrientation())));
+var center;
 
 var edgeRestitution = 0.9;
 var floorFriction = 0.01;
 
-var names = ['floor'];
+var names = ['floor', 'table', 'paddle', 'edge', 'puck'];
 
 var deleteButton = Overlays.addOverlay("image", {
   x: screenSize.x / 2 - BUTTON_SIZE,
@@ -90,232 +92,9 @@ var spawnButton = Overlays.addOverlay("image", {
   alpha: 1
 });
 
-var floor = Entities.addEntity({
-  name: "floor",
-  type: "Box",
-  position: Vec3.subtract(center, {
-    x: 0,
-    y: 0,
-    z: 0
-  }),
-  dimensions: {
-    x: FIELD_WIDTH,
-    y: FLOOR_THICKNESS,
-    z: FIELD_LENGTH
-  },
-  color: {
-    red: 128,
-    green: 128,
-    blue: 128
-  },
-  gravity: {
-    x: 0,
-    y: 0,
-    z: 0
-  },
-  ignoreCollisions: false,
-  locked: true,
-  friction: floorFriction,
-  visible: debugVisible,
-  lifetime: LIFETIME
-});
 
-var edge1 = Entities.addEntity({
-  name: "floor",
-  type: "Box",
-  collisionSoundURL: hitSideSound,
-  position: Vec3.sum(center, {
-    x: FIELD_WIDTH / 2.0,
-    y: FLOOR_THICKNESS / 2.0,
-    z: 0
-  }),
-  dimensions: {
-    x: EDGE_THICKESS,
-    y: EDGE_HEIGHT,
-    z: FIELD_LENGTH + EDGE_THICKESS
-  },
-  color: {
-    red: 100,
-    green: 100,
-    blue: 100
-  },
-  gravity: {
-    x: 0,
-    y: 0,
-    z: 0
-  },
-  ignoreCollisions: false,
-  visible: debugVisible,
-  restitution: edgeRestitution,
-  locked: true,
-  lifetime: LIFETIME
-});
 
-var edge2 = Entities.addEntity({
-  type: "Box",
-  collisionSoundURL: hitSideSound,
-  position: Vec3.sum(center, {
-    x: -FIELD_WIDTH / 2.0,
-    y: FLOOR_THICKNESS / 2.0,
-    z: 0
-  }),
-  dimensions: {
-    x: EDGE_THICKESS,
-    y: EDGE_HEIGHT,
-    z: FIELD_LENGTH + EDGE_THICKESS
-  },
-  color: {
-    red: 100,
-    green: 100,
-    blue: 100
-  },
-  gravity: {
-    x: 0,
-    y: 0,
-    z: 0
-  },
-  ignoreCollisions: false,
-  visible: debugVisible,
-  restitution: edgeRestitution,
-  locked: true,
-  lifetime: LIFETIME
-});
-
-var edge3a = Entities.addEntity({
-  type: "Box",
-  collisionSoundURL: hitSideSound,
-  position: Vec3.sum(center, {
-    x: FIELD_WIDTH / 4.0 + (GOAL_WIDTH / 4.0),
-    y: FLOOR_THICKNESS / 2.0,
-    z: -FIELD_LENGTH / 2.0
-  }),
-  dimensions: {
-    x: FIELD_WIDTH / 2.0 - GOAL_WIDTH / 2.0,
-    y: EDGE_HEIGHT,
-    z: EDGE_THICKESS
-  },
-  color: {
-    red: 100,
-    green: 100,
-    blue: 100
-  },
-  gravity: {
-    x: 0,
-    y: 0,
-    z: 0
-  },
-  ignoreCollisions: false,
-  visible: debugVisible,
-  restitution: edgeRestitution,
-  locked: true,
-  lifetime: LIFETIME
-});
-
-var edge3b = Entities.addEntity({
-  type: "Box",
-  collisionSoundURL: hitSideSound,
-  position: Vec3.sum(center, {
-    x: -FIELD_WIDTH / 4.0 - (GOAL_WIDTH / 4.0),
-    y: FLOOR_THICKNESS / 2.0,
-    z: -FIELD_LENGTH / 2.0
-  }),
-  dimensions: {
-    x: FIELD_WIDTH / 2.0 - GOAL_WIDTH / 2.0,
-    y: EDGE_HEIGHT,
-    z: EDGE_THICKESS
-  },
-  color: {
-    red: 100,
-    green: 100,
-    blue: 100
-  },
-  gravity: {
-    x: 0,
-    y: 0,
-    z: 0
-  },
-  ignoreCollisions: false,
-  visible: debugVisible,
-  restitution: edgeRestitution,
-  locked: true,
-  lifetime: LIFETIME
-});
-
-var edge4a = Entities.addEntity({
-  type: "Box",
-  collisionSoundURL: hitSideSound,
-  position: Vec3.sum(center, {
-    x: FIELD_WIDTH / 4.0 + (GOAL_WIDTH / 4.0),
-    y: FLOOR_THICKNESS / 2.0,
-    z: FIELD_LENGTH / 2.0
-  }),
-  dimensions: {
-    x: FIELD_WIDTH / 2.0 - GOAL_WIDTH / 2.0,
-    y: EDGE_HEIGHT,
-    z: EDGE_THICKESS
-  },
-  color: {
-    red: 100,
-    green: 100,
-    blue: 100
-  },
-  gravity: {
-    x: 0,
-    y: 0,
-    z: 0
-  },
-  ignoreCollisions: false,
-  visible: debugVisible,
-  restitution: edgeRestitution,
-  locked: true,
-  lifetime: LIFETIME
-});
-
-var edge4b = Entities.addEntity({
-  type: "Box",
-  collisionSoundURL: hitSideSound,
-  position: Vec3.sum(center, {
-    x: -FIELD_WIDTH / 4.0 - (GOAL_WIDTH / 4.0),
-    y: FLOOR_THICKNESS / 2.0,
-    z: FIELD_LENGTH / 2.0
-  }),
-  dimensions: {
-    x: FIELD_WIDTH / 2.0 - GOAL_WIDTH / 2.0,
-    y: EDGE_HEIGHT,
-    z: EDGE_THICKESS
-  },
-  color: {
-    red: 100,
-    green: 100,
-    blue: 100
-  },
-  gravity: {
-    x: 0,
-    y: 0,
-    z: 0
-  },
-  ignoreCollisions: false,
-  visible: debugVisible,
-  restitution: edgeRestitution,
-  locked: true,
-  lifetime: LIFETIME
-});
-
-var table = Entities.addEntity({
-  type: "Model",
-  modelURL: polyTable,
-  dimensions: Vec3.multiply({
-    x: 0.8,
-    y: 0.45,
-    z: 1.31
-  }, MODEL_SCALE),
-  position: Vec3.sum(center, MODEL_OFFSET),
-  ignoreCollisions: false,
-  visible: true,
-  locked: true,
-  lifetime: LIFETIME
-});
-
+var floor, edge1, edge2, edge3a, edge3b, edge4a, edge4b;
 var puck;
 var paddle1, paddle2;
 
@@ -324,6 +103,7 @@ var paddle1, paddle2;
 function makeNewProp(which) {
   if (which == "puck") {
     return Entities.addEntity({
+      name: 'puck',
       type: "Model",
       modelURL: puckModel,
       compoundShapeURL: puckCollisionModel,
@@ -356,6 +136,7 @@ function makeNewProp(which) {
     });
   } else if (which == "paddle1") {
     return Entities.addEntity({
+      name: "paddle",
       type: "Model",
       modelURL: paddleModel,
       compoundShapeURL: paddleCollisionModel,
@@ -388,6 +169,7 @@ function makeNewProp(which) {
     });
   } else if (which == "paddle2") {
     return Entities.addEntity({
+      name: "paddle",
       type: "Model",
       modelURL: paddleModel,
       compoundShapeURL: paddleCollisionModel,
@@ -422,9 +204,6 @@ function makeNewProp(which) {
 }
 
 
-puck = makeNewProp("puck");
-paddle1 = makeNewProp("paddle1");
-paddle2 = makeNewProp("paddle2");
 
 function update(deltaTime) {
   if (Math.random() < 0.1) {
@@ -457,11 +236,270 @@ function mousePressEvent(event) {
     y: event.y
   });
   if (clickedOverlay == spawnButton) {
-    // Script.stop();
-    print('yaaa');
+    spawnAllTheThings();
   } else if (clickedOverlay == deleteButton) {
-    
+    deleteAllTheThings();
   }
+}
+
+function spawnAllTheThings() {
+  center = Vec3.sum(MyAvatar.position, Vec3.multiply((FIELD_WIDTH + FIELD_LENGTH) * 0.60, Quat.getFront(Camera.getOrientation())));
+  floor = Entities.addEntity({
+    name: "floor",
+    type: "Box",
+    position: Vec3.subtract(center, {
+      x: 0,
+      y: 0,
+      z: 0
+    }),
+    dimensions: {
+      x: FIELD_WIDTH,
+      y: FLOOR_THICKNESS,
+      z: FIELD_LENGTH
+    },
+    color: {
+      red: 128,
+      green: 128,
+      blue: 128
+    },
+    gravity: {
+      x: 0,
+      y: 0,
+      z: 0
+    },
+    ignoreCollisions: false,
+    locked: true,
+    friction: floorFriction,
+    visible: debugVisible,
+    lifetime: LIFETIME
+  });
+
+  edge1 = Entities.addEntity({
+    name: 'edge',
+    type: "Box",
+    collisionSoundURL: hitSideSound,
+    position: Vec3.sum(center, {
+      x: FIELD_WIDTH / 2.0,
+      y: FLOOR_THICKNESS / 2.0,
+      z: 0
+    }),
+    dimensions: {
+      x: EDGE_THICKESS,
+      y: EDGE_HEIGHT,
+      z: FIELD_LENGTH + EDGE_THICKESS
+    },
+    color: {
+      red: 100,
+      green: 100,
+      blue: 100
+    },
+    gravity: {
+      x: 0,
+      y: 0,
+      z: 0
+    },
+    ignoreCollisions: false,
+    visible: debugVisible,
+    restitution: edgeRestitution,
+    locked: true,
+    lifetime: LIFETIME
+  });
+
+  edge2 = Entities.addEntity({
+    name: 'edge',
+    type: "Box",
+    collisionSoundURL: hitSideSound,
+    position: Vec3.sum(center, {
+      x: -FIELD_WIDTH / 2.0,
+      y: FLOOR_THICKNESS / 2.0,
+      z: 0
+    }),
+    dimensions: {
+      x: EDGE_THICKESS,
+      y: EDGE_HEIGHT,
+      z: FIELD_LENGTH + EDGE_THICKESS
+    },
+    color: {
+      red: 100,
+      green: 100,
+      blue: 100
+    },
+    gravity: {
+      x: 0,
+      y: 0,
+      z: 0
+    },
+    ignoreCollisions: false,
+    visible: debugVisible,
+    restitution: edgeRestitution,
+    locked: true,
+    lifetime: LIFETIME
+  });
+
+  edge3a = Entities.addEntity({
+    name: 'edge',
+    type: "Box",
+    collisionSoundURL: hitSideSound,
+    position: Vec3.sum(center, {
+      x: FIELD_WIDTH / 4.0 + (GOAL_WIDTH / 4.0),
+      y: FLOOR_THICKNESS / 2.0,
+      z: -FIELD_LENGTH / 2.0
+    }),
+    dimensions: {
+      x: FIELD_WIDTH / 2.0 - GOAL_WIDTH / 2.0,
+      y: EDGE_HEIGHT,
+      z: EDGE_THICKESS
+    },
+    color: {
+      red: 100,
+      green: 100,
+      blue: 100
+    },
+    gravity: {
+      x: 0,
+      y: 0,
+      z: 0
+    },
+    ignoreCollisions: false,
+    visible: debugVisible,
+    restitution: edgeRestitution,
+    locked: true,
+    lifetime: LIFETIME
+  });
+
+  edge3b = Entities.addEntity({
+    name: 'edge',
+    type: "Box",
+    collisionSoundURL: hitSideSound,
+    position: Vec3.sum(center, {
+      x: -FIELD_WIDTH / 4.0 - (GOAL_WIDTH / 4.0),
+      y: FLOOR_THICKNESS / 2.0,
+      z: -FIELD_LENGTH / 2.0
+    }),
+    dimensions: {
+      x: FIELD_WIDTH / 2.0 - GOAL_WIDTH / 2.0,
+      y: EDGE_HEIGHT,
+      z: EDGE_THICKESS
+    },
+    color: {
+      red: 100,
+      green: 100,
+      blue: 100
+    },
+    gravity: {
+      x: 0,
+      y: 0,
+      z: 0
+    },
+    ignoreCollisions: false,
+    visible: debugVisible,
+    restitution: edgeRestitution,
+    locked: true,
+    lifetime: LIFETIME
+  });
+
+  edge4a = Entities.addEntity({
+    name: 'edge',
+    type: "Box",
+    collisionSoundURL: hitSideSound,
+    position: Vec3.sum(center, {
+      x: FIELD_WIDTH / 4.0 + (GOAL_WIDTH / 4.0),
+      y: FLOOR_THICKNESS / 2.0,
+      z: FIELD_LENGTH / 2.0
+    }),
+    dimensions: {
+      x: FIELD_WIDTH / 2.0 - GOAL_WIDTH / 2.0,
+      y: EDGE_HEIGHT,
+      z: EDGE_THICKESS
+    },
+    color: {
+      red: 100,
+      green: 100,
+      blue: 100
+    },
+    gravity: {
+      x: 0,
+      y: 0,
+      z: 0
+    },
+    ignoreCollisions: false,
+    visible: debugVisible,
+    restitution: edgeRestitution,
+    locked: true,
+    lifetime: LIFETIME
+  });
+
+  edge4b = Entities.addEntity({
+    name: 'edge',
+    type: "Box",
+    collisionSoundURL: hitSideSound,
+    position: Vec3.sum(center, {
+      x: -FIELD_WIDTH / 4.0 - (GOAL_WIDTH / 4.0),
+      y: FLOOR_THICKNESS / 2.0,
+      z: FIELD_LENGTH / 2.0
+    }),
+    dimensions: {
+      x: FIELD_WIDTH / 2.0 - GOAL_WIDTH / 2.0,
+      y: EDGE_HEIGHT,
+      z: EDGE_THICKESS
+    },
+    color: {
+      red: 100,
+      green: 100,
+      blue: 100
+    },
+    gravity: {
+      x: 0,
+      y: 0,
+      z: 0
+    },
+    ignoreCollisions: false,
+    visible: debugVisible,
+    restitution: edgeRestitution,
+    locked: true,
+    lifetime: LIFETIME
+  });
+
+  table = Entities.addEntity({
+    name: "table",
+    type: "Model",
+    modelURL: polyTable,
+    dimensions: Vec3.multiply({
+      x: 0.8,
+      y: 0.45,
+      z: 1.31
+    }, MODEL_SCALE),
+    position: Vec3.sum(center, MODEL_OFFSET),
+    ignoreCollisions: false,
+    visible: true,
+    locked: true,
+    lifetime: LIFETIME
+  });
+  puck = makeNewProp("puck");
+  paddle1 = makeNewProp("paddle1");
+  paddle2 = makeNewProp("paddle2");
+
+}
+
+function deleteAllTheThings() {
+
+  //delete all nearby entitites that are named any the names from our names array
+
+
+  var nearbyEntities = Entities.findEntities(MyAvatar.position, ENTITY_SEARCH_RANGE);
+  for (var i = 0; i < nearbyEntities.length; i++) {
+    var entityName = Entities.getEntityProperties(nearbyEntities[i]).name;
+    for (var j = 0; j < names.length; j++) {
+      if (names[j] === entityName) {
+        //We have a mach- delete this entity
+        Entities.editEntity(nearbyEntities[i], {
+          locked: false
+        });
+        Entities.deleteEntity(nearbyEntities[i]);
+      }
+    }
+  }
+
 }
 
 function scriptEnding() {
@@ -491,8 +529,6 @@ function scriptEnding() {
     locked: false
   });
 
-  Overlays.deleteOverlay(spawnButton);
-  Overlays.deleteOverlay(deleteButton);
 
 
   Entities.deleteEntity(edge1);
@@ -506,8 +542,11 @@ function scriptEnding() {
   Entities.deleteEntity(paddle1);
   Entities.deleteEntity(paddle2);
   Entities.deleteEntity(table);
+
+  Overlays.deleteOverlay(spawnButton);
+  Overlays.deleteOverlay(deleteButton);
 }
 
-Script.update.connect(update);
+// Script.update.connect(update);
 Controller.mousePressEvent.connect(mousePressEvent);
 Script.scriptEnding.connect(scriptEnding);

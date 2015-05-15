@@ -89,17 +89,12 @@ function shootDice(position, velocity) {
           type: "Model",
           modelURL: HIFI_PUBLIC_BUCKET + "models/props/Dice/goldDie.fbx",
           position: position,
-          velocity: velocity,
+          // velocity: velocity,
           rotation: Quat.fromPitchYawRollDegrees(Math.random() * 360, Math.random() * 360, Math.random() * 360),
           angularVelocity: {
             x: Math.random() * MAX_ANGULAR_SPEED,
             y: Math.random() * MAX_ANGULAR_SPEED,
             z: Math.random() * MAX_ANGULAR_SPEED
-          },
-          gravity: {
-            x: 0,
-            y: GRAVITY,
-            z: 0
           },
           lifetime: LIFETIME,
           shapeType: "box",
@@ -108,6 +103,19 @@ function shootDice(position, velocity) {
         }));
       position = Vec3.sum(position, Vec3.multiply(DIE_SIZE, Vec3.normalize(Quat.getRight(Camera.getOrientation()))));
     }
+
+    Script.setTimeout(function() {
+      for (var i = dice.length - NUMBER_OF_DICE; i < dice.length; i++) {
+        Entities.editEntity(dice[i], {
+          velocity: velocity,
+          gravity: {
+            x: 0,
+            y: GRAVITY,
+            z: 0
+          }
+        });
+      }
+    }, 3000)
   }
 }
 
