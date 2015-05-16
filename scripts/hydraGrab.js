@@ -15,7 +15,7 @@
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 //
 
-
+var originalGravity;
 var entityProps, currentPosition, currentVelocity, currentRotation, distanceToTarget, velocityTowardTarget, desiredVelocity;
 var addedVelocity, newVelocity, angularVelocity, dT, cameraEntityDistance;
 var RIGHT = 1;
@@ -50,7 +50,7 @@ var grabSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/s
 var releaseSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/ReleaseClamp.wav");
 
 function getRayIntersection(pickRay) {
-  var intersection = Entities.findRayIntersection(pickRay);
+  var intersection = Entities.findRayIntersection(pickRay, true);
   return intersection;
 }
 
@@ -62,11 +62,6 @@ function controller(side) {
   this.palm = 2 * side;
   this.tip = 2 * side + 1;
   this.trigger = side;
-  this.originalGravity = {
-    x: 0,
-    y: 0,
-    z: 0
-  };
 
   this.laser = Overlays.addOverlay("line3d", {
     start: {
@@ -126,9 +121,9 @@ function controller(side) {
       this.desiredVelocity = Vec3.multiply(dPosition, (1.0 / deltaTime) * SPRING_RATE);
       //  compute how much we want to add to the existing velocity
       this.addedVelocity = Vec3.subtract(this.desiredVelocity, this.velocityTowardTarget);
-       //If target is to far, roll off force as inverse square of distance
-      if(this.distanceToTarget/ this.cameraEntityDistance > FULL_STRENGTH) {
-         this.addedVelocity = Vec3.multiply(this.addedVelocity, Math.pow(FULL_STRENGTH/ this.distanceToTarget, 2.0));
+      //If target is to far, roll off force as inverse square of distance
+      if (this.distanceToTarget / this.cameraEntityDistance > FULL_STRENGTH) {
+        this.addedVelocity = Vec3.multiply(this.addedVelocity, Math.pow(FULL_STRENGTH / this.distanceToTarget, 2.0));
       }
       this.newVelocity = Vec3.sum(this.currentVelocity, this.addedVelocity);
       this.newVelocity = Vec3.subtract(this.newVelocity, Vec3.multiply(this.newVelocity, DAMPING_RATE));
@@ -218,7 +213,8 @@ function controller(side) {
     this.targetPosition = this.entityProps.position;
     this.currentPosition = this.targetPosition;
     this.oldPalmPosition = this.palmPosition;
-    this.originalGravity = this.entityProps.gravity;
+    originalGravity = this.entityProps.gravity;
+    print("first grav " + JSON.stringify(originalGravity));
     Entities.editEntity(this.grabbedEntity, {
       gravity: {
         x: 0,
@@ -237,7 +233,9 @@ function controller(side) {
 
   this.release = function() {
     this.grabbing = false;
-    this.grabbedEntity = null;
+    Entities.editEntity(this.grabbedEntity, {
+      gravity: originalGravity
+    });
     Overlays.editOverlay(this.laser, {
       visible: true
     });
@@ -250,17 +248,18 @@ function controller(side) {
       volume: 0.25
     });
 
+    this.grabbedEntity = null;
     // only restore the original gravity if it's not zero.  This is to avoid...
     // 1. interface A grabs an entity and locally saves off its gravity
     // 2. interface A sets the entity's gravity to zero
     // 3. interface B grabs the entity and saves off its gravity (which is zero)
     // 4. interface A releases the entity and puts the original gravity back
     // 5. interface B releases the entity and puts the original gravity back (to zero)
-    if(!vectorIsZero(this.originalGravity)) {
-      Entities.editEntity(this.grabbedEntity, {
-        gravity: this.originalGravity
-      });
-    }
+
+    var isZero = vectorIsZero(originalGravity);
+    // if(!vectorIsZero(originalGravity)) {
+    print("Waaaah " + JSON.stringify(originalGravity));
+    // }
   }
 
   this.moveLaser = function() {

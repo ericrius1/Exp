@@ -219,7 +219,6 @@ function controller(side) {
 
   this.release = function() {
     this.grabbing = false;
-    this.grabbedEntity = null;
     Overlays.editOverlay(this.laser, {
       visible: true
     });
@@ -239,11 +238,11 @@ function controller(side) {
     // 4. interface A releases the entity and puts the original gravity back
     // 5. interface B releases the entity and puts the original gravity back (to zero)
     if(!vectorIsZero(this.originalGravity)) {
-      print("RESTORE ORIG GRAVITY!")
       Entities.editEntity(this.grabbedEntity, {
         gravity: this.originalGravity
       });
     }
+    this.grabbedEntity = null;
   }
 
   this.moveLaser = function() {
