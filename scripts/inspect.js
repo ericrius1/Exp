@@ -253,32 +253,19 @@ function mousePressEvent(event) {
             //We've selected our target, now orbit towards it automatically
             rotatingTowardsTarget = true;
             //calculate our target cam rotation
-            var camToTargetVector = Vec3.subtract(position, center);
-            targetCamOrientation = orientationOf(camToTargetVector);
             Script.setTimeout(function(){
               rotatingTowardsTarget = false;
             }, LOOK_AT_TIME);
 
+            vector = Vec3.subtract(position, center);
+            targetCamOrientation = orientationOf(vector);
+            radius = Vec3.length(vector);
+            azimuth = Math.atan2(vector.z, vector.x);
+            altitude = Math.asin(vector.y / Vec3.length(vector));
+            
+            isActive = true;
         }
-        
-        if ((distance == -1 || Vec3.length(Vec3.subtract(avatarTarget, position)) < distance) &&
-            (avatarTarget.x != 0 || avatarTarget.y != 0 || avatarTarget.z != 0)) {
-            distance = Vec3.length(Vec3.subtract(avatarTarget, position));
-            center  = avatarTarget;
-            string = "Inspecting avatar";
-        }
-        
-        if (distance == -1) {
-            return;
-        }
-        
-        vector = Vec3.subtract(position, center);
-        radius = Vec3.length(vector);
-        azimuth = Math.atan2(vector.z, vector.x);
-        altitude = Math.asin(vector.y / Vec3.length(vector));
-        
-        print(string);
-        isActive = true;
+
     }
 }
 
