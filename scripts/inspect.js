@@ -28,6 +28,8 @@ var PAN_RATE = 50.0;
 var Y_AXIS = { x: 0, y: 1, z: 0 };
 var X_AXIS = { x: 1, y: 0, z: 0 };
 
+var LOOK_AT_TIME = 500;
+
 var alt = false;
 var shift = false;
 var control = false;
@@ -55,6 +57,10 @@ var altitude = 0.0;
 
 var avatarPosition;
 var avatarOrientation;
+
+var rotatingTowardsTarget = false;
+var targetCamOrientation;
+var oldPosition, oldOrientation;
 
 
 function orientationOf(vector) {
@@ -119,7 +125,9 @@ function handlePanMode(dx, dy) {
 
 function saveCameraState() {
     oldMode = Camera.mode;
-    var oldPosition = Camera.getPosition();
+    oldPosition = Camera.getPosition();
+    oldOrientation = Camera.getOrientation();
+
     Camera.mode = "independent";
     Camera.setPosition(oldPosition);
 }
@@ -237,10 +245,18 @@ function mousePressEvent(event) {
         var string;
         
         if (modelIntersection.intersects && modelIntersection.accurate) {
-            print("intersection props " + JSON.stringify(modelIntersection.intersection));
             distance = modelIntersection.distance;
             center = modelIntersection.intersection;
             string = "Inspecting model";
+            //We've selected our target, now orbit towards it automatically
+            rotatingTowardsTarget = true;
+            //calculate our target cam rotation
+            var camToTargetVector = Vec3.subtract(position, center);
+            targetCamOrientation = orientationOf(camToTargetVector);
+            Script.setTimeout(function(){
+              rotatingTowardsTarget = false;
+            }, LOOK_AT_TIME);
+
         }
         
         if ((distance == -1 || Vec3.length(Vec3.subtract(avatarTarget, position)) < distance) &&
@@ -271,7 +287,7 @@ function mouseReleaseEvent(event) {
 }
 
 function mouseMoveEvent(event) {
-    if (isActive && mode != noMode) {
+    if (isActive && mode != noMode && !rotatingTowardsTarget) {
         if (mode == radialMode) {
             handleRadialMode(event.x - mouseLastX, event.y - mouseLastY);
         }
@@ -282,13 +298,21 @@ function mouseMoveEvent(event) {
             handlePanMode(event.x - mouseLastX, event.y - mouseLastY);
         }
         
-        mouseLastX = event.x;
-        mouseLastY = event.y;
     }
+      mouseLastX = event.x;
+      mouseLastY = event.y;
 }
 
 function update() {
     handleModes();
+    if(rotatingTowardsTarget){
+      rotateTowardsTarget();
+    }
+}
+
+function rotateTowardsTarget(){
+  var newOrientation = Quat.mix(Camera.getOrientation(), targetCamOrientation, .1);  
+  Camera.setOrientation(newOrientation);
 }
 
 function scriptEnding() {
