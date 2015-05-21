@@ -134,6 +134,8 @@ function saveCameraState() {
 
 function restoreCameraState() {
     Camera.mode = oldMode;
+    Camera.setPosition(oldPosition);
+    Camera.setOrientation(oldOrientation);
 }
 
 function handleModes() {
@@ -283,6 +285,8 @@ function mousePressEvent(event) {
 function mouseReleaseEvent(event) {
     if (isActive) {
         isActive = false;
+        mode = noMode;
+        restoreCameraState();
     }
 }
 
