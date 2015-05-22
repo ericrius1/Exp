@@ -31,7 +31,6 @@
     function TestFx(color, emitDirection, emitRate, emitStrength, blinkRate) {
 
         this.entity = Entities.addEntity({ type: "ParticleEffect",
-                                           name: "Shnur",
                                            animationSettings: "{\"firstFrame\":0,\"fps\":30,\"frameIndex\":0,\"hold\":false,\"lastFrame\":10000,\"loop\":true,\"running\":true,\"startAutomatically\":false}",
                                            position: spawnPoint,
                                            textures: "https://s3.amazonaws.com/hifi-public/cozza13/particle/orb_blue_glow.png",
