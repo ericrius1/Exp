@@ -37,6 +37,7 @@
                                            emitRate: emitRate,
                                            animationIsPlaying: 1,
                                            emitStrength: emitStrength,
+                                           dimensions: {x: 100, y: 100, z: 100},
                                            // emitDirection: emitDirection,
                                            color: color,
                                            visible: true,

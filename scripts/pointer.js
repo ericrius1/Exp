@@ -1,29 +1,22 @@
+//Dimensions property for lines is the offset of the position
+
 var lineEntityID = null;
 var lineIsRezzed = false;
 var altHeld = false;
 var lineCreated = false;
+var position, positionOffset, prevPosition;
+var nearLinePosition;
 
 
-var animationSettings = JSON.stringify({
-  firstFrame: 0,
-  fps: 30, 
-  loop: true,
-  running: true
-});
-var tipEmitter = Entities.addEntity({
-  type: "ParticleEffect",
-  animationSettings: animationSettings,
-  position: MyAvatar.position,
-  textures: "https://s3.amazonaws.com/hifi-public/cozza13/particle/orb_blue_glow.png",
-  emitRate: 1000,
-  emitStrength: 30,
-  visible: true,
-  color: {red: 200, green: 10, blue: 200}
+var center = Vec3.sum(MyAvatar.position, Vec3.multiply(15.0, Quat.getFront(Camera.getOrientation())));
+var whiteBoard = Entities.addEntity({
+  type: "Box",
+  position: center,
+  dimensions: {x: 10, y: 5, z: .001},
+  color: {red: 255, green: 255, blue: 255}
 });
 
-
-
-function nearLinePoint(targetPosition) {
+function calculateNearLinePosition(targetPosition) {
   var handPosition = MyAvatar.getRightPalmPosition();
   var along = Vec3.subtract(targetPosition, handPosition);
   along = Vec3.normalize(along);
@@ -47,19 +40,23 @@ function createOrUpdateLine(event) {
   var props = Entities.getEntityProperties(intersection.entityID);
 
   if (intersection.intersects) {
-    var dim = Vec3.subtract(intersection.intersection, nearLinePoint(intersection.intersection));
+    startPosition = intersection.intersection;
+    nearLinePosition = calculateNearLinePosition(intersection.intersection);
+    positionOffset= Vec3.subtract(startPosition, nearLinePosition);
     if (lineIsRezzed) {
       Entities.editEntity(lineEntityID, {
-        position: nearLinePoint(intersection.intersection),
-        dimensions: dim,
+        position: nearLinePosition,
+        dimensions: positionOffset,
         lifetime: 15 + props.lifespan // renew lifetime
       });
+      draw();
     } else {
       lineIsRezzed = true;
+      prevPosition = intersection.intersection;
       lineEntityID = Entities.addEntity({
         type: "Line",
-        position: nearLinePoint(intersection.intersection),
-        dimensions: dim,
+        position: nearLinePosition,
+        dimensions: positionOffset,
         color: {
           red: 255,
           green: 255,
@@ -73,6 +70,18 @@ function createOrUpdateLine(event) {
   }
 }
 
+function draw(){
+  var offset = Vec3.subtract(prevPosition, startPosition)
+  Entities.addEntity({
+    type: "Line",
+    position: prevPosition,
+    dimensions: offset,
+    color: {red: 200, green: 40, blue: 200}
+  })
+
+  prevPosition = startPosition;
+
+}
 
 function mousePressEvent(event) {
   if (!event.isLeftButton || altHeld) {
@@ -87,6 +96,7 @@ function mousePressEvent(event) {
 function mouseMoveEvent(event) {
   createOrUpdateLine(event);
 }
+
 
 
 function mouseReleaseEvent(event) {
@@ -111,7 +121,12 @@ function keyReleaseEvent(event) {
 
 }
 
+function cleanup(){
+  Entities.deleteEntity(whiteBoard);
+}
 
+
+Script.scriptEnding.connect(cleanup);
 Controller.mousePressEvent.connect(mousePressEvent);
 Controller.mouseReleaseEvent.connect(mouseReleaseEvent);
 
