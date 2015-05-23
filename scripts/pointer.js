@@ -6,6 +6,8 @@ var altHeld = false;
 var lineCreated = false;
 var position, positionOffset, prevPosition;
 var nearLinePosition;
+var strokes = [];
+var STROKE_MOVE_AMOUNT = 1;
 
 
 var center = Vec3.sum(MyAvatar.position, Vec3.multiply(15.0, Quat.getFront(Camera.getOrientation())));
@@ -71,16 +73,21 @@ function createOrUpdateLine(event) {
 }
 
 function draw(){
-  var offset = Vec3.subtract(prevPosition, startPosition)
+  //We need to move line a bit towards avatar to avoid zfighting of line
+  var moveDir = Vec3.subtract(MyAvatar.position, startPosition);
+  moveDir = Vec3.normalize(moveDir);
+  moveDir = Vec3.multiply(moveDir, STROKE_MOVE_AMOUNT);
+  var adjustedStartPosition = Vec3.sum(startPosition, moveDir);
+  var adjustedPrevPosition = Vec3.sum(prevPosition, moveDir);
+
+  var offset = Vec3.subtract(adjustedPrevPosition, adjustedStartPosition);
   Entities.addEntity({
     type: "Line",
-    position: prevPosition,
+    position: adjustedPrevPosition,
     dimensions: offset,
     color: {red: 200, green: 40, blue: 200}
-  })
-
+  });
   prevPosition = startPosition;
-
 }
 
 function mousePressEvent(event) {
