@@ -7,14 +7,14 @@ var lineCreated = false;
 var position, positionOffset, prevPosition;
 var nearLinePosition;
 var strokes = [];
-var STROKE_MOVE_AMOUNT = 1;
+var STROKE_MOVE_AMOUNT = 0.05;
 
 
-var center = Vec3.sum(MyAvatar.position, Vec3.multiply(15.0, Quat.getFront(Camera.getOrientation())));
+var center = Vec3.sum(MyAvatar.position, Vec3.multiply(2.0, Quat.getFront(Camera.getOrientation())));
 var whiteBoard = Entities.addEntity({
   type: "Box",
   position: center,
-  dimensions: {x: 10, y: 5, z: .001},
+  dimensions: {x: 1, y: 1, z: .001},
   color: {red: 255, green: 255, blue: 255}
 });
 
@@ -85,7 +85,8 @@ function draw(){
     type: "Line",
     position: adjustedPrevPosition,
     dimensions: offset,
-    color: {red: 200, green: 40, blue: 200}
+    color: {red: 200, green: 40, blue: 200},
+    lifetime: 20
   });
   prevPosition = startPosition;
 }

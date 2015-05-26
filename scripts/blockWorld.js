@@ -14,7 +14,7 @@ var GENERATE_INTERVAL = 50;
 
 var floorPos = Vec3.sum(MyAvatar.position, {
   x: 0,
-  y: -20,
+  y: -6,
   z: 0
 });
 var x = floorPos.x;
