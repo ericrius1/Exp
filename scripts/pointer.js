@@ -7,10 +7,14 @@ var lineCreated = false;
 var position, positionOffset, prevPosition;
 var nearLinePosition;
 var strokes = [];
-var STROKE_MOVE_AMOUNT = 0.05;
+var STROKE_MOVE_AMOUNT = 0.1;
+var DISTANCE_DRAW_THRESHOLD = 0.1;
+var drawDistance = 0;
+
 
 
 var center = Vec3.sum(MyAvatar.position, Vec3.multiply(2.0, Quat.getFront(Camera.getOrientation())));
+center.y += 0.5;
 var whiteBoard = Entities.addEntity({
   type: "Box",
   position: center,
@@ -73,6 +77,13 @@ function createOrUpdateLine(event) {
 }
 
 function draw(){
+
+  //We only want to draw line if distance between starting and previous point is large enough
+  drawDistance = Vec3.distance(startPosition, prevPosition);
+  if( drawDistance < DISTANCE_DRAW_THRESHOLD){
+    return;
+  }
+  print('draw distance ' + drawDistance);
   //We need to move line a bit towards avatar to avoid zfighting of line
   var moveDir = Vec3.subtract(MyAvatar.position, startPosition);
   moveDir = Vec3.normalize(moveDir);
@@ -80,14 +91,14 @@ function draw(){
   var adjustedStartPosition = Vec3.sum(startPosition, moveDir);
   var adjustedPrevPosition = Vec3.sum(prevPosition, moveDir);
 
-  var offset = Vec3.subtract(adjustedPrevPosition, adjustedStartPosition);
-  Entities.addEntity({
+  var offset = Vec3.subtract(adjustedStartPosition, adjustedPrevPosition);
+  strokes.push(Entities.addEntity({
     type: "Line",
     position: adjustedPrevPosition,
     dimensions: offset,
     color: {red: 200, green: 40, blue: 200},
-    lifetime: 20
-  });
+    // lifetime: 20
+  }));
   prevPosition = startPosition;
 }
 
@@ -131,6 +142,9 @@ function keyReleaseEvent(event) {
 
 function cleanup(){
   Entities.deleteEntity(whiteBoard);
+  for(var i =0; i < strokes.length; i++){
+    Entities.deleteEntity(strokes[i]);
+  }
 }
 
 

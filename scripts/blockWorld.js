@@ -138,7 +138,7 @@ function destroy() {
   for (var i = 0; i < blocks.length; i++) {
     Entities.deleteEntity(blocks[i]);
   }
-  Overlays.deleteOverlay(offButton);
+  Overlays.deleteOverlay(offButton);a
   Script.clearInterval(blockSpawner);
 }
 
