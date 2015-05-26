@@ -7,9 +7,31 @@ var lineCreated = false;
 var position, positionOffset, prevPosition;
 var nearLinePosition;
 var strokes = [];
-var STROKE_MOVE_AMOUNT = 0.1;
-var DISTANCE_DRAW_THRESHOLD = 0.1;
+var STROKE_MOVE_AMOUNT = 0.05;
+var DISTANCE_DRAW_THRESHOLD = .03;
 var drawDistance = 0;
+
+var userCanDraw = false;
+
+var BUTTON_SIZE = 32;
+var PADDING = 3;
+
+var buttonOffColor = {red: 250, green: 10, blue: 10};
+var buttonOnColor = {red: 10, green: 200, blue: 100};
+
+HIFI_PUBLIC_BUCKET = "http://s3.amazonaws.com/hifi-public/";
+var screenSize = Controller.getViewportDimensions();
+
+var drawButton = Overlays.addOverlay("image", {
+  x: screenSize.x / 2 - BUTTON_SIZE * 2 + PADDING,
+  y: screenSize.y - (BUTTON_SIZE + PADDING),
+  width: BUTTON_SIZE,
+  height: BUTTON_SIZE,
+  imageURL: HIFI_PUBLIC_BUCKET + "images/pencil.png?v2",
+  color: buttonOffColor,
+  alpha: 1
+});
+
 
 
 
@@ -55,7 +77,9 @@ function createOrUpdateLine(event) {
         dimensions: positionOffset,
         lifetime: 15 + props.lifespan // renew lifetime
       });
-      draw();
+      if(userCanDraw){
+        draw();
+      }
     } else {
       lineIsRezzed = true;
       prevPosition = intersection.intersection;
@@ -83,7 +107,6 @@ function draw(){
   if( drawDistance < DISTANCE_DRAW_THRESHOLD){
     return;
   }
-  print('draw distance ' + drawDistance);
   //We need to move line a bit towards avatar to avoid zfighting of line
   var moveDir = Vec3.subtract(MyAvatar.position, startPosition);
   moveDir = Vec3.normalize(moveDir);
@@ -103,6 +126,19 @@ function draw(){
 }
 
 function mousePressEvent(event) {
+  var clickedOverlay = Overlays.getOverlayAtPoint({
+    x: event.x,
+    y: event.y
+  });
+  if (clickedOverlay == drawButton) {
+    userCanDraw = !userCanDraw;
+    if(userCanDraw === true){
+      Overlays.editOverlay(drawButton, {color: buttonOnColor});
+    } else {
+      Overlays.editOverlay(drawButton, {color: buttonOffColor});
+    }
+  } 
+
   if (!event.isLeftButton || altHeld) {
     return;
   }
@@ -145,6 +181,8 @@ function cleanup(){
   for(var i =0; i < strokes.length; i++){
     Entities.deleteEntity(strokes[i]);
   }
+
+  Overlays.deleteOverlay(drawButton);
 }
 
 
