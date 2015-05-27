@@ -28,8 +28,8 @@ var userCanDraw = true;
 var BUTTON_SIZE = 32;
 var PADDING = 3;
 
-var drawButtonOffColor = {red: 250, green: 10, blue: 10};
-var drawButtonOnColor = {red: 10, green: 200, blue: 100};
+var buttonOffColor = {red: 250, green: 10, blue: 10};
+var buttonOnColor = {red: 10, green: 200, blue: 100};
 
 HIFI_PUBLIC_BUCKET = "http://s3.amazonaws.com/hifi-public/";
 var screenSize = Controller.getViewportDimensions();
@@ -40,7 +40,7 @@ var drawButton = Overlays.addOverlay("image", {
   width: BUTTON_SIZE,
   height: BUTTON_SIZE,
   imageURL: HIFI_PUBLIC_BUCKET + "images/pencil.png?v2",
-  color: drawButtonOnColor,
+  color: buttonOnColor,
   alpha: 1
 });
 
@@ -50,7 +50,7 @@ var pointerButton = Overlays.addOverlay("image", {
   width: BUTTON_SIZE,
   height: BUTTON_SIZE,
   imageURL: HIFI_PUBLIC_BUCKET + "images/laser.png",
-  color: drawButtonOnColor,
+  color: buttonOnColor,
   alpha: 1
 })
 
@@ -149,9 +149,9 @@ function mousePressEvent(event) {
   if (clickedOverlay == drawButton) {
     userCanDraw = !userCanDraw;
     if(userCanDraw === true){
-      Overlays.editOverlay(drawButton, {color: drawButtonOnColor});
+      Overlays.editOverlay(drawButton, {color: buttonOnColor});
     } else {
-      Overlays.editOverlay(drawButton, {color: drawButtonOffColor});
+      Overlays.editOverlay(drawButton, {color: buttonOffColor});
     }
   } 
 
