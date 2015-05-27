@@ -1,3 +1,15 @@
+//  blockWorld.js
+//  examples
+//
+//  Created by Eric Levin on May 26, 2015
+//  Copyright 2015 High Fidelity, Inc.
+//
+//  Creates a floor of tiles and then drops planky blocks at random points above the tile floor
+//
+//  Distributed under the Apache License, Version 2.0.
+//  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
+//
+
 var TILE_SIZE = 7
 var GENERATE_INTERVAL = 50;
 var NUM_ROWS = 10;

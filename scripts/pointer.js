@@ -1,4 +1,14 @@
-//Dimensions property for lines is the offset of the position
+//  pointer.js
+//  examples
+//
+//  Created by Eric Levin on May 26, 2015
+//  Copyright 2015 High Fidelity, Inc.
+//
+//  Provides a pointer with option to draw on surfaces
+//
+//  Distributed under the Apache License, Version 2.0.
+//  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
+//
 
 var lineEntityID = null;
 var lineIsRezzed = false;
@@ -7,30 +17,42 @@ var lineCreated = false;
 var position, positionOffset, prevPosition;
 var nearLinePosition;
 var strokes = [];
-var STROKE_MOVE_AMOUNT = 0.05;
-var DISTANCE_DRAW_THRESHOLD = .03;
+var STROKE_ADJUST = 0.005;
+var DISTANCE_DRAW_THRESHOLD = .02;
 var drawDistance = 0;
 
-var userCanDraw = false;
+var LINE_WIDTH = 20;
+
+var userCanDraw = true;
 
 var BUTTON_SIZE = 32;
 var PADDING = 3;
 
-var buttonOffColor = {red: 250, green: 10, blue: 10};
-var buttonOnColor = {red: 10, green: 200, blue: 100};
+var drawButtonOffColor = {red: 250, green: 10, blue: 10};
+var drawButtonOnColor = {red: 10, green: 200, blue: 100};
 
 HIFI_PUBLIC_BUCKET = "http://s3.amazonaws.com/hifi-public/";
 var screenSize = Controller.getViewportDimensions();
 
 var drawButton = Overlays.addOverlay("image", {
-  x: screenSize.x / 2 - BUTTON_SIZE * 2 + PADDING,
+  x: screenSize.x /2 - BUTTON_SIZE + PADDING * 2,
   y: screenSize.y - (BUTTON_SIZE + PADDING),
   width: BUTTON_SIZE,
   height: BUTTON_SIZE,
   imageURL: HIFI_PUBLIC_BUCKET + "images/pencil.png?v2",
-  color: buttonOffColor,
+  color: drawButtonOnColor,
   alpha: 1
 });
+
+var pointerButton = Overlays.addOverlay("image", {
+  x: screenSize.x / 2 - BUTTON_SIZE * 2 + PADDING,
+  y: screenSize.y - (BUTTON_SIZE + PADDING),
+  width: BUTTON_SIZE,
+  height: BUTTON_SIZE,
+  imageURL: HIFI_PUBLIC_BUCKET + "images/laser.png",
+  color: drawButtonOnColor,
+  alpha: 1
+})
 
 
 
@@ -69,20 +91,21 @@ function createOrUpdateLine(event) {
 
   if (intersection.intersects) {
     startPosition = intersection.intersection;
+    var subtractVec = Vec3.multiply(Vec3.normalize(pickRay.direction), STROKE_ADJUST);
+    startPosition = Vec3.subtract(startPosition, subtractVec);
     nearLinePosition = calculateNearLinePosition(intersection.intersection);
     positionOffset= Vec3.subtract(startPosition, nearLinePosition);
     if (lineIsRezzed) {
       Entities.editEntity(lineEntityID, {
         position: nearLinePosition,
         dimensions: positionOffset,
-        lifetime: 15 + props.lifespan // renew lifetime
       });
       if(userCanDraw){
         draw();
       }
     } else {
       lineIsRezzed = true;
-      prevPosition = intersection.intersection;
+      prevPosition = startPosition;
       lineEntityID = Entities.addEntity({
         type: "Line",
         position: nearLinePosition,
@@ -92,7 +115,6 @@ function createOrUpdateLine(event) {
           green: 255,
           blue: 255
         },
-        lifetime: 15 // if someone crashes while pointing, don't leave the line there forever.
       });
     }
   } else {
@@ -107,20 +129,14 @@ function draw(){
   if( drawDistance < DISTANCE_DRAW_THRESHOLD){
     return;
   }
-  //We need to move line a bit towards avatar to avoid zfighting of line
-  var moveDir = Vec3.subtract(MyAvatar.position, startPosition);
-  moveDir = Vec3.normalize(moveDir);
-  moveDir = Vec3.multiply(moveDir, STROKE_MOVE_AMOUNT);
-  var adjustedStartPosition = Vec3.sum(startPosition, moveDir);
-  var adjustedPrevPosition = Vec3.sum(prevPosition, moveDir);
 
-  var offset = Vec3.subtract(adjustedStartPosition, adjustedPrevPosition);
+  var offset = Vec3.subtract(startPosition, prevPosition);
   strokes.push(Entities.addEntity({
     type: "Line",
-    position: adjustedPrevPosition,
+    position: prevPosition,
     dimensions: offset,
     color: {red: 200, green: 40, blue: 200},
-    // lifetime: 20
+    lineWidth: LINE_WIDTH
   }));
   prevPosition = startPosition;
 }
@@ -133,9 +149,9 @@ function mousePressEvent(event) {
   if (clickedOverlay == drawButton) {
     userCanDraw = !userCanDraw;
     if(userCanDraw === true){
-      Overlays.editOverlay(drawButton, {color: buttonOnColor});
+      Overlays.editOverlay(drawButton, {color: drawButtonOnColor});
     } else {
-      Overlays.editOverlay(drawButton, {color: buttonOffColor});
+      Overlays.editOverlay(drawButton, {color: drawButtonOffColor});
     }
   } 
 
@@ -183,6 +199,7 @@ function cleanup(){
   }
 
   Overlays.deleteOverlay(drawButton);
+  Overlays.deleteOverlay(pointerButton);
 }
 
 
