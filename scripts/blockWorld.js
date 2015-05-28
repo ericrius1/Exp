@@ -13,6 +13,7 @@
 var TILE_SIZE = 7
 var GENERATE_INTERVAL = 50;
 var NUM_ROWS = 10;
+var angVelRange = 4;
 
 var floorTiles = [];
 var blocks = [];
@@ -61,6 +62,20 @@ var offButton = Overlays.addOverlay("image", {
   width: BUTTON_SIZE,
   height: BUTTON_SIZE,
   imageURL: HIFI_PUBLIC_BUCKET + "images/close.png",
+  color: {
+    red: 255,
+    green: 255,
+    blue: 255
+  },
+  alpha: 1
+});
+
+var deleteButton = Overlays.addOverlay("image", {
+  x: screenSize.x / 2 - BUTTON_SIZE,
+  y: screenSize.y - (BUTTON_SIZE + PADDING),
+  width: BUTTON_SIZE,
+  height: BUTTON_SIZE,
+  imageURL: HIFI_PUBLIC_BUCKET + "images/delete.png",
   color: {
     red: 255,
     green: 255,
@@ -127,11 +142,16 @@ function dropBlock() {
       x: 0,
       y: .1,
       z: 0
+    },
+    angularVelocity: {
+      x: randFloat(-angVelRange, angVelRange),
+      y: randFloat(-angVelRange, angVelRange),
+      z: randFloat(-angVelRange, angVelRange),
     }
   }));
 }
 
-function mousePressEvent(event){
+function mousePressEvent(event) {
   var clickedOverlay = Overlays.getOverlayAtPoint({
     x: event.x,
     y: event.y
@@ -139,19 +159,34 @@ function mousePressEvent(event){
   if (clickedOverlay == offButton) {
     Script.clearInterval(blockSpawner);
   } 
+  if(clickedOverlay == deleteButton){
+    destroyStuff();
+  }
 }
 
 generateFloor();
 
-function destroy() {
+function cleanup() {
+  // for (var i = 0; i < floorTiles.length; i++) {
+  //   Entities.deleteEntity(floorTiles[i]);
+  // }
+  // for (var i = 0; i < blocks.length; i++) {
+  //   Entities.deleteEntity(blocks[i]);
+  // }
+  Overlays.deleteOverlay(offButton);
+  Overlays.deleteOverlay(deleteButton)
+  Script.clearInterval(blockSpawner);
+}
+
+function destroyStuff() {
   for (var i = 0; i < floorTiles.length; i++) {
     Entities.deleteEntity(floorTiles[i]);
   }
   for (var i = 0; i < blocks.length; i++) {
     Entities.deleteEntity(blocks[i]);
   }
-  Overlays.deleteOverlay(offButton);a
   Script.clearInterval(blockSpawner);
+
 }
 
 function randFloat(low, high) {
@@ -162,5 +197,5 @@ function map(value, min1, max1, min2, max2) {
   return min2 + (max2 - min2) * ((value - min1) / (max1 - min1));
 }
 
-Script.scriptEnding.connect(destroy);
+Script.scriptEnding.connect(cleanup);
 Controller.mousePressEvent.connect(mousePressEvent);
