@@ -1,16 +1,30 @@
-HIFI_PUBLIC_BUCKET = "http://s3.amazonaws.com/hifi-public/";
+var HIFI_PUBLIC_BUCKET = "http://s3.amazonaws.com/hifi-public/";
+var SOUND_PATH = HIFI_PUBLIC_BUCKET + "sounds/Collisions-hitsandslaps/";
+var soundURLS = ["67LCollision01.wav", "67LCollision02.wav", "ball-hit.wav"];
 var FLOOR_SIZE = 10;
 var center = Vec3.sum(MyAvatar.position, Vec3.multiply(FLOOR_SIZE * 1.5, Quat.getFront(Camera.getOrientation())));
 var WALL_WIDTH = .1;
 var FLOOR_HEIGHT_OFFSET = -2;
 var WALL_HEIGHT = FLOOR_SIZE / 4;
 var BALL_DROP_HEIGHT = center.y + WALL_HEIGHT;
-var NUM_BALLS = 10;
+var NUM_BALLS = 50;
 var BALL_RADIUS = 1;
-var BROWNIAN_INTERVAL_TIME = 1000;
+var BROWNIAN_INTERVAL_TIME = 16;
 var BROWNIAN_FORCE_RANGE = 5;
+var SPAWN_TIME = 50;
+var spawnCount = 0;
 
 var brownianMotionActivated = false;
+var buttonOffColor = {
+  red: 250,
+  green: 10,
+  blue: 10
+};
+var buttonOnColor = {
+  red: 10,
+  green: 200,
+  blue: 100
+};
 
 var bounds = {
   xMin: center.x - FLOOR_SIZE / 2,
@@ -30,11 +44,7 @@ var brownianButton = Overlays.addOverlay("image", {
   width: BUTTON_SIZE,
   height: BUTTON_SIZE,
   imageURL: HIFI_PUBLIC_BUCKET + "images/blocks.png",
-  color: {
-    red: 255,
-    green: 255,
-    blue: 255
-  },
+  color: buttonOffColor,
   alpha: 1
 });
 
@@ -133,40 +143,44 @@ var frontWall = Entities.addEntity({
   }
 });
 
-spawnBalls();
+var spawnInterval = Script.setInterval(spawnBalls, SPAWN_TIME);
 
 function spawnBalls() {
-  for (var i = 0; i < NUM_BALLS; i++) {
-    balls.push(Entities.addEntity({
-      type: "Sphere",
-      position: {
-        x: randFloat(bounds.xMin, bounds.xMax),
-        y: BALL_DROP_HEIGHT,
-        z: randFloat(bounds.zMin, bounds.zMax)
-      },
-      dimensions: {
-        x: BALL_RADIUS,
-        y: BALL_RADIUS,
-        z: BALL_RADIUS
-      },
-      color: {
-        red: 130,
-        green: 70,
-        blue: 150
-      },
-      ignoreCollisions: false,
-      collisionsWillMove: true,
-      gravity: {
-        x: 0,
-        y: -9,
-        z: 0
-      },
-      velocity: {
-        x: 0,
-        y: -.1,
-        z: 0
-      }
-    }));
+  balls.push(Entities.addEntity({
+    type: "Sphere",
+    shapeType: "sphere",
+    position: {
+      x: randFloat(bounds.xMin, bounds.xMax),
+      y: BALL_DROP_HEIGHT,
+      z: randFloat(bounds.zMin, bounds.zMax)
+    },
+    dimensions: {
+      x: BALL_RADIUS,
+      y: BALL_RADIUS,
+      z: BALL_RADIUS
+    },
+    color: {
+      red: randFloat(100, 150),
+      green: randFloat(20, 80),
+      blue: randFloat(10, 180)
+    },
+    ignoreCollisions: false,
+    collisionsWillMove: true,
+    gravity: {
+      x: 0,
+      y: -9.9,
+      z: 0
+    },
+    velocity: {
+      x: 0,
+      y: -.25,
+      z: 0
+    },
+    collisionSoundURL: SOUND_PATH + soundURLS[randInt(0, soundURLS.length - 1)]
+  }));
+  spawnCount++;
+  if (spawnCount === NUM_BALLS) {
+    Script.clearInterval(spawnInterval);
   }
 }
 
@@ -177,18 +191,30 @@ function mousePressEvent(event) {
   });
   if (clickedOverlay == brownianButton) {
     brownianMotionActivated = !brownianMotionActivated;
-    if(brownianMotionActivated){
+    if (brownianMotionActivated) {
       brownianInterval = Script.setInterval(bumpBalls, BROWNIAN_INTERVAL_TIME);
+      Overlays.editOverlay(brownianButton, {
+        color: buttonOnColor
+      })
     } else {
       Script.clearInterval(brownianInterval);
+      Overlays.editOverlay(brownianButton, {
+        color: buttonOffColor
+      })
     }
   }
 }
 
-function bumpBalls(){
-  balls.forEach(function(ball){
+function bumpBalls() {
+  balls.forEach(function(ball) {
+    var props = Entities.getEntityProperties(ball);
+    var newVelocity = Vec3.sum(props.velocity, {
+      x: (Math.random() - 0.5) * BROWNIAN_FORCE_RANGE,
+      y: 0,
+      z: (Math.random() - 0.5) * BROWNIAN_FORCE_RANGE
+    });
     Entities.editEntity(ball, {
-      velocity: {x: randFloat(-BROWNIAN_FORCE_RANGE, BROWNIAN_FORCE_RANGE), y: randFloat(-BROWNIAN_FORCE_RANGE, BROWNIAN_FORCE_RANGE), z: randFloat(-BROWNIAN_FORCE_RANGE, BROWNIAN_FORCE_RANGE)}
+      velocity: newVelocity
     });
   });
 }
@@ -202,12 +228,19 @@ function cleanup() {
   balls.forEach(function(ball) {
     Entities.deleteEntity(ball);
   });
-  Overlays.deleteEntity(brownianButton);
+  Overlays.deleteOverlay(brownianButton);
 }
 
 function randFloat(low, high) {
   return Math.floor(low + Math.random() * (high - low));
 }
+
+
+function randInt(low, high) {
+  return Math.floor(randFloat(low, high));
+}
+
+Script.scriptEnding.connect(cleanup);
 
 
 Script.scriptEnding.connect(cleanup);
