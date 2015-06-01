@@ -1,12 +1,10 @@
 var lines = [];
-var isDrawing = false;
+var pointerActivated = false;
 
-var DRAWING_DISTANCE = 5;
-var MAX_POINTS_PER_LINE = 80;
+var POINTER_DISTANCE = 5;
 var line;
-var points = [];
-
-function newLine(point){
+newLine();
+function newLine(){
   line = Entities.addEntity({
     position: MyAvatar.position,
     type: "Line",
@@ -20,44 +18,34 @@ function newLine(point){
       y: 10,
       z: 10
     },
-    lineWidth: 5
+    lineWidth: 2
   });
-  points = [];
-  if(point){
-    points.push(point);
-  }
   lines.push(line);
 }
 
 
 function mouseMoveEvent(event) {
-  if (!isDrawing) {
+  if (!pointerActivated) {
     return;
   }
 
   var pickRay = Camera.computePickRay(event.x, event.y);
-  var addVector = Vec3.multiply(Vec3.normalize(pickRay.direction), DRAWING_DISTANCE);
-  var point = Vec3.sum(Camera.getPosition(), addVector);
-  points.push(point);
+  var startPosition = MyAvatar.getRightPalmPosition();
+  var addVector = Vec3.multiply(Vec3.normalize(pickRay.direction), POINTER_DISTANCE);
+  var endPosition = Vec3.sum(startPosition, addVector);
   Entities.editEntity(line, {
-    linePoints: points
+    linePoints: [startPosition, endPosition]
   });
-
-  if(points.length === MAX_POINTS_PER_LINE){
-    //We need to start a new line!
-    newLine(point);
-  }
 }
 
 function mousePressEvent() {
-  newLine();
-  isDrawing = true;
-
+  pointerActivated = true;
+  Entities.editEntity(line, {visible: true})
 }
 
 function mouseReleaseEvent() {
-  isDrawing = false;
-  print('final points!! ' + points.length)
+  pointerActivated = false;
+  Entities.editEntity(line, {visible: false})
 }
 
 
