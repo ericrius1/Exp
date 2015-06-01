@@ -20,15 +20,9 @@ var LASER_COLOR = {
   blue: 200
 };
 
-var DROP_DISTANCE = 5.0;
-var DROP_COLOR = {
-  red: 200,
-  green: 200,
-  blue: 200
-};
 
 var FULL_STRENGTH = 0.05;
-var LASER_LENGTH_FACTOR = 500;
+var DISTANCE_FROM_HAND = 1;
 var CLOSE_ENOUGH = 0.001;
 var SPRING_RATE = 1.5;
 var DAMPING_RATE = 0.8;
@@ -36,10 +30,9 @@ var SCREEN_TO_METERS = 0.001;
 var DISTANCE_SCALE_FACTOR = 1000
 
 
-function getRayIntersection(pickRay) {
-  var intersection = Entities.findRayIntersection(pickRay, true);
-  return intersection;
-}
+var BRUSH_RADIUS = .1;
+var brushColor = {red: 200, green: 20, blue: 140};
+
 
 
 function controller(side) {
@@ -50,21 +43,12 @@ function controller(side) {
   this.tip = 2 * side + 1;
   this.trigger = side;
 
-  this.laser = Overlays.addOverlay("line3d", {
-    start: {
-      x: 0,
-      y: 0,
-      z: 0
-    },
-    end: {
-      x: 0,
-      y: 0,
-      z: 0
-    },
-    color: LASER_COLOR,
-    alpha: 1,
-    lineWidth: LASER_WIDTH,
-    anchor: "MyAvatar"
+
+  this.brush = Entities.addEntity({
+    type: 'Box',
+    position: {x: 0, y: 0, z:0},
+    color: brushColor,
+    dimensions: {x: BRUSH_RADIUS, y: BRUSH_RADIUS, z: BRUSH_RADIUS}
   });
 
 
@@ -85,21 +69,17 @@ function controller(side) {
   }
 
   this.moveLaser = function() {
-    var inverseRotation = Quat.inverse(MyAvatar.orientation);
-    var startPosition = Vec3.multiplyQbyV(inverseRotation, Vec3.subtract(this.palmPosition, MyAvatar.position));
-    var direction = Vec3.multiplyQbyV(inverseRotation, Vec3.subtract(this.tipPosition, this.palmPosition));
-    direction = Vec3.multiply(direction, LASER_LENGTH_FACTOR / (Vec3.length(direction) * MyAvatar.scale));
-    var endPosition = Vec3.sum(startPosition, direction);
+    var startPosition = this.palmPosition;
+    print("palm position " + JSON.stringify(this.palmPosition));
+    var offsetVector = Vec3.multiply(DISTANCE_FROM_HAND, Vec3.normalize(Vec3.subtract(this.tipPosition, this.palmPosition)));
+    var endPosition = Vec3.sum(startPosition, offsetVector);
 
-    Overlays.editOverlay(this.laser, {
-      start: startPosition,
-      end: endPosition
-    });
+    Entities.editEntity(this.brush, {position: endPosition});
 
   }
 
   this.cleanup = function() {
-    Overlays.deleteOverlay(this.laser);
+    Entities.deleteEntity(this.brush);
   }
 }
 
