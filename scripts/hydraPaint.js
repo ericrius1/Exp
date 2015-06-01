@@ -21,17 +21,15 @@ var LASER_COLOR = {
 };
 
 
-var FULL_STRENGTH = 0.05;
-var DISTANCE_FROM_HAND = 1;
-var CLOSE_ENOUGH = 0.001;
-var SPRING_RATE = 1.5;
-var DAMPING_RATE = 0.8;
-var SCREEN_TO_METERS = 0.001;
-var DISTANCE_SCALE_FACTOR = 1000
+var DISTANCE_FROM_HAND = 5;
 
 
 var BRUSH_RADIUS = .1;
 var brushColor = {red: 200, green: 20, blue: 140};
+
+var minLineWidth = 1;
+var maxLineWidth = 2;
+var currentLineWidth = minLineWidth;
 
 
 
@@ -70,11 +68,10 @@ function controller(side) {
 
   this.moveLaser = function() {
     var startPosition = this.palmPosition;
-    print("palm position " + JSON.stringify(this.palmPosition));
     var offsetVector = Vec3.multiply(DISTANCE_FROM_HAND, Vec3.normalize(Vec3.subtract(this.tipPosition, this.palmPosition)));
     var endPosition = Vec3.sum(startPosition, offsetVector);
-
-    Entities.editEntity(this.brush, {position: endPosition});
+    currentLineWidth = map(this.triggerValue, 0, 1, minLineWidth, maxLineWidth);
+    Entities.editEntity(this.brush, {position: endPosition, dimensions: {x: currentLineWidth, y: currentLineWidth, z: currentLineWidth}});
 
   }
 
@@ -95,8 +92,13 @@ function vectorIsZero(v) {
   return v.x === 0 && v.y === 0 && v.z === 0;
 }
 
+
 var rightController = new controller(RIGHT);
 
 
 Script.update.connect(update);
 Script.scriptEnding.connect(scriptEnding);
+
+function map(value, min1, max1, min2, max2) {
+  return min2 + (max2 - min2) * ((value - min1) / (max1 - min1));
+}
