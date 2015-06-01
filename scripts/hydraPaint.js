@@ -21,15 +21,21 @@ var LASER_COLOR = {
 };
 
 
-var DISTANCE_FROM_HAND = 5;
+var DISTANCE_FROM_HAND = 1;
 
 
 var BRUSH_RADIUS = .1;
-var brushColor = {red: 200, green: 20, blue: 140};
+var brushColor = {
+  red: 200,
+  green: 20,
+  blue: 140
+};
 
-var minLineWidth = 1;
-var maxLineWidth = 2;
+var minLineWidth = .02;
+var maxLineWidth = .04;
 var currentLineWidth = minLineWidth;
+var MIN_PAINT_TRIGGER_THRESHOLD = .1;
+var MAX_POINTS_PER_LINE = 80;
 
 
 
@@ -40,20 +46,60 @@ function controller(side) {
   this.palm = 2 * side;
   this.tip = 2 * side + 1;
   this.trigger = side;
+  this.lines = [];
+  this.isPainting = false;
 
 
   this.brush = Entities.addEntity({
-    type: 'Box',
-    position: {x: 0, y: 0, z:0},
+    type: 'Sphere',
+    position: {
+      x: 0,
+      y: 0,
+      z: 0
+    },
     color: brushColor,
-    dimensions: {x: BRUSH_RADIUS, y: BRUSH_RADIUS, z: BRUSH_RADIUS}
+    dimensions: {
+      x: BRUSH_RADIUS,
+      y: BRUSH_RADIUS,
+      z: BRUSH_RADIUS
+    }
   });
 
 
+  this.newLine = function(point) {
+    this.line = Entities.addEntity({
+      position: MyAvatar.position,
+      type: "Line",
+      color: {
+        red: randInt(0, 200),
+        green: randInt(0, 200),
+        blue: randInt(0, 200)
+      },
+      dimensions: {
+        x: 10,
+        y: 10,
+        z: 10
+      },
+      lineWidth: 5
+    });
+    this.points = [];
+    if (point) {
+      this.points.push(point);
+    }
+    this.lines.push(this.line);
+  }
 
   this.update = function(deltaTime) {
     this.updateControllerState();
-    this.moveLaser();
+    if (this.triggerValue > MIN_PAINT_TRIGGER_THRESHOLD) {
+      if(!this.isPainting){
+        this.isPainting = true;
+        this.newLine();
+      }
+      this.paint();
+    } else {
+      this.isPainting = false;
+    }
 
     this.oldPalmPosition = this.palmPosition;
     this.oldTipPosition = this.tipPosition;
@@ -66,17 +112,35 @@ function controller(side) {
     this.triggerValue = Controller.getTriggerValue(this.trigger);
   }
 
-  this.moveLaser = function() {
+  this.paint = function() {
     var startPosition = this.palmPosition;
     var offsetVector = Vec3.multiply(DISTANCE_FROM_HAND, Vec3.normalize(Vec3.subtract(this.tipPosition, this.palmPosition)));
     var endPosition = Vec3.sum(startPosition, offsetVector);
     currentLineWidth = map(this.triggerValue, 0, 1, minLineWidth, maxLineWidth);
-    Entities.editEntity(this.brush, {position: endPosition, dimensions: {x: currentLineWidth, y: currentLineWidth, z: currentLineWidth}});
+    this.points.push(endPosition);
+    print("points " + this.points.length);
+    Entities.editEntity(this.line, {
+      linePoints: this.points
+    });
+    if(this.points.length > MAX_POINTS_PER_LINE){
+      this.newLine(endPosition);
+    }
+    Entities.editEntity(this.brush, {
+      position: endPosition,
+      dimensions: {
+        x: currentLineWidth,
+        y: currentLineWidth,
+        z: currentLineWidth
+      }
+    });
 
   }
 
   this.cleanup = function() {
     Entities.deleteEntity(this.brush);
+    this.lines.forEach(function(line) {
+      Entities.deleteEntity(line);
+    });
   }
 }
 
@@ -101,4 +165,13 @@ Script.scriptEnding.connect(scriptEnding);
 
 function map(value, min1, max1, min2, max2) {
   return min2 + (max2 - min2) * ((value - min1) / (max1 - min1));
+}
+
+function randFloat(low, high) {
+  return Math.floor(low + Math.random() * (high - low));
+}
+
+
+function randInt(low, high) {
+  return Math.floor(randFloat(low, high));
 }
