@@ -14,7 +14,10 @@
 
 Script.include('lineRider.js')
 var lineRider = new LineRider();
-lineRider.testFunction();
+lineRider.addStartHandler(function(){
+  //set path to most recently created line
+  lineRider.setPath(rightController.points);
+});
 
 var LEFT = 0;
 var RIGHT = 1;
@@ -22,10 +25,10 @@ var RIGHT = 1;
 var currentTime = 0;
 
 
-var DISTANCE_FROM_HAND = 5;
-var minBrushSize = DISTANCE_FROM_HAND / 50;
-var maxBrushSize = minBrushSize * 2
-var currentBrushSize = minBrushSize;
+var DISTANCE_FROM_HAND = 2;
+var minBrushSize = .05;
+var maxBrushSize = .1
+
 
 var minLineWidth = 1;
 var maxLineWidth = 2;
@@ -39,6 +42,11 @@ var RIGHT_BUTTON_3 = 9;
 var RIGHT_BUTTON_4 = 10;
 var LEFT_BUTTON_3 = 3;
 var LEFT_BUTTON_4 = 4;
+
+var STROKE_SMOOTH_FACTOR = 2;
+
+var MIN_DRAW_DISTANCE = 1;
+var MAX_DRAW_DISTANCE = 2;
 
 function controller(side, undoButton, redoButton) {
   this.triggerHeld = false;
@@ -56,6 +64,9 @@ function controller(side, undoButton, redoButton) {
   this.redoButton = redoButton;
   this.redoButtonPressed = false;
   this.prevRedoButtonPressed = false;
+  this.strokeCount = 0;
+  this.currentBrushSize = minBrushSize;
+  this.points = [];
 
   this.hslColor = {
     hue: 0.5,
@@ -102,16 +113,19 @@ function controller(side, undoButton, redoButton) {
   this.update = function(deltaTime) {
     this.updateControllerState();
     this.updateColor();
-    var startPosition = this.palmPosition;
-    var offsetVector = Vec3.multiply(DISTANCE_FROM_HAND, Vec3.normalize(Vec3.subtract(this.tipPosition, this.palmPosition)));
-    var endPosition = Vec3.sum(startPosition, offsetVector);
-    currentBrushSize = map(this.triggerValue, 0, 1, minBrushSize, maxBrushSize);
+    this.avatarPalmOffset = Vec3.subtract(this.palmPosition, MyAvatar.position);
+    this.projectedForwardDistance = Vec3.dot(Quat.getFront(Camera.getOrientation()), this.avatarPalmOffset);
+    this.mappedPalmOffset = map(this.projectedForwardDistance, -.5, .5, MIN_DRAW_DISTANCE, MAX_DRAW_DISTANCE);
+    this.tipDirection = Vec3.normalize(Vec3.subtract(this.tipPosition, this.palmPosition));
+    this.offsetVector = Vec3.multiply(this.mappedPalmOffset, this.tipDirection );
+    this.drawPoint = Vec3.sum(this.palmPosition, this.offsetVector);
+    this.currentBrushSize = map(this.triggerValue, 0, 1, minBrushSize, maxBrushSize);
     Entities.editEntity(this.brush, {
-      position: endPosition,
+      position: this.drawPoint,
       dimensions: {
-        x: currentBrushSize,
-        y: currentBrushSize,
-        z: currentBrushSize
+        x: this.currentBrushSize,
+        y: this.currentBrushSize,
+        z: this.currentBrushSize
       },
       color: this.rgbColor
     });
@@ -120,7 +134,10 @@ function controller(side, undoButton, redoButton) {
         this.isPainting = true;
         this.newLine();
       }
-      this.paint(endPosition);
+      if(this.strokeCount % STROKE_SMOOTH_FACTOR === 0){
+        this.paint(this.drawPoint);
+      }
+      this.strokeCount++;
     } else {
       this.isPainting = false;
     }
@@ -163,7 +180,6 @@ function controller(side, undoButton, redoButton) {
   }
 
   this.redoStroke = function(){
-    print('redod')
     var restoredLine = Entities.addEntity(this.deletedLines.pop());
     Entities.addEntity(restoredLine);
     this.lines.push(restoredLine);
@@ -195,11 +211,17 @@ function update(deltaTime) {
   rightController.update(deltaTime);
   leftController.update(deltaTime);
   currentTime += deltaTime;
+  lineRider.update();
 }
 
 function scriptEnding() {
   rightController.cleanup();
   leftController.cleanup();
+  lineRider.cleanup();
+}
+
+function mousePressEvent(event){
+  lineRider.mousePressEvent(event);
 }
 
 function vectorIsZero(v) {
@@ -207,12 +229,14 @@ function vectorIsZero(v) {
 }
 
 
+
+
 var rightController = new controller(RIGHT, RIGHT_BUTTON_3, RIGHT_BUTTON_4);
 var leftController = new controller(LEFT, LEFT_BUTTON_3, LEFT_BUTTON_4);
 
-
 Script.update.connect(update);
 Script.scriptEnding.connect(scriptEnding);
+Controller.mousePressEvent.connect(mousePressEvent);
 
 function map(value, min1, max1, min2, max2) {
   return min2 + (max2 - min2) * ((value - min1) / (max1 - min1));

@@ -285,12 +285,10 @@ function controller(side) {
 
 function update(deltaTime) {
   rightController.update(deltaTime);
-  leftController.update(deltaTime);
 }
 
 function scriptEnding() {
   rightController.cleanup();
-  leftController.cleanup();
 }
 
 function vectorIsZero(v) {
@@ -298,7 +296,6 @@ function vectorIsZero(v) {
 }
 
 var rightController = new controller(RIGHT);
-var leftController = new controller(LEFT);
 
 
 Script.update.connect(update);
