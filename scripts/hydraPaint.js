@@ -12,13 +12,17 @@
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 //
 
+Script.include('lineRider.js')
+var lineRider = new LineRider();
+lineRider.testFunction();
+
 var LEFT = 0;
 var RIGHT = 1;
 
 var currentTime = 0;
 
 
-var DISTANCE_FROM_HAND = 1;
+var DISTANCE_FROM_HAND = 5;
 var minBrushSize = DISTANCE_FROM_HAND / 50;
 var maxBrushSize = minBrushSize * 2
 var currentBrushSize = minBrushSize;
@@ -32,9 +36,11 @@ var LINE_LIFETIME = 20;
 var COLOR_CHANGE_TIME_FACTOR = 0.1;
 
 var RIGHT_BUTTON_3 = 9;
+var RIGHT_BUTTON_4 = 10;
 var LEFT_BUTTON_3 = 3;
+var LEFT_BUTTON_4 = 4;
 
-function controller(side, undoButton) {
+function controller(side, undoButton, redoButton) {
   this.triggerHeld = false;
   this.triggerThreshold = 0.9;
   this.side = side;
@@ -42,10 +48,14 @@ function controller(side, undoButton) {
   this.tip = 2 * side + 1;
   this.trigger = side;
   this.lines = [];
+  this.deletedLines = [] //just an array of properties objects
   this.isPainting = false;
   this.undoButton =  undoButton; 
   this.undoButtonPressed = false;  
   this.prevUndoButtonPressed = false;  
+  this.redoButton = redoButton;
+  this.redoButtonPressed = false;
+  this.prevRedoButtonPressed = false;
 
   this.hslColor = {
     hue: 0.5,
@@ -127,12 +137,18 @@ function controller(side, undoButton) {
 
 
   this.updateControllerState = function() {
-    this.undoButtonPressed = Controller.isButtonPressed(this.undoButton);    
+    this.undoButtonPressed = Controller.isButtonPressed(this.undoButton);   
+    this.redoButtonPressed = Controller.isButtonPressed(this.redoButton);   
+    // print("undo button pressed " + this.undoButtonPressed) 
     if(this.prevUndoButtonPressed === true && this.undoButtonPressed === false){
       //User released undo button, so undo
       this.undoStroke();
     }
-    this.prevUndoButtonPressed = this.undoButtonPressed
+    if(this.prevRedoButtonPressed === true && this.redoButtonPressed === false){
+      this.redoStroke();
+    }
+    this.prevRedoButtonPressed = this.redoButtonPressed;
+    this.prevUndoButtonPressed = this.undoButtonPressed;
 
     this.palmPosition = Controller.getSpatialControlPosition(this.palm);
     this.tipPosition = Controller.getSpatialControlPosition(this.tip);
@@ -140,7 +156,17 @@ function controller(side, undoButton) {
   }
 
   this.undoStroke = function(){
-    Entities.deleteEntity(this.lines.pop());
+    var deletedLine = this.lines.pop();
+    var deletedLineProps = Entities.getEntityProperties(deletedLine);
+    this.deletedLines.push(deletedLineProps);
+    Entities.deleteEntity(deletedLine);
+  }
+
+  this.redoStroke = function(){
+    print('redod')
+    var restoredLine = Entities.addEntity(this.deletedLines.pop());
+    Entities.addEntity(restoredLine);
+    this.lines.push(restoredLine);
   }
 
   this.paint = function(point) {
@@ -167,7 +193,7 @@ function controller(side, undoButton) {
 
 function update(deltaTime) {
   rightController.update(deltaTime);
-  // leftController.update(deltaTime);
+  leftController.update(deltaTime);
   currentTime += deltaTime;
 }
 
@@ -181,8 +207,8 @@ function vectorIsZero(v) {
 }
 
 
-var rightController = new controller(RIGHT, RIGHT_BUTTON_3);
-var leftController = new controller(LEFT, LEFT_BUTTON_3);
+var rightController = new controller(RIGHT, RIGHT_BUTTON_3, RIGHT_BUTTON_4);
+var leftController = new controller(LEFT, LEFT_BUTTON_3, LEFT_BUTTON_4);
 
 
 Script.update.connect(update);
