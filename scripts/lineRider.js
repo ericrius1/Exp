@@ -30,7 +30,7 @@ LineRider = function() {
 
   this.currentPoint = 0;
   this.shouldUpdate = false;
-  this.moveIntervalTime = 100;
+  this.moveIntervalTime = 50;
 
 }
 
