@@ -12,6 +12,7 @@
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 //
 
+var LEFT = 0;
 var RIGHT = 1;
 var LASER_WIDTH = 3;
 var LASER_COLOR = {
@@ -21,7 +22,7 @@ var LASER_COLOR = {
 };
 
 
-var DISTANCE_FROM_HAND = 1;
+var DISTANCE_FROM_HAND = 2;
 var minBrushSize = .015;
 var maxBrushSize = 0.03;
 var currentBrushSize = minBrushSize;
@@ -36,8 +37,9 @@ var minLineWidth = 1;
 var maxLineWidth = 10;
 var currentLineWidth = minLineWidth;
 var MIN_PAINT_TRIGGER_THRESHOLD = .01;
-var MAX_POINTS_PER_LINE = 80;
+var MAX_POINTS_PER_LINE = 10;
 var BRUSH_SIZE_FACTOR = 0.01;
+var LINE_LIFETIME = 5;
 
 
 
@@ -82,7 +84,8 @@ function controller(side) {
         y: 10,
         z: 10
       },
-      lineWidth: 5
+      lineWidth: 5,
+      lifetime: LINE_LIFETIME
     });
     this.points = [];
     if (point) {
@@ -97,7 +100,6 @@ function controller(side) {
     var offsetVector = Vec3.multiply(DISTANCE_FROM_HAND, Vec3.normalize(Vec3.subtract(this.tipPosition, this.palmPosition)));
     var endPosition = Vec3.sum(startPosition, offsetVector);
     currentBrushSize = map(this.triggerValue, 0, 1, minBrushSize, maxBrushSize);
-    print('triggerValue ' + this.triggerValue);
     Entities.editEntity(this.brush, {
       position: endPosition,
       dimensions: {
@@ -152,10 +154,12 @@ function controller(side) {
 
 function update(deltaTime) {
   rightController.update(deltaTime);
+  leftController.update(deltaTime);
 }
 
 function scriptEnding() {
   rightController.cleanup();
+  leftController.cleanup();
 }
 
 function vectorIsZero(v) {
@@ -164,6 +168,7 @@ function vectorIsZero(v) {
 
 
 var rightController = new controller(RIGHT);
+var leftController = new controller(LEFT);
 
 
 Script.update.connect(update);
