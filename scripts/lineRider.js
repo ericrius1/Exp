@@ -23,7 +23,7 @@ LineRider = function() {
     y: screenSize.y - (BUTTON_SIZE + PADDING),
     width: BUTTON_SIZE,
     height: BUTTON_SIZE,
-    imageURL: HIFI_PUBLIC_BUCKET + "images/pencil.png?v2",
+    imageURL: HIFI_PUBLIC_BUCKET + "images/coaster.png?v2",
     color: this.buttonOffColor,
     alpha: 1
   });
