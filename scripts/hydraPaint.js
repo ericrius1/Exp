@@ -43,7 +43,9 @@ function controller(side, undoButton) {
   this.trigger = side;
   this.lines = [];
   this.isPainting = false;
-  this.undoButton =  undoButton;   
+  this.undoButton =  undoButton; 
+  this.undoButtonPressed = false;  
+  this.prevUndoButtonPressed = false;  
 
   this.hslColor = {
     hue: 0.5,
@@ -125,12 +127,20 @@ function controller(side, undoButton) {
 
 
   this.updateControllerState = function() {
-    var  isButtonPressed = Controller.isButtonPressed(this.undoButton);    
-    print("BUTTON PRESSED " + isButtonPressed);
+    this.undoButtonPressed = Controller.isButtonPressed(this.undoButton);    
+    if(this.prevUndoButtonPressed === true && this.undoButtonPressed === false){
+      //User released undo button, so undo
+      this.undoStroke();
+    }
+    this.prevUndoButtonPressed = this.undoButtonPressed
 
     this.palmPosition = Controller.getSpatialControlPosition(this.palm);
     this.tipPosition = Controller.getSpatialControlPosition(this.tip);
     this.triggerValue = Controller.getTriggerValue(this.trigger);
+  }
+
+  this.undoStroke = function(){
+    Entities.deleteEntity(this.lines.pop());
   }
 
   this.paint = function(point) {
