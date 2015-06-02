@@ -22,20 +22,22 @@ var LASER_COLOR = {
 
 
 var DISTANCE_FROM_HAND = 1;
+var minBrushSize = .015;
+var maxBrushSize = 0.03;
+var currentBrushSize = minBrushSize;
 
-
-var BRUSH_RADIUS = .1;
 var brushColor = {
   red: 200,
   green: 20,
   blue: 140
 };
 
-var minLineWidth = .02;
-var maxLineWidth = .04;
+var minLineWidth = 1;
+var maxLineWidth = 10;
 var currentLineWidth = minLineWidth;
-var MIN_PAINT_TRIGGER_THRESHOLD = .1;
+var MIN_PAINT_TRIGGER_THRESHOLD = .01;
 var MAX_POINTS_PER_LINE = 80;
+var BRUSH_SIZE_FACTOR = 0.01;
 
 
 
@@ -59,9 +61,9 @@ function controller(side) {
     },
     color: brushColor,
     dimensions: {
-      x: BRUSH_RADIUS,
-      y: BRUSH_RADIUS,
-      z: BRUSH_RADIUS
+      x: minBrushSize,
+      y: minBrushSize,
+      z: minBrushSize
     }
   });
 
@@ -91,12 +93,25 @@ function controller(side) {
 
   this.update = function(deltaTime) {
     this.updateControllerState();
+    var startPosition = this.palmPosition;
+    var offsetVector = Vec3.multiply(DISTANCE_FROM_HAND, Vec3.normalize(Vec3.subtract(this.tipPosition, this.palmPosition)));
+    var endPosition = Vec3.sum(startPosition, offsetVector);
+    currentBrushSize = map(this.triggerValue, 0, 1, minBrushSize, maxBrushSize);
+    print('triggerValue ' + this.triggerValue);
+    Entities.editEntity(this.brush, {
+      position: endPosition,
+      dimensions: {
+        x: currentBrushSize,
+        y: currentBrushSize,
+        z: currentBrushSize
+      }
+    });
     if (this.triggerValue > MIN_PAINT_TRIGGER_THRESHOLD) {
-      if(!this.isPainting){
+      if (!this.isPainting) {
         this.isPainting = true;
         this.newLine();
       }
-      this.paint();
+      this.paint(endPosition);
     } else {
       this.isPainting = false;
     }
@@ -112,27 +127,18 @@ function controller(side) {
     this.triggerValue = Controller.getTriggerValue(this.trigger);
   }
 
-  this.paint = function() {
-    var startPosition = this.palmPosition;
-    var offsetVector = Vec3.multiply(DISTANCE_FROM_HAND, Vec3.normalize(Vec3.subtract(this.tipPosition, this.palmPosition)));
-    var endPosition = Vec3.sum(startPosition, offsetVector);
+  this.paint = function(point) {
+
     currentLineWidth = map(this.triggerValue, 0, 1, minLineWidth, maxLineWidth);
-    this.points.push(endPosition);
-    print("points " + this.points.length);
+    this.points.push(point);
     Entities.editEntity(this.line, {
-      linePoints: this.points
+      linePoints: this.points,
+      lineWidth: currentLineWidth
     });
-    if(this.points.length > MAX_POINTS_PER_LINE){
-      this.newLine(endPosition);
+    if (this.points.length > MAX_POINTS_PER_LINE) {
+      this.newLine(point);
     }
-    Entities.editEntity(this.brush, {
-      position: endPosition,
-      dimensions: {
-        x: currentLineWidth,
-        y: currentLineWidth,
-        z: currentLineWidth
-      }
-    });
+
 
   }
 
