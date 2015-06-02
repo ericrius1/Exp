@@ -15,10 +15,15 @@
 Script.include('lineRider.js')
 var lineRider = new LineRider();
 lineRider.addStartHandler(function(){
-  //set path to most recently created line
-  lineRider.setPath(rightController.points);
+  var points = [];
+  //create points array from list of all points in path
+  rightController.path.forEach(function(point){
+    points.push(point);
+  });
+  lineRider.setPath(points);
 });
 
+var MAX_POINTS_PER_LINE = 80;
 var LEFT = 0;
 var RIGHT = 1;
 
@@ -34,7 +39,6 @@ var minLineWidth = 1;
 var maxLineWidth = 2;
 var currentLineWidth = minLineWidth;
 var MIN_PAINT_TRIGGER_THRESHOLD = .01;
-var MAX_POINTS_PER_LINE = 20;
 var LINE_LIFETIME = 20;
 var COLOR_CHANGE_TIME_FACTOR = 0.1;
 
@@ -43,7 +47,7 @@ var RIGHT_BUTTON_4 = 10;
 var LEFT_BUTTON_3 = 3;
 var LEFT_BUTTON_4 = 4;
 
-var STROKE_SMOOTH_FACTOR = 2;
+var STROKE_SMOOTH_FACTOR = 1;
 
 var MIN_DRAW_DISTANCE = 1;
 var MAX_DRAW_DISTANCE = 2;
@@ -67,6 +71,7 @@ function controller(side, undoButton, redoButton) {
   this.strokeCount = 0;
   this.currentBrushSize = minBrushSize;
   this.points = [];
+  this.path = [];
 
   this.hslColor = {
     hue: 0.5,
@@ -106,6 +111,7 @@ function controller(side, undoButton, redoButton) {
     this.points = [];
     if (point) {
       this.points.push(point);
+      this.path.push(point);
     }
     this.lines.push(this.line);
   }
@@ -133,17 +139,23 @@ function controller(side, undoButton, redoButton) {
       if (!this.isPainting) {
         this.isPainting = true;
         this.newLine();
+        this.path = [];
       }
       if(this.strokeCount % STROKE_SMOOTH_FACTOR === 0){
         this.paint(this.drawPoint);
       }
       this.strokeCount++;
-    } else {
-      this.isPainting = false;
+    } else if (this.triggerValue < MIN_PAINT_TRIGGER_THRESHOLD && this.isPainting) {
+      this.releaseTrigger();
     }
 
     this.oldPalmPosition = this.palmPosition;
     this.oldTipPosition = this.tipPosition;
+  }
+
+  this.releaseTrigger = function(){
+    this.isPainting = false;
+
   }
 
   this.updateColor = function() {
@@ -189,6 +201,7 @@ function controller(side, undoButton, redoButton) {
 
     currentLineWidth = map(this.triggerValue, 0, 1, minLineWidth, maxLineWidth);
     this.points.push(point);
+    this.path.push(point);
     Entities.editEntity(this.line, {
       linePoints: this.points,
       lineWidth: currentLineWidth,
@@ -211,7 +224,6 @@ function update(deltaTime) {
   rightController.update(deltaTime);
   leftController.update(deltaTime);
   currentTime += deltaTime;
-  lineRider.update();
 }
 
 function scriptEnding() {

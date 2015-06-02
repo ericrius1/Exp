@@ -30,48 +30,63 @@ LineRider = function() {
 
   this.currentPoint = 0;
   this.shouldUpdate = false;
+  this.moveIntervalTime = 100;
 
 }
 
-LineRider.prototype.update = function(){
-  if(!this.shouldUpdate){
+
+LineRider.prototype.move = function() {
+  if (!this.shouldMove) {
     return;
   }
   MyAvatar.position = this.points[this.currentPoint++];
+
   if (this.currentPoint === this.points.length) {
     this.currentPoint = 0;
   }
-
+  var self = this;
+  Script.setTimeout(function() {
+    self.move();
+  }, this.moveIntervalTime);
 }
 
 LineRider.prototype.setPath = function(points) {
   this.points = points;
 }
 
-LineRider.prototype.addStartHandler = function(callback){
-  this.onStart= callback;
+LineRider.prototype.addStartHandler = function(callback) {
+  this.onStart = callback;
 }
 
 
 LineRider.prototype.mousePressEvent = function(event) {
-   var clickedOverlay = Overlays.getOverlayAtPoint({
+  var clickedOverlay = Overlays.getOverlayAtPoint({
     x: event.x,
     y: event.y
   });
   if (clickedOverlay == this.startButton) {
     this.startButtonOn = !this.startButtonOn;
-    if(this.startButtonOn === true){
-      Overlays.editOverlay(this.startButton, {color: this.buttonOnColor});
-      if(this.onStart){
+    if (this.startButtonOn === true) {
+      Overlays.editOverlay(this.startButton, {
+        color: this.buttonOnColor
+      });
+      if (this.onStart) {
         this.onStart();
-        this.shouldUpdate = true;
+        this.shouldMove = true;
+        var self = this;
+        Script.setTimeout(function() {
+          self.move();
+        }, this.moveIntervalTime);
       }
     } else {
-      Overlays.editOverlay(this.startButton, {color: this.buttonOffColor})
+      Overlays.editOverlay(this.startButton, {
+        color: this.buttonOffColor
+      })
+      this.shouldMove = false;
     }
 
   }
-  
+
 }
 
 LineRider.prototype.startRide = function() {
