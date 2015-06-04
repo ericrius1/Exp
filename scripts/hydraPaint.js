@@ -65,14 +65,19 @@ function controller(side, undoButton, redoButton, cycleColorButton) {
   this.lines = [];
   this.deletedLines = [] //just an array of properties objects
   this.isPainting = false;
+  
   this.undoButton =  undoButton; 
   this.undoButtonPressed = false;  
   this.prevUndoButtonPressed = false;  
+  
   this.redoButton = redoButton;
   this.redoButtonPressed = false;
   this.prevRedoButtonPressed = false;
-  this.cycleColorButtonPressed = true;
+
+  this.cycleColorButton = cycleColorButton;
+  this.cycleColorButtonPressed = false;
   this.prevColorCycleButtonPressed = false;
+  
   this.strokeCount = 0;
   this.currentBrushSize = minBrushSize;
   this.points = [];
@@ -176,12 +181,12 @@ function controller(side, undoButton, redoButton, cycleColorButton) {
       this.redoStroke();
     }
 
-    if(this.prevColorCycleButtonPressed === true && this.colorCycleButtonPressed === false){
+    if(this.prevCycleColorButtonPressed === true && this.cycleColorButtonPressed === false){
       cycleColor();
     }
     this.prevRedoButtonPressed = this.redoButtonPressed;
     this.prevUndoButtonPressed = this.undoButtonPressed;
-    this.prevColorCycleButtonPressed = this.cycleColorButtonPressed;
+    this.prevCycleColorButtonPressed = this.cycleColorButtonPressed;
 
     this.palmPosition = Controller.getSpatialControlPosition(this.palm);
     this.tipPosition = Controller.getSpatialControlPosition(this.tip);
@@ -243,8 +248,6 @@ function mousePressEvent(event){
 function vectorIsZero(v) {
   return v.x === 0 && v.y === 0 && v.z === 0;
 }
-
-
 
 
 var rightController = new controller(RIGHT, RIGHT_BUTTON_3, RIGHT_BUTTON_4, RIGHT_BUTTON_1);
