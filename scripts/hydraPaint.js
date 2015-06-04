@@ -11,6 +11,7 @@
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 //
+var MAX_POINTS_PER_LINE = 30;
 
 Script.include('lineRider.js')
 var lineRider = new LineRider();
@@ -23,7 +24,6 @@ lineRider.addStartHandler(function(){
   lineRider.setPath(points);
 });
 
-var MAX_POINTS_PER_LINE = 80;
 var LEFT = 0;
 var RIGHT = 1;
 
@@ -35,8 +35,8 @@ var minBrushSize = .05;
 var maxBrushSize = .1
 
 
-var minLineWidth = 1;
-var maxLineWidth = 2;
+var minLineWidth = 5;
+var maxLineWidth = 10;
 var currentLineWidth = minLineWidth;
 var MIN_PAINT_TRIGGER_THRESHOLD = .01;
 var LINE_LIFETIME = 20;

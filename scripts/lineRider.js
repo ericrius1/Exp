@@ -72,7 +72,10 @@ LineRider.prototype.mousePressEvent = function(event) {
       });
       if (this.onStart) {
         this.onStart();
-        this.shouldMove = true;
+        //make sure we actually have a path
+        if(this.path.length > 2){
+          this.shouldMove = true;
+        }
         var self = this;
         Script.setTimeout(function() {
           self.move();
