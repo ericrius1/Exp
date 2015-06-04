@@ -16,7 +16,7 @@ LineRider = function() {
     green: 200,
     blue: 100
   };
-  this.startButtonOn = false;
+  this.riding = false;
 
   this.startButton = Overlays.addOverlay("image", {
     x: screenSize.x / 2 - BUTTON_SIZE + PADDING * 2,
@@ -65,33 +65,37 @@ LineRider.prototype.mousePressEvent = function(event) {
     y: event.y
   });
   if (clickedOverlay == this.startButton) {
-    this.startButtonOn = !this.startButtonOn;
-    if (this.startButtonOn === true) {
-      Overlays.editOverlay(this.startButton, {
-        color: this.buttonOnColor
-      });
-      if (this.onStart) {
-        this.onStart();
-        //make sure we actually have a path
-        if(this.points.length > 2){
-          this.shouldMove = true;
-        }
-        var self = this;
-        Script.setTimeout(function() {
-          self.move();
-        }, this.moveIntervalTime);
-      }
-    } else {
-      Overlays.editOverlay(this.startButton, {
-        color: this.buttonOffColor
-      })
-      this.shouldMove = false;
-    }
+    this.toggleRide();
 
   }
 
 }
 
+LineRider.prototype.toggleRide = function() {
+  this.riding = !this.riding;
+  if (this.riding === true) {
+    Overlays.editOverlay(this.startButton, {
+      color: this.buttonOnColor
+    });
+    if (this.onStart) {
+      this.onStart();
+      //make sure we actually have a path
+      if (this.points.length > 2) {
+        this.shouldMove = true;
+      }
+      var self = this;
+      Script.setTimeout(function() {
+        self.move();
+      }, this.moveIntervalTime);
+    }
+  } else {
+    Overlays.editOverlay(this.startButton, {
+      color: this.buttonOffColor
+    })
+    this.shouldMove = false;
+  }
+
+}
 LineRider.prototype.startRide = function() {
   this.shouldUpdate = true;
 

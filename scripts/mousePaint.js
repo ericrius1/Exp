@@ -34,6 +34,7 @@ function mouseMoveEvent(event) {
 
 
   var pickRay = Camera.computePickRay(event.x, event.y);
+  print('pickray ' +  JSON.stringify(pickRay));
   var addVector = Vec3.multiply(Vec3.normalize(pickRay.direction), DRAWING_DISTANCE);
   var point = Vec3.sum(Camera.getPosition(), addVector);
   points.push(point);

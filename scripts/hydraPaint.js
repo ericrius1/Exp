@@ -31,8 +31,8 @@ var currentTime = 0;
 
 
 var DISTANCE_FROM_HAND = 2;
-var minBrushSize = .05;
-var maxBrushSize = .1
+var minBrushSize = .02;
+var maxBrushSize = .04
 
 
 var minLineWidth = 5;
@@ -43,10 +43,12 @@ var LINE_LIFETIME = 20;
 var COLOR_CHANGE_TIME_FACTOR = 0.1;
 
 var RIGHT_BUTTON_1 = 7
+var RIGHT_BUTTON_2 = 8
 var RIGHT_BUTTON_3 = 9;
 var RIGHT_BUTTON_4 = 10
 
 var LEFT_BUTTON_1 = 1;
+var LEFT_BUTTON_2 = 2;
 var LEFT_BUTTON_3 = 3;
 var LEFT_BUTTON_4 = 4;
 
@@ -55,7 +57,7 @@ var STROKE_SMOOTH_FACTOR = 1;
 var MIN_DRAW_DISTANCE = 1;
 var MAX_DRAW_DISTANCE = 2;
 
-function controller(side, undoButton, redoButton, cycleColorButton) {
+function controller(side, undoButton, redoButton, cycleColorButton, startRideButton) {
   this.triggerHeld = false;
   this.triggerThreshold = 0.9;
   this.side = side;
@@ -77,6 +79,10 @@ function controller(side, undoButton, redoButton, cycleColorButton) {
   this.cycleColorButton = cycleColorButton;
   this.cycleColorButtonPressed = false;
   this.prevColorCycleButtonPressed = false;
+
+  this.startRideButton = startRideButton;
+  this.startRideButtonPressed = false;
+  this.prevStartRideButtonPressed = false;
   
   this.strokeCount = 0;
   this.currentBrushSize = minBrushSize;
@@ -95,7 +101,7 @@ function controller(side, undoButton, redoButton, cycleColorButton) {
       y: 0,
       z: 0
     },
-    color: this.rgbColor,
+    color: currentColor,
     dimensions: {
       x: minBrushSize,
       y: minBrushSize,
@@ -141,7 +147,7 @@ function controller(side, undoButton, redoButton, cycleColorButton) {
         y: this.currentBrushSize,
         z: this.currentBrushSize
       },
-      color: this.rgbColor
+      color: currentColor
     });
     if (this.triggerValue > MIN_PAINT_TRIGGER_THRESHOLD) {
       if (!this.isPainting) {
@@ -171,6 +177,7 @@ function controller(side, undoButton, redoButton, cycleColorButton) {
     this.undoButtonPressed = Controller.isButtonPressed(this.undoButton);   
     this.redoButtonPressed = Controller.isButtonPressed(this.redoButton); 
     this.cycleColorButtonPressed = Controller.isButtonPressed(this.cycleColorButton); 
+    this.startRideButtonPressed = Controller.isButtonPressed(this.startRideButton); 
 
     //This logic gives us button release
     if(this.prevUndoButtonPressed === true && this.undoButtonPressed === false){
@@ -184,9 +191,13 @@ function controller(side, undoButton, redoButton, cycleColorButton) {
     if(this.prevCycleColorButtonPressed === true && this.cycleColorButtonPressed === false){
       cycleColor();
     }
+    if(this.prevStartRideButtonPressed === true && this.startRideButtonPressed === false){
+      lineRider.toggleRide();
+    }
     this.prevRedoButtonPressed = this.redoButtonPressed;
     this.prevUndoButtonPressed = this.undoButtonPressed;
     this.prevCycleColorButtonPressed = this.cycleColorButtonPressed;
+    this.prevStartRideButtonPressed = this.startRideButtonPressed;
 
     this.palmPosition = Controller.getSpatialControlPosition(this.palm);
     this.tipPosition = Controller.getSpatialControlPosition(this.tip);
@@ -250,8 +261,8 @@ function vectorIsZero(v) {
 }
 
 
-var rightController = new controller(RIGHT, RIGHT_BUTTON_3, RIGHT_BUTTON_4, RIGHT_BUTTON_1);
-var leftController = new controller(LEFT, LEFT_BUTTON_3, LEFT_BUTTON_4, LEFT_BUTTON_1);
+var rightController = new controller(RIGHT, RIGHT_BUTTON_3, RIGHT_BUTTON_4, RIGHT_BUTTON_1,RIGHT_BUTTON_2);
+var leftController = new controller(LEFT, LEFT_BUTTON_3, LEFT_BUTTON_4, LEFT_BUTTON_1, LEFT_BUTTON_2);
 
 Script.update.connect(update);
 Script.scriptEnding.connect(scriptEnding);
@@ -269,15 +280,3 @@ function randFloat(low, high) {
 function randInt(low, high) {
   return Math.floor(randFloat(low, high));
 }
-
-/**
- * Converts an HSL color value to RGB. Conversion formula
- * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
- * Assumes h, s, and l are contained in the set [0, 1] and
- * returns r, g, and b in the set [0, 255].
- *
- * @param   Number  h       The hue
- * @param   Number  s       The saturation
- * @param   Number  l       The lightness
- * @return  Array           The RGB representation
- */

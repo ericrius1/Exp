@@ -11,7 +11,7 @@
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 //
-var MAX_POINTS_PER_LINE = 30;
+var MAX_POINTS_PER_LINE = 80;
 var DRAWING_DISTANCE = 5;
 
 var colorPalette = [
