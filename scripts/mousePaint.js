@@ -7,7 +7,24 @@ var LINE_WIDTH = 7;
 var line;
 var points = [];
 
-function newLine(point){
+
+var brush = Entities.addEntity({
+  type: 'Sphere',
+  position: {
+    x: 0,
+    y: 0,
+    z: 0
+  },
+  color: currentColor,
+  dimensions: {
+    x: minBrushSize,
+    y: minBrushSize,
+    z: minBrushSize
+  }
+});
+
+
+function newLine(point) {
   line = Entities.addEntity({
     position: MyAvatar.position,
     type: "Line",
@@ -17,10 +34,10 @@ function newLine(point){
       y: 10,
       z: 10
     },
-    lineWidth: LINE_WIDTH 
+    lineWidth: LINE_WIDTH
   });
   points = [];
-  if(point){
+  if (point) {
     points.push(point);
   }
   lines.push(line);
@@ -34,7 +51,6 @@ function mouseMoveEvent(event) {
 
 
   var pickRay = Camera.computePickRay(event.x, event.y);
-  print('pickray ' +  JSON.stringify(pickRay));
   var addVector = Vec3.multiply(Vec3.normalize(pickRay.direction), DRAWING_DISTANCE);
   var point = Vec3.sum(Camera.getPosition(), addVector);
   points.push(point);
@@ -42,7 +58,7 @@ function mouseMoveEvent(event) {
     linePoints: points
   });
 
-  if(points.length === MAX_POINTS_PER_LINE){
+  if (points.length === MAX_POINTS_PER_LINE) {
     //We need to start a new line!
     newLine(point);
   }
@@ -59,8 +75,9 @@ function mouseReleaseEvent() {
 }
 
 function keyPressEvent(event) {
-  if(event.text === "SPACE"){
-    cycleColor();
+  if (event.text === "SPACE") {
+    cycleColor();      
+    Entities.editEntity(this.brush, {color: currentColor});
   }
 }
 

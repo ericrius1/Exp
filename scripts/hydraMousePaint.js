@@ -35,7 +35,7 @@ if(hydraCheck() === true){
 
 function cycleColor() {
   currentColor = colorPalette[++currentColorIndex];
-  if(currentColorIndex === colorPalette.length){
+  if(currentColorIndex === colorPalette.length-1){
     currentColorIndex = -1;
   }
 

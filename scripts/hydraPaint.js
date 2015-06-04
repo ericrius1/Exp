@@ -15,10 +15,10 @@ var MAX_POINTS_PER_LINE = 30;
 
 Script.include('lineRider.js')
 var lineRider = new LineRider();
-lineRider.addStartHandler(function(){
+lineRider.addStartHandler(function() {
   var points = [];
   //create points array from list of all points in path
-  rightController.path.forEach(function(point){
+  rightController.path.forEach(function(point) {
     points.push(point);
   });
   lineRider.setPath(points);
@@ -67,11 +67,11 @@ function controller(side, undoButton, redoButton, cycleColorButton, startRideBut
   this.lines = [];
   this.deletedLines = [] //just an array of properties objects
   this.isPainting = false;
-  
-  this.undoButton =  undoButton; 
-  this.undoButtonPressed = false;  
-  this.prevUndoButtonPressed = false;  
-  
+
+  this.undoButton = undoButton;
+  this.undoButtonPressed = false;
+  this.prevUndoButtonPressed = false;
+
   this.redoButton = redoButton;
   this.redoButtonPressed = false;
   this.prevRedoButtonPressed = false;
@@ -83,17 +83,12 @@ function controller(side, undoButton, redoButton, cycleColorButton, startRideBut
   this.startRideButton = startRideButton;
   this.startRideButtonPressed = false;
   this.prevStartRideButtonPressed = false;
-  
+
   this.strokeCount = 0;
   this.currentBrushSize = minBrushSize;
   this.points = [];
   this.path = [];
 
-  this.hslColor = {
-    hue: 0.5,
-    sat: .7,
-    light: 0.7
-  };
   this.brush = Entities.addEntity({
     type: 'Sphere',
     position: {
@@ -137,7 +132,7 @@ function controller(side, undoButton, redoButton, cycleColorButton, startRideBut
     this.projectedForwardDistance = Vec3.dot(Quat.getFront(Camera.getOrientation()), this.avatarPalmOffset);
     this.mappedPalmOffset = map(this.projectedForwardDistance, -.5, .5, MIN_DRAW_DISTANCE, MAX_DRAW_DISTANCE);
     this.tipDirection = Vec3.normalize(Vec3.subtract(this.tipPosition, this.palmPosition));
-    this.offsetVector = Vec3.multiply(this.mappedPalmOffset, this.tipDirection );
+    this.offsetVector = Vec3.multiply(this.mappedPalmOffset, this.tipDirection);
     this.drawPoint = Vec3.sum(this.palmPosition, this.offsetVector);
     this.currentBrushSize = map(this.triggerValue, 0, 1, minBrushSize, maxBrushSize);
     Entities.editEntity(this.brush, {
@@ -155,7 +150,7 @@ function controller(side, undoButton, redoButton, cycleColorButton, startRideBut
         this.newLine();
         this.path = [];
       }
-      if(this.strokeCount % STROKE_SMOOTH_FACTOR === 0){
+      if (this.strokeCount % STROKE_SMOOTH_FACTOR === 0) {
         this.paint(this.drawPoint);
       }
       this.strokeCount++;
@@ -167,31 +162,32 @@ function controller(side, undoButton, redoButton, cycleColorButton, startRideBut
     this.oldTipPosition = this.tipPosition;
   }
 
-  this.releaseTrigger = function(){
+  this.releaseTrigger = function() {
     this.isPainting = false;
 
   }
 
 
   this.updateControllerState = function() {
-    this.undoButtonPressed = Controller.isButtonPressed(this.undoButton);   
-    this.redoButtonPressed = Controller.isButtonPressed(this.redoButton); 
-    this.cycleColorButtonPressed = Controller.isButtonPressed(this.cycleColorButton); 
-    this.startRideButtonPressed = Controller.isButtonPressed(this.startRideButton); 
+    this.undoButtonPressed = Controller.isButtonPressed(this.undoButton);
+    this.redoButtonPressed = Controller.isButtonPressed(this.redoButton);
+    this.cycleColorButtonPressed = Controller.isButtonPressed(this.cycleColorButton);
+    this.startRideButtonPressed = Controller.isButtonPressed(this.startRideButton);
 
     //This logic gives us button release
-    if(this.prevUndoButtonPressed === true && this.undoButtonPressed === false){
+    if (this.prevUndoButtonPressed === true && this.undoButtonPressed === false) {
       //User released undo button, so undo
       this.undoStroke();
     }
-    if(this.prevRedoButtonPressed === true && this.redoButtonPressed === false){
+    if (this.prevRedoButtonPressed === true && this.redoButtonPressed === false) {
       this.redoStroke();
     }
 
-    if(this.prevCycleColorButtonPressed === true && this.cycleColorButtonPressed === false){
+    if (this.prevCycleColorButtonPressed === true && this.cycleColorButtonPressed === false) {
       cycleColor();
+      Entities.editEntity(this.brush, {color: currentColor});
     }
-    if(this.prevStartRideButtonPressed === true && this.startRideButtonPressed === false){
+    if (this.prevStartRideButtonPressed === true && this.startRideButtonPressed === false) {
       lineRider.toggleRide();
     }
     this.prevRedoButtonPressed = this.redoButtonPressed;
@@ -204,14 +200,14 @@ function controller(side, undoButton, redoButton, cycleColorButton, startRideBut
     this.triggerValue = Controller.getTriggerValue(this.trigger);
   }
 
-  this.undoStroke = function(){
+  this.undoStroke = function() {
     var deletedLine = this.lines.pop();
     var deletedLineProps = Entities.getEntityProperties(deletedLine);
     this.deletedLines.push(deletedLineProps);
     Entities.deleteEntity(deletedLine);
   }
 
-  this.redoStroke = function(){
+  this.redoStroke = function() {
     var restoredLine = Entities.addEntity(this.deletedLines.pop());
     Entities.addEntity(restoredLine);
     this.lines.push(restoredLine);
@@ -252,7 +248,7 @@ function scriptEnding() {
   lineRider.cleanup();
 }
 
-function mousePressEvent(event){
+function mousePressEvent(event) {
   lineRider.mousePressEvent(event);
 }
 
@@ -261,7 +257,7 @@ function vectorIsZero(v) {
 }
 
 
-var rightController = new controller(RIGHT, RIGHT_BUTTON_3, RIGHT_BUTTON_4, RIGHT_BUTTON_1,RIGHT_BUTTON_2);
+var rightController = new controller(RIGHT, RIGHT_BUTTON_3, RIGHT_BUTTON_4, RIGHT_BUTTON_1, RIGHT_BUTTON_2);
 var leftController = new controller(LEFT, LEFT_BUTTON_3, LEFT_BUTTON_4, LEFT_BUTTON_1, LEFT_BUTTON_2);
 
 Script.update.connect(update);
