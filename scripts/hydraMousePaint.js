@@ -26,5 +26,28 @@ var currentColorIndex = 0;
 var currentColor = colorPalette[currentColorIndex];
 
 
-Script.include('hydraPaint.js');
-Script.include('mousePaint.js');
+if(hydraCheck() === true){
+  Script.include('hydraPaint.js');
+} else{
+  Script.include('mousePaint.js');
+}
+
+
+function cycleColor() {
+  currentColor = colorPalette[++currentColorIndex];
+  if(currentColorIndex === colorPalette.length){
+    currentColorIndex = -1;
+  }
+
+}
+
+function hydraCheck() {
+    var numberOfButtons = Controller.getNumberOfButtons();
+    var numberOfTriggers = Controller.getNumberOfTriggers();
+    var numberOfSpatialControls = Controller.getNumberOfSpatialControls();
+    var controllersPerTrigger = numberOfSpatialControls / numberOfTriggers;
+    hydrasConnected = (numberOfButtons == 12 && numberOfTriggers == 2 && controllersPerTrigger == 2);
+    return hydrasConnected;//hydrasConnected;
+}
+
+

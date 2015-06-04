@@ -73,7 +73,7 @@ LineRider.prototype.mousePressEvent = function(event) {
       if (this.onStart) {
         this.onStart();
         //make sure we actually have a path
-        if(this.path.length > 2){
+        if(this.points.length > 2){
           this.shouldMove = true;
         }
         var self = this;

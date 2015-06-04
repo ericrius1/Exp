@@ -2,7 +2,8 @@ var lines = [];
 var isDrawing = false;
 
 
-var MAX_POINTS_PER_LINE = 80;
+var MAX_POINTS_PER_LINE = 20;
+var LINE_WIDTH = 7;
 var line;
 var points = [];
 
@@ -16,7 +17,7 @@ function newLine(point){
       y: 10,
       z: 10
     },
-    lineWidth: 5
+    lineWidth: LINE_WIDTH 
   });
   points = [];
   if(point){
@@ -30,6 +31,7 @@ function mouseMoveEvent(event) {
   if (!isDrawing) {
     return;
   }
+
 
   var pickRay = Camera.computePickRay(event.x, event.y);
   var addVector = Vec3.multiply(Vec3.normalize(pickRay.direction), DRAWING_DISTANCE);
@@ -53,7 +55,6 @@ function mousePressEvent() {
 
 function mouseReleaseEvent() {
   isDrawing = false;
-  print('final points!! ' + points.length)
 }
 
 function keyPressEvent(event) {
@@ -62,19 +63,12 @@ function keyPressEvent(event) {
   }
 }
 
-function cycleColor() {
-  currentColor = colorPalette[++currentColorIndex];
-  if(currentColorIndex === colorPalette.length){
-    currentColorIndex = -1;
-  }
-
-}
 
 
 function cleanup() {
   lines.forEach(function(line) {
     Entities.deleteEntity(line);
-  })
+  });
 
 }
 

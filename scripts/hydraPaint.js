@@ -42,8 +42,11 @@ var MIN_PAINT_TRIGGER_THRESHOLD = .01;
 var LINE_LIFETIME = 20;
 var COLOR_CHANGE_TIME_FACTOR = 0.1;
 
+var RIGHT_BUTTON_1 = 7
 var RIGHT_BUTTON_3 = 9;
-var RIGHT_BUTTON_4 = 10;
+var RIGHT_BUTTON_4 = 10
+
+var LEFT_BUTTON_1 = 1;
 var LEFT_BUTTON_3 = 3;
 var LEFT_BUTTON_4 = 4;
 
@@ -52,7 +55,7 @@ var STROKE_SMOOTH_FACTOR = 1;
 var MIN_DRAW_DISTANCE = 1;
 var MAX_DRAW_DISTANCE = 2;
 
-function controller(side, undoButton, redoButton) {
+function controller(side, undoButton, redoButton, cycleColorButton) {
   this.triggerHeld = false;
   this.triggerThreshold = 0.9;
   this.side = side;
@@ -68,6 +71,8 @@ function controller(side, undoButton, redoButton) {
   this.redoButton = redoButton;
   this.redoButtonPressed = false;
   this.prevRedoButtonPressed = false;
+  this.cycleColorButtonPressed = true;
+  this.prevColorCycleButtonPressed = false;
   this.strokeCount = 0;
   this.currentBrushSize = minBrushSize;
   this.points = [];
@@ -78,7 +83,6 @@ function controller(side, undoButton, redoButton) {
     sat: .7,
     light: 0.7
   };
-  this.rgbColor = hslToRgb(this.hslColor);
   this.brush = Entities.addEntity({
     type: 'Sphere',
     position: {
@@ -99,7 +103,7 @@ function controller(side, undoButton, redoButton) {
     this.line = Entities.addEntity({
       position: MyAvatar.position,
       type: "Line",
-      color: hslToRgb(this.hslColor),
+      color: currentColor,
       dimensions: {
         x: 10,
         y: 10,
@@ -118,7 +122,6 @@ function controller(side, undoButton, redoButton) {
 
   this.update = function(deltaTime) {
     this.updateControllerState();
-    this.updateColor();
     this.avatarPalmOffset = Vec3.subtract(this.palmPosition, MyAvatar.position);
     this.projectedForwardDistance = Vec3.dot(Quat.getFront(Camera.getOrientation()), this.avatarPalmOffset);
     this.mappedPalmOffset = map(this.projectedForwardDistance, -.5, .5, MIN_DRAW_DISTANCE, MAX_DRAW_DISTANCE);
@@ -158,17 +161,13 @@ function controller(side, undoButton, redoButton) {
 
   }
 
-  this.updateColor = function() {
-    this.hslColor.hue = Math.sin(currentTime * COLOR_CHANGE_TIME_FACTOR);
-    this.rgbColor = hslToRgb(this.hslColor);
-
-  }
-
 
   this.updateControllerState = function() {
     this.undoButtonPressed = Controller.isButtonPressed(this.undoButton);   
-    this.redoButtonPressed = Controller.isButtonPressed(this.redoButton);   
-    // print("undo button pressed " + this.undoButtonPressed) 
+    this.redoButtonPressed = Controller.isButtonPressed(this.redoButton); 
+    this.cycleColorButtonPressed = Controller.isButtonPressed(this.cycleColorButton); 
+
+    //This logic gives us button release
     if(this.prevUndoButtonPressed === true && this.undoButtonPressed === false){
       //User released undo button, so undo
       this.undoStroke();
@@ -176,8 +175,13 @@ function controller(side, undoButton, redoButton) {
     if(this.prevRedoButtonPressed === true && this.redoButtonPressed === false){
       this.redoStroke();
     }
+
+    if(this.prevColorCycleButtonPressed === true && this.colorCycleButtonPressed === false){
+      cycleColor();
+    }
     this.prevRedoButtonPressed = this.redoButtonPressed;
     this.prevUndoButtonPressed = this.undoButtonPressed;
+    this.prevColorCycleButtonPressed = this.cycleColorButtonPressed;
 
     this.palmPosition = Controller.getSpatialControlPosition(this.palm);
     this.tipPosition = Controller.getSpatialControlPosition(this.tip);
@@ -243,8 +247,8 @@ function vectorIsZero(v) {
 
 
 
-var rightController = new controller(RIGHT, RIGHT_BUTTON_3, RIGHT_BUTTON_4);
-var leftController = new controller(LEFT, LEFT_BUTTON_3, LEFT_BUTTON_4);
+var rightController = new controller(RIGHT, RIGHT_BUTTON_3, RIGHT_BUTTON_4, RIGHT_BUTTON_1);
+var leftController = new controller(LEFT, LEFT_BUTTON_3, LEFT_BUTTON_4, LEFT_BUTTON_1);
 
 Script.update.connect(update);
 Script.scriptEnding.connect(scriptEnding);
@@ -274,35 +278,3 @@ function randInt(low, high) {
  * @param   Number  l       The lightness
  * @return  Array           The RGB representation
  */
-function hslToRgb(hslColor) {
-  var h = hslColor.hue;
-  var s = hslColor.sat;
-  var l = hslColor.light;
-  var r, g, b;
-
-  if (s == 0) {
-    r = g = b = l; // achromatic
-  } else {
-    var hue2rgb = function hue2rgb(p, q, t) {
-      if (t < 0) t += 1;
-      if (t > 1) t -= 1;
-      if (t < 1 / 6) return p + (q - p) * 6 * t;
-      if (t < 1 / 2) return q;
-      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-      return p;
-    }
-
-    var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-    var p = 2 * l - q;
-    r = hue2rgb(p, q, h + 1 / 3);
-    g = hue2rgb(p, q, h);
-    b = hue2rgb(p, q, h - 1 / 3);
-  }
-
-  return {
-    red: Math.round(r * 255),
-    green: Math.round(g * 255),
-    blue: Math.round(b * 255)
-  };
-
-}

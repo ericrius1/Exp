@@ -34,7 +34,7 @@ function mouseMoveEvent(event) {
   if (!isDrawing) {
     return;
   }
-
+  print('waaaah')
   var pickRay = Camera.computePickRay(event.x, event.y);
   var addVector = Vec3.multiply(Vec3.normalize(pickRay.direction), DRAWING_DISTANCE);
   var point = Vec3.sum(Camera.getPosition(), addVector);
