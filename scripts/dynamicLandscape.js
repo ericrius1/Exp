@@ -4,7 +4,7 @@ var cubes = [];
 var cubesSettings = [];
 var time = 0;
 
-var OMEGA = 2.0 * Math.PI / 32;
+var OMEGA = 2.0 * Math.PI / 16;
 var RANGE = 1.0;
 
 var center = Vec3.sum(MyAvatar.position, Vec3.multiply(2, Quat.getFront(Camera.getOrientation())));
@@ -12,7 +12,6 @@ var center = Vec3.sum(MyAvatar.position, Vec3.multiply(2, Quat.getFront(Camera.g
 
 for (var x = 0, rowIndex = 0; x < NUM_ROWS * CUBE_SIZE; x += CUBE_SIZE, rowIndex++) {
   for (var z = 0, columnIndex = 0; z < NUM_ROWS * CUBE_SIZE; z += CUBE_SIZE, columnIndex++) {
-    print('yaa')
     var hue = map(x * z, 0, Math.pow((NUM_ROWS * CUBE_SIZE), 2), 0.5, 0.8);
     var sat = map(x * z, 0, Math.pow((NUM_ROWS * CUBE_SIZE), 2), 0.4, 0.7);
     var light = map(x * z, 0, Math.pow((NUM_ROWS * CUBE_SIZE), 2), 0.4, 0.7);
@@ -22,9 +21,7 @@ for (var x = 0, rowIndex = 0; x < NUM_ROWS * CUBE_SIZE; x += CUBE_SIZE, rowIndex
       light: light
     };
     var rgbColor = hslToRgb(hslColor);
-    print('row index ' + rowIndex)
     var baseHeight = map(rowIndex * columnIndex, 0, Math.pow(NUM_ROWS, 2), -4, -2);
-    print('base height ' + baseHeight);
     var relativePosition = {
       x: x,
       y: baseHeight,
@@ -42,23 +39,32 @@ for (var x = 0, rowIndex = 0; x < NUM_ROWS * CUBE_SIZE; x += CUBE_SIZE, rowIndex
       color: rgbColor
     }));
 
-
+    print('phase ' + map(rowIndex * columnIndex, 0, Math.pow(NUM_ROWS, 2), OMEGA/2, OMEGA * 2));
     cubesSettings.push({
-      baseHeight: baseHeight
+      baseHeight: center.y + baseHeight,
+      phase: randFloat(OMEGA/2, OMEGA * 2)
     })
   }
 }
 
-
-
 function update(deleteTime) {
   time += deleteTime;
   for (var i = 0; i < cubes.length; i++) {
-    var newHeight = cubesSettings[i].baseHeight + Math.sin(time * OMEGA) / 2.0 * RANGE;
-    var newVelocity = Math.cos(time * OMEGA) / 2.0 * RANGE * OMEGA;
+    var phase = cubesSettings[i].phase;
+    var props = Entities.getEntityProperties(cubes[i]);
+    var newHeight = cubesSettings[i].baseHeight + Math.sin(time * phase) / 2.0 * RANGE;
+    var newVelocityY = Math.cos(time * phase) / 2.0 * RANGE * phase;
+
+    var newPosition = props.position;
+    var newVelocity = props.velocity;
+
+    newPosition.y = newHeight;
+    newVelocity = newVelocityY;
+    Entities.editEntity( cubes[i], {
+      position: newPosition,
+      velocity: props.velocity
+    });
   }
-
-
 }
 
 function cleanup() {
@@ -67,7 +73,7 @@ function cleanup() {
   })
 }
 
-Script.scriptEnding.connect(update);
+Script.update.connect(update);
 Script.scriptEnding.connect(cleanup)
 
 
