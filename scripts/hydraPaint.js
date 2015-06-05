@@ -1,16 +1,4 @@
-//
-//  hydraPaint.js
-//  examples
-//
-//  Created by Eric Levin on 5/14/15.
-//  Copyright 2014 High Fidelity, Inc.
-//
-//  This script allows you to paint with the hydra!
-//
-//
-//  Distributed under the Apache License, Version 2.0.
-//  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
-//
+
 var MAX_POINTS_PER_LINE = 30;
 
 Script.include('lineRider.js')

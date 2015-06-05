@@ -1,4 +1,4 @@
-var center = Vec3.sum(MyAvatar.position, Vec3.multiply(3, Quat.getFront(Camera.getOrientation())));
+var center = Vec3.sum(MyAvatar.position, Vec3.multiply(1, Quat.getFront(Camera.getOrientation())));
 var p1 = center;
 var p2 = Vec3.sum(center, {
   x: 1,
@@ -16,18 +16,35 @@ var lineColor = {
   blue: 200
 };
 //Lets modify line entity so we hardcode 10 points and make line from that
-var line = Entities.addEntity({
-  type: 'Line',
-  position: center,
-  linePoints: [p1, p2, p3],
-  color: lineColor,
-  dimensions: {
-    x: 10,
-    y: 10,
-    z: 10
-  },
-  lineWidth: 10
-});
+
+var lines = [];
+var points = [];
+
+function mousePressEvent() {
+  var center = Vec3.sum(MyAvatar.position, Vec3.multiply(3, Quat.getFront(Camera.getOrientation())));
+  points.push(center);
+  if(Math.random() < .2){
+    center.x = "shnuur"
+    print("SHNUUUUR")
+  }
+  // if(points.length < 2){
+  //   return;
+  // }
+  lines.push(Entities.addEntity({
+    type: 'Line',
+    position: center,
+    linePoints: points,
+    dimensions: { x: .1, y: .1, z: .1},
+    color: lineColor,
+    dimensions: {
+      x: 10,
+      y: 10,
+      z: 10
+    },
+    lineWidth: 10
+  })); 
+}
+
 
 
 // Script.setInterval(changeColor, 1000);
@@ -61,4 +78,5 @@ function cleanup() {
 }
 
 Script.scriptEnding.connect(cleanup);
+Controller.mousePressEvent.connect(mousePressEvent);
 // Script.update.connect(update);
