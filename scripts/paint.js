@@ -12,8 +12,8 @@
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 //
 Script.include('lineRider.js')
-var MAX_POINTS_PER_LINE = 30;
-var DRAWING_DISTANCE = 5;
+var MAX_POINTS_PER_LINE = 80;
+
 
 var colorPalette = [{
   red: 236,
@@ -69,6 +69,7 @@ function hydraCheck() {
 //************ Mouse Paint **************************
 
 function MousePaint() {
+  var DRAWING_DISTANCE = 2;
   var lines = [];
   var deletedLines = [];
   var isDrawing = false;
@@ -91,7 +92,7 @@ function MousePaint() {
   var points = [];
 
 
-  var BRUSH_SIZE = 0.08;
+  var BRUSH_SIZE = 0.02;
 
   var brush = Entities.addEntity({
     type: 'Sphere',
@@ -131,21 +132,22 @@ function MousePaint() {
 
 
   function mouseMoveEvent(event) {
-    if (!isDrawing) {
-      return;
-    }
 
 
     var pickRay = Camera.computePickRay(event.x, event.y);
     var addVector = Vec3.multiply(Vec3.normalize(pickRay.direction), DRAWING_DISTANCE);
     var point = Vec3.sum(Camera.getPosition(), addVector);
-    points.push(point);
     Entities.editEntity(line, {
       linePoints: points
     });
     Entities.editEntity(brush, {
       position: point
     });
+    if (!isDrawing) {
+      return;
+    }
+
+    points.push(point);
     path.push(point);
 
     if (points.length === MAX_POINTS_PER_LINE) {
@@ -168,6 +170,10 @@ function MousePaint() {
   }
 
   function mousePressEvent(event) {
+    if(!event.isLeftButton) {
+      isDrawing = false;
+      return;
+    }
     lineRider.mousePressEvent(event);
     path = [];
     newLine();
@@ -239,7 +245,6 @@ function HydraPaint() {
   var currentTime = 0;
 
 
-  var DISTANCE_FROM_HAND = 2;
   var minBrushSize = .02;
   var maxBrushSize = .04
 
@@ -263,8 +268,8 @@ function HydraPaint() {
 
   var STROKE_SMOOTH_FACTOR = 1;
 
-  var MIN_DRAW_DISTANCE = 1;
-  var MAX_DRAW_DISTANCE = 2;
+  var MIN_DRAW_DISTANCE = 0.2;
+  var MAX_DRAW_DISTANCE = 0.4;
 
   function controller(side, undoButton, redoButton, cycleColorButton, startRideButton) {
     this.triggerHeld = false;

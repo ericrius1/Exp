@@ -23,10 +23,6 @@ var points = [];
 function mousePressEvent() {
   var center = Vec3.sum(MyAvatar.position, Vec3.multiply(3, Quat.getFront(Camera.getOrientation())));
   points.push(center);
-  if(Math.random() < .2){
-    center.x = "shnuur"
-    print("SHNUUUUR")
-  }
   // if(points.length < 2){
   //   return;
   // }
@@ -34,6 +30,7 @@ function mousePressEvent() {
     type: 'Line',
     position: center,
     linePoints: points,
+    rotation: {x: Math.random() * 100, y: 0, z: Math.random() * 100},
     dimensions: { x: .1, y: .1, z: .1},
     color: lineColor,
     dimensions: {

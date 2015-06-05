@@ -1,3 +1,5 @@
+
+
 var e = Entities.findEntities(MyAvatar.position, 16000)
 for (i = 0; i < e.length; i++) { 
   var props = Entities.getEntityProperties(e[i]);
@@ -5,3 +7,5 @@ for (i = 0; i < e.length; i++) {
     Entities.deleteEntity(e[i]); 
   }
 }
+
+
