@@ -1,5 +1,5 @@
 //
-//  hydraPaint.js
+//  paint.js
 //  examples
 //
 //  Created by Eric Levin on 5/14/15.
@@ -11,6 +11,7 @@
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 //
+Script.include('lineRider.js')
 var MAX_POINTS_PER_LINE = 80;
 var DRAWING_DISTANCE = 5;
 
@@ -40,8 +41,9 @@ var currentColorIndex = 0;
 var currentColor = colorPalette[currentColorIndex];
 
 
+
 if (hydraCheck() === true) {
-  Script.include('hydraPaint.js');
+  HydraPaint();
 } else {
   MousePaint();
 }
@@ -185,7 +187,7 @@ function MousePaint() {
 function HydraPaint() {
 
 
-  Script.include('lineRider.js')
+
   var lineRider = new LineRider();
   lineRider.addStartHandler(function() {
     var points = [];
@@ -423,6 +425,9 @@ function HydraPaint() {
   }
 
   function mousePressEvent(event) {
+    if(!event.isLeftButton){
+      return;
+    }
     lineRider.mousePressEvent(event);
   }
 
