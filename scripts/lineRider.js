@@ -1,4 +1,15 @@
-//Takes the avatar on a line ride
+//
+//  lineRider.js
+//  examples
+//
+//  Created by Eric Levin on 6/4/15.
+//  Copyright 2014 High Fidelity, Inc.
+//
+//  Takes the avatar on a line ride. Meant to be used in conjunction with paint.js
+//  Paint a line and then click on roller coaster icon to start!
+//
+//  Distributed under the Apache License, Version 2.0.
+//  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 LineRider = function() {
   HIFI_PUBLIC_BUCKET = "http://s3.amazonaws.com/hifi-public/";
   var screenSize = Controller.getViewportDimensions();

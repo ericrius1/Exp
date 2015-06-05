@@ -2,7 +2,7 @@
 //  paint.js
 //  examples
 //
-//  Created by Eric Levin on 5/14/15.
+//  Created by Eric Levin on 6/4/15.
 //  Copyright 2014 High Fidelity, Inc.
 //
 //  This script allows you to paint with the hydra or mouse!
@@ -12,7 +12,7 @@
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 //
 Script.include('lineRider.js')
-var MAX_POINTS_PER_LINE = 80;
+var MAX_POINTS_PER_LINE = 30;
 var DRAWING_DISTANCE = 5;
 
 var colorPalette = [{
@@ -66,10 +66,23 @@ function hydraCheck() {
   return hydrasConnected; //hydrasConnected;
 }
 
+//************ Mouse Paint **************************
 
 function MousePaint() {
   var lines = [];
+  var deletedLines = [];
   var isDrawing = false;
+  var path = [];
+
+  var lineRider = new LineRider();
+  lineRider.addStartHandler(function() {
+    var points = [];
+    //create points array from list of all points in path
+    path.forEach(function(point) {
+      points.push(point);
+    });
+    lineRider.setPath(points);
+  });
 
 
 
@@ -111,6 +124,7 @@ function MousePaint() {
     points = [];
     if (point) {
       points.push(point);
+      path.push(point);
     }
     lines.push(line);
   }
@@ -131,7 +145,8 @@ function MousePaint() {
     });
     Entities.editEntity(brush, {
       position: point
-    })
+    });
+    path.push(point);
 
     if (points.length === MAX_POINTS_PER_LINE) {
       //We need to start a new line!
@@ -139,9 +154,25 @@ function MousePaint() {
     }
   }
 
-  function mousePressEvent() {
+  function undoStroke() {
+    var deletedLine = lines.pop();
+    var deletedLineProps = Entities.getEntityProperties(deletedLine);
+    deletedLines.push(deletedLineProps);
+    Entities.deleteEntity(deletedLine);
+  }
+
+  function redoStroke() {
+    var restoredLine = Entities.addEntity(deletedLines.pop());
+    Entities.addEntity(restoredLine);
+    lines.push(restoredLine);
+  }
+
+  function mousePressEvent(event) {
+    lineRider.mousePressEvent(event);
+    path = [];
     newLine();
     isDrawing = true;
+
 
   }
 
@@ -156,6 +187,12 @@ function MousePaint() {
         color: currentColor
       });
     }
+    if (event.text === "z") {
+      undoStroke();
+    }
+    if(event.text === "x") {
+      redoStroke();
+    }
   }
 
   function cleanup() {
@@ -163,6 +200,7 @@ function MousePaint() {
       Entities.deleteEntity(line);
     });
     Entities.deleteEntity(brush);
+    lineRider.cleanup();
 
   }
 
@@ -172,17 +210,14 @@ function MousePaint() {
   Controller.mouseMoveEvent.connect(mouseMoveEvent);
   Script.scriptEnding.connect(cleanup);
 
-  function randFloat(low, high) {
-    return Math.floor(low + Math.random() * (high - low));
-  }
-
-
-  function randInt(low, high) {
-    return Math.floor(randFloat(low, high));
-  }
-
   Controller.keyPressEvent.connect(keyPressEvent);
 }
+
+
+
+//*****************HYDRA PAINT *******************************************
+
+
 
 function HydraPaint() {
 
@@ -397,7 +432,6 @@ function HydraPaint() {
       Entities.editEntity(this.line, {
         linePoints: this.points,
         lineWidth: currentLineWidth,
-        color: this.rgbColor
       });
       if (this.points.length > MAX_POINTS_PER_LINE) {
         this.newLine(point);
@@ -418,16 +452,13 @@ function HydraPaint() {
     currentTime += deltaTime;
   }
 
-  function scriptEnding() {
+  function cleanup() {
     rightController.cleanup();
     leftController.cleanup();
     lineRider.cleanup();
   }
 
   function mousePressEvent(event) {
-    if(!event.isLeftButton){
-      return;
-    }
     lineRider.mousePressEvent(event);
   }
 
@@ -440,19 +471,20 @@ function HydraPaint() {
   var leftController = new controller(LEFT, LEFT_BUTTON_3, LEFT_BUTTON_4, LEFT_BUTTON_1, LEFT_BUTTON_2);
 
   Script.update.connect(update);
-  Script.scriptEnding.connect(scriptEnding);
+  Script.scriptEnding.connect(cleanup);
   Controller.mousePressEvent.connect(mousePressEvent);
 
-  function map(value, min1, max1, min2, max2) {
-    return min2 + (max2 - min2) * ((value - min1) / (max1 - min1));
-  }
+}
 
-  function randFloat(low, high) {
-    return Math.floor(low + Math.random() * (high - low));
-  }
+function randFloat(low, high) {
+  return low + Math.random() * (high - low);
+}
 
 
-  function randInt(low, high) {
-    return Math.floor(randFloat(low, high));
-  }
+function randInt(low, high) {
+  return Math.floor(randFloat(low, high));
+}
+
+function map(value, min1, max1, min2, max2) {
+  return min2 + (max2 - min2) * ((value - min1) / (max1 - min1));
 }

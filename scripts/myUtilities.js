@@ -36,7 +36,7 @@ function map(value, min1, max1, min2, max2) {
 }
 
 function randFloat(low, high) {
-  return Math.floor(low + Math.random() * (high - low));
+    return low + Math.random() * ( high - low );
 }
 
 
