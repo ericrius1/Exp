@@ -1,20 +1,33 @@
 var NUM_ROWS = 7;
 var CUBE_SIZE = 1;
 var cubes = [];
+var cubesSettings = [];
+var time = 0;
+
+var OMEGA = 2.0 * Math.PI / 32;
+var RANGE = 1.0;
 
 var center = Vec3.sum(MyAvatar.position, Vec3.multiply(2, Quat.getFront(Camera.getOrientation())));
 
-for (var x = 0; x < NUM_ROWS * CUBE_SIZE; x += CUBE_SIZE) {
-  for (var z = 0; z < NUM_ROWS * CUBE_SIZE; z+=CUBE_SIZE) {
 
-    var hue = map(x * z, 0, Math.pow((NUM_ROWS * CUBE_SIZE), 2), 0.5, 0.8 );
-    var sat = map(x * z, 0, Math.pow((NUM_ROWS * CUBE_SIZE), 2), 0.4, 0.7 );
-    var light = map(x * z, 0, Math.pow((NUM_ROWS * CUBE_SIZE), 2), 0.4, 0.7 );
-    var hslColor = {hue: hue, sat: sat, light: light};
+for (var x = 0, rowIndex = 0; x < NUM_ROWS * CUBE_SIZE; x += CUBE_SIZE, rowIndex++) {
+  for (var z = 0, columnIndex = 0; z < NUM_ROWS * CUBE_SIZE; z += CUBE_SIZE, columnIndex++) {
+    print('yaa')
+    var hue = map(x * z, 0, Math.pow((NUM_ROWS * CUBE_SIZE), 2), 0.5, 0.8);
+    var sat = map(x * z, 0, Math.pow((NUM_ROWS * CUBE_SIZE), 2), 0.4, 0.7);
+    var light = map(x * z, 0, Math.pow((NUM_ROWS * CUBE_SIZE), 2), 0.4, 0.7);
+    var hslColor = {
+      hue: hue,
+      sat: sat,
+      light: light
+    };
     var rgbColor = hslToRgb(hslColor);
+    print('row index ' + rowIndex)
+    var baseHeight = map(rowIndex * columnIndex, 0, Math.pow(NUM_ROWS, 2), -4, -2);
+    print('base height ' + baseHeight);
     var relativePosition = {
       x: x,
-      y: -2,
+      y: baseHeight,
       z: z
     };
     var position = Vec3.sum(center, relativePosition);
@@ -28,10 +41,25 @@ for (var x = 0; x < NUM_ROWS * CUBE_SIZE; x += CUBE_SIZE) {
       },
       color: rgbColor
     }));
+
+
+    cubesSettings.push({
+      baseHeight: baseHeight
+    })
   }
 }
 
 
+
+function update(deleteTime) {
+  time += deleteTime;
+  for (var i = 0; i < cubes.length; i++) {
+    var newHeight = cubesSettings[i].baseHeight + Math.sin(time * OMEGA) / 2.0 * RANGE;
+    var newVelocity = Math.cos(time * OMEGA) / 2.0 * RANGE * OMEGA;
+  }
+
+
+}
 
 function cleanup() {
   cubes.forEach(function(cube) {
@@ -39,7 +67,7 @@ function cleanup() {
   })
 }
 
-
+Script.scriptEnding.connect(update);
 Script.scriptEnding.connect(cleanup)
 
 
@@ -84,7 +112,7 @@ function map(value, min1, max1, min2, max2) {
 }
 
 function randFloat(low, high) {
-    return low + Math.random() * ( high - low );
+  return low + Math.random() * (high - low);
 }
 
 
