@@ -1,11 +1,11 @@
-var NUM_ROWS = 7;
+var NUM_ROWS = 10;
 var CUBE_SIZE = 1;
 var cubes = [];
 var cubesSettings = [];
 var time = 0;
 
-var OMEGA = 2.0 * Math.PI / 16;
-var RANGE = 1.0;
+var OMEGA = 2.0 * Math.PI/8;
+var RANGE = 0.5;
 
 var center = Vec3.sum(MyAvatar.position, Vec3.multiply(2, Quat.getFront(Camera.getOrientation())));
 
@@ -21,7 +21,7 @@ for (var x = 0, rowIndex = 0; x < NUM_ROWS * CUBE_SIZE; x += CUBE_SIZE, rowIndex
       light: light
     };
     var rgbColor = hslToRgb(hslColor);
-    var baseHeight = map(rowIndex * columnIndex, 0, Math.pow(NUM_ROWS, 2), -4, -2);
+    var baseHeight = map(columnIndex, 0, NUM_ROWS, -4, -2);
     var relativePosition = {
       x: x,
       y: baseHeight,
@@ -39,10 +39,11 @@ for (var x = 0, rowIndex = 0; x < NUM_ROWS * CUBE_SIZE; x += CUBE_SIZE, rowIndex
       color: rgbColor
     }));
 
-    print('phase ' + map(rowIndex * columnIndex, 0, Math.pow(NUM_ROWS, 2), OMEGA/2, OMEGA * 2));
+    var phase = map(columnIndex * rowIndex, 0, Math.pow(NUM_ROWS,2), 3, 6);
+    print('phase ' + phase);
     cubesSettings.push({
       baseHeight: center.y + baseHeight,
-      phase: randFloat(OMEGA/2, OMEGA * 2)
+      phase: phase
     })
   }
 }
@@ -52,8 +53,8 @@ function update(deleteTime) {
   for (var i = 0; i < cubes.length; i++) {
     var phase = cubesSettings[i].phase;
     var props = Entities.getEntityProperties(cubes[i]);
-    var newHeight = cubesSettings[i].baseHeight + Math.sin(time * phase) / 2.0 * RANGE;
-    var newVelocityY = Math.cos(time * phase) / 2.0 * RANGE * phase;
+    var newHeight = cubesSettings[i].baseHeight + Math.sin(time * OMEGA + phase) / 2.0 * RANGE;
+    var newVelocityY = Math.cos(time * OMEGA + phase) / 2.0 * RANGE * OMEGA;
 
     var newPosition = props.position;
     var newVelocity = props.velocity;
