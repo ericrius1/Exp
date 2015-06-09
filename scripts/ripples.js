@@ -46,13 +46,25 @@ function update(deleteTime) {
       //spring force: f = kx
       var acceleration = Vec3.multiply(Vec3.subtract(cell.props.position, cell.basePosition), ELASTICITY);
       var newVelocity = Vec3.subtract(cell.props.velocity, acceleration);
-      for(var n = 0; n < cell.neighbors.length; n++) {
-        var neighbor = cell.neighbors[n];
-        var extension  = Vec3.subtract(cell.props.position, grid[neighbor[0]][neighbor[1]].props.position);
+      for (var n = 0; n < cell.neighbors.length; n++) {
+        var neighborLocation = cell.neighbors[n];
+        var neighbor = grid[neighborLocation[0]][neighborLocation[1]];
+        var extension = Vec3.subtract(cell.props.position, neighbor.props.position);
         acceleration = Vec3.multiply(extension, ELASTICITY);
-        // newVelocity = Vec3.subtract()
-        Entities.editEntity(cell.entity, {velocity: newVelocity})
+        newVelocity = Vec3.subtract(newVelocity, acceleration);
+
+        neighbor.props.velocity = Vec3.sum(neighbor.props.velocity, acceleration);
       }
+    }
+  }
+
+  //Now, once all is said and done, go through each cell and update its velocity
+  for (var rowIndex = 0; rowIndex < NUM_ROWS; rowIndex++) {
+    for (var columnIndex = 0; columnIndex < NUM_COLUMNS; columnIndex++) {
+      var cell = grid[rowIndex][columnIndex]
+      Entities.editEntity(cell.entity, {
+        velocity: cell.props.velocity
+      });
     }
   }
 }
