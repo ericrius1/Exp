@@ -2,7 +2,7 @@ HIFI_PUBLIC_BUCKET = "http://s3.amazonaws.com/hifi-public/";
 // Script.include(HIFI_PUBLIC_BUCKET + 'scripts/utilities.js')
 Script.include('utilities.js');
 
-var NUM_ROWS = 10;
+var NUM_ROWS = 2;
 var NUM_COLUMNS = NUM_ROWS;
 var BOX_SIZE = 1;
 var center = Vec3.sum(MyAvatar.position, Vec3.multiply(BOX_SIZE * 10, Quat.getFront(Camera.getOrientation())));
@@ -10,8 +10,20 @@ var center = Vec3.sum(MyAvatar.position, Vec3.multiply(BOX_SIZE * 10, Quat.getFr
 var grid = [];
 var entities = [];
 
+var ELASTICITY = .1;
+
 
 createGrid();
+//Simulate middle box flung up
+
+var pulledEntity = grid[NUM_ROWS / 2][NUM_COLUMNS / 2].entity;
+Entities.editEntity(pulledEntity, {
+  velocity: {
+    x: 0,
+    y: 10,
+    z: 0
+  }
+});
 
 
 
@@ -26,6 +38,23 @@ function update(deleteTime) {
 
 
 
+  //Now go through each box and apply proper spring forces
+  for (var rowIndex = 0; rowIndex < NUM_ROWS; rowIndex++) {
+    for (var columnIndex = 0; columnIndex < NUM_COLUMNS; columnIndex++) {
+
+      var cell = grid[rowIndex][columnIndex];
+      //spring force: f = kx
+      var acceleration = Vec3.multiply(Vec3.subtract(cell.props.position, cell.basePosition), ELASTICITY);
+      var newVelocity = Vec3.subtract(cell.props.velocity, acceleration);
+      for(var n = 0; n < cell.neighbors.length; n++) {
+        var neighbor = cell.neighbors[n];
+        var extension  = Vec3.subtract(cell.props.position, grid[neighbor[0]][neighbor[1]].props.position);
+        acceleration = Vec3.multiply(extension, ELASTICITY);
+        // newVelocity = Vec3.subtract()
+        Entities.editEntity(cell.entity, {velocity: newVelocity})
+      }
+    }
+  }
 }
 
 function cleanup() {
@@ -62,7 +91,8 @@ function createGrid() {
           hue: 0.6,
           sat: 0.5,
           light: randFloat(0.5, 0.6)
-        })
+        }),
+        damping: 0.9
       });
       grid[rowIndex].push({
         entity: entity,
@@ -81,7 +111,7 @@ function createGrid() {
       }
       if (rowIndex > 0) {
         //Top Neighbor
-        grid[rowIndex][columnIndex].neighbors.push([rowIndex - 1][columnIndex])
+        grid[rowIndex][columnIndex].neighbors.push([rowIndex - 1, columnIndex])
       }
       if (columnIndex < NUM_COLUMNS - 1) {
         // Right Neighbor
