@@ -2,7 +2,7 @@ HIFI_PUBLIC_BUCKET = "http://s3.amazonaws.com/hifi-public/";
 // Script.include(HIFI_PUBLIC_BUCKET + 'scripts/utilities.js')
 Script.include('utilities.js');
 
-var NUM_ROWS = 2;
+var NUM_ROWS = 4;
 var NUM_COLUMNS = NUM_ROWS;
 var BOX_SIZE = 1;
 var center = Vec3.sum(MyAvatar.position, Vec3.multiply(BOX_SIZE * 10, Quat.getFront(Camera.getOrientation())));
@@ -16,14 +16,14 @@ var ELASTICITY = .1;
 createGrid();
 //Simulate middle box flung up
 
-var pulledEntity = grid[NUM_ROWS / 2][NUM_COLUMNS / 2].entity;
-Entities.editEntity(pulledEntity, {
-  velocity: {
-    x: 0,
-    y: 10,
-    z: 0
-  }
-});
+// var pulledEntity = grid[NUM_ROWS / 2][NUM_COLUMNS / 2].entity;
+// Entities.editEntity(pulledEntity, {
+//   velocity: {
+//     x: 0,
+//     y: 10,
+//     z: 0
+//   }
+// });
 
 
 
@@ -45,7 +45,7 @@ function update(deleteTime) {
       var cell = grid[rowIndex][columnIndex];
       //spring force: f = kx
       var acceleration = Vec3.multiply(Vec3.subtract(cell.props.position, cell.basePosition), ELASTICITY);
-      var newVelocity = Vec3.subtract(cell.props.velocity, acceleration);
+      var newVelocity = Vec3.sum(cell.props.velocity, acceleration);
       for (var n = 0; n < cell.neighbors.length; n++) {
         var neighborLocation = cell.neighbors[n];
         var neighbor = grid[neighborLocation[0]][neighborLocation[1]];
@@ -77,7 +77,6 @@ function cleanup() {
     }
   }
 }
-
 
 
 function createGrid() {

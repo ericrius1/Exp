@@ -1,79 +1,83 @@
-var center = Vec3.sum(MyAvatar.position, Vec3.multiply(1, Quat.getFront(Camera.getOrientation())));
-var p1 = center;
-var p2 = Vec3.sum(center, {
-  x: 1,
-  y: 0,
-  z: 0
-});
-var p3 = Vec3.sum(center, {
-  x: 1,
-  y: 1,
-  z: 0
-});
-var lineColor = {
-  red: 200,
-  green: 70,
-  blue: 200
-};
-//Lets modify line entity so we hardcode 10 points and make line from that
+var time = 0;
 
-var lines = [];
+var omega = 2 * Math.PI / 8;
+var range = 10;
+
+
 var points = [];
+var lines = [];
+var currentLine;
 
-function mousePressEvent() {
-  var center = Vec3.sum(MyAvatar.position, Vec3.multiply(3, Quat.getFront(Camera.getOrientation())));
-  points.push(center);
-  // if(points.length < 2){
-  //   return;
-  // }
-  lines.push(Entities.addEntity({
-    type: 'Line',
-    position: center,
+var MAX_POINTS_PER_LINE = 20;
+newLine();
+
+function newLine(point) {
+  points = [];
+  points.push(point);
+  var line = Entities.addEntity({
+    type: "Line",
+    position: point,
     linePoints: points,
-    rotation: {x: Math.random() * 100, y: 0, z: Math.random() * 100},
-    dimensions: { x: .1, y: .1, z: .1},
-    color: lineColor,
-    dimensions: {
-      x: 10,
-      y: 10,
-      z: 10
-    },
-    lineWidth: 10
-  })); 
-}
-
-
-
-// Script.setInterval(changeColor, 1000);
-
-function changeColor() {
-  Entities.editEntity(line, {
     color: {
-      red: Math.random() * 100,
-      green: 10,
+      red: 200,
+      green: 50,
       blue: 100
     },
-    lineWidth: Math.random() * 20
+    dimensions: {
+      x: 1,
+      y: 1,
+      z: 1
+    },
+    lineWidth: 7
   });
+  lines.push(line);
+
 }
 
-
-function update() {
-  var pos = Entities.getEntityProperties(line).position;
-  Entities.editEntity(line, {
-    position: Vec3.sum(pos, {
-      x: .01,
-      y: 0,
-      z: 0
-    })
-  });
-}
-
+var basePosition = Vec3.sum(MyAvatar.position, Vec3.multiply(5, Quat.getFront(Camera.getOrientation())));
+var ball = Entities.addEntity({
+  type: 'Sphere',
+  position: basePosition,
+  color: {
+    red: 200,
+    green: 20,
+    blue: 20
+  }
+})
 
 function cleanup() {
-  Entities.deleteEntity(line);
+  lines.forEach(function(line) {
+    Entities.deleteEntity(line);
+  })
+  Entities.deleteEntity(ball);
+
 }
 
-Script.scriptEnding.connect(cleanup);
-Controller.mousePressEvent.connect(mousePressEvent);
-// Script.update.connect(update);
+function update(deltaTime) {
+
+  time += deltaTime;
+  var newPosition = {
+      x: basePosition.x + Math.sin(time * omega) / 2.0 * range,
+      y: basePosition.y,
+      z: basePosition.z + Math.cos(time * omega) / 2.0 * range
+  }
+
+
+  Entities.editEntity(ball, {
+    position: newPosition
+  });
+  points.push(newPosition);
+  Entities.editEntity(lines[lines.length - 1], {
+    linePoints: points
+  })
+
+  if (points.length === MAX_POINTS_PER_LINE) {
+    newLine(newPosition);
+  }
+
+
+}
+
+
+Script.update.connect(update);
+Script.scriptEnding.connect(cleanup)

@@ -69,7 +69,7 @@ function hydraCheck() {
 //************ Mouse Paint **************************
 
 function MousePaint() {
-  var DRAWING_DISTANCE = 2;
+  var DRAWING_DISTANCE = 5;
   var lines = [];
   var deletedLines = [];
   var isDrawing = false;
@@ -92,7 +92,7 @@ function MousePaint() {
   var points = [];
 
 
-  var BRUSH_SIZE = 0.02;
+  var BRUSH_SIZE = .05;
 
   var brush = Entities.addEntity({
     type: 'Sphere',
@@ -149,6 +149,11 @@ function MousePaint() {
 
     points.push(point);
     path.push(point);
+
+    print("point pos " + JSON.stringify(point))
+    if(point.x > 16000 || point.y > 16000 || point.z > 16000) {
+      print( "HUGE POINT IN SCRIPT!!!")
+    }
 
     if (points.length === MAX_POINTS_PER_LINE) {
       //We need to start a new line!

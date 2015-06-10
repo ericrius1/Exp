@@ -91,11 +91,6 @@ function initControls(){
   controllerActive = (Vec3.length(palmPosition) > 0);
 }
 
-Script.setTimeout(function(){
-  target = Entities.identifyEntity(target);
-  stick = Entities.identifyEntity(stick);  
-}, 500);
-
 function cleanup(){
   Entities.deleteEntity(target);
   Entities.deleteEntity(stick);
