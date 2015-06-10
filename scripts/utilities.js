@@ -47,3 +47,7 @@ randFloat = function(low, high) {
 randInt = function(low, high) {
   return Math.floor(randFloat(low, high));
 }
+
+clamp = function(num, min, max) {
+  return Math.min(Math.max(num, min), max);
+}

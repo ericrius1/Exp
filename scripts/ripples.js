@@ -1,29 +1,38 @@
 HIFI_PUBLIC_BUCKET = "http://s3.amazonaws.com/hifi-public/";
-// Script.include(HIFI_PUBLIC_BUCKET + 'scripts/utilities.js')
-Script.include('utilities.js');
-
-var NUM_ROWS = 2;
+Script.include("utilities.js");
+var NUM_ROWS = 3;
 var NUM_COLUMNS = NUM_ROWS;
 var BOX_SIZE = 1;
 var center = Vec3.sum(MyAvatar.position, Vec3.multiply(BOX_SIZE * 10, Quat.getFront(Camera.getOrientation())));
-
+var DAMPING = 0.96
 var grid = [];
 var entities = [];
+var IMPULSE = 4;
+var PADDING = BOX_SIZE * .1;
 
 var ELASTICITY = .1;
 
+//cache variables for update 
+var extension, acceleration, neighbor, neighborLocation, cell, newColor;
 
 createGrid();
 //Simulate middle box flung up
 
-var pulledEntity = grid[NUM_ROWS / 2][NUM_COLUMNS / 2].entity;
-Entities.editEntity(pulledEntity, {
+function mousePressEvent(event) {
+  var pickRay = Camera.computePickRay(event.x, event.y);
+  var pickResults = Entities.findRayIntersection(pickRay);
+  if(!pickResults.intersects){
+    return;
+  }
+  Entities.editEntity(pickResults.entityID, {
   velocity: {
     x: 0,
-    y: 10,
+    y: IMPULSE,
     z: 0
   }
 });
+
+}
 
 
 
@@ -37,20 +46,21 @@ function update(deleteTime) {
   }
 
 
-
   //Now go through each box and apply proper spring forces
   for (var rowIndex = 0; rowIndex < NUM_ROWS; rowIndex++) {
     for (var columnIndex = 0; columnIndex < NUM_COLUMNS; columnIndex++) {
 
-      var cell = grid[rowIndex][columnIndex];
+      cell = grid[rowIndex][columnIndex];
       //spring force: f = kx
-      var acceleration = ELASTICITY * (cell.props.position.y - cell.basePosition.y);
+      extension =  (cell.props.position.y - cell.basePosition.y);
+      var hue = clamp(map(extension, 0, 1, 0.5, 0.7), 0.5, 0.7);
+      cell.color = hslToRgb({hue: hue, sat: 0.6, light: 0.6});
+      acceleration = ELASTICITY * extension;
       cell.props.velocity.y -= acceleration;
-      print('new velocity' +acceleration)
       for (var n = 0; n < cell.neighbors.length; n++) {
-        var neighborLocation = cell.neighbors[n];
-        var neighbor = grid[neighborLocation[0]][neighborLocation[1]];
-        var extension = cell.props.position.y - neighbor.props.position.y
+        neighborLocation = cell.neighbors[n];
+        neighbor = grid[neighborLocation[0]][neighborLocation[1]];
+        extension = cell.props.position.y - neighbor.props.position.y
         acceleration = ELASTICITY * extension;
         neighbor.props.velocity.y += acceleration;
         cell.props.velocity.y -= acceleration;
@@ -63,7 +73,8 @@ function update(deleteTime) {
     for (var columnIndex = 0; columnIndex < NUM_COLUMNS; columnIndex++) {
       var cell = grid[rowIndex][columnIndex]
       Entities.editEntity(cell.entity, {
-        velocity: cell.props.velocity
+        velocity: cell.props.velocity,
+        color: cell.color
       });
     }
   }
@@ -87,9 +98,9 @@ function createGrid() {
         grid[rowIndex] = [];
       }
       var basePosition = Vec3.sum(center, {
-        x: rowIndex * BOX_SIZE,
+        x: rowIndex * (BOX_SIZE + PADDING),
         y: -2,
-        z: columnIndex * BOX_SIZE
+        z: columnIndex * (BOX_SIZE + PADDING)
       });
       var entity = Entities.addEntity({
         type: 'Box',
@@ -99,12 +110,8 @@ function createGrid() {
           y: BOX_SIZE,
           z: BOX_SIZE
         },
-        color: hslToRgb({
-          hue: 0.6,
-          sat: 0.5,
-          light: randFloat(0.5, 0.6)
-        }),
-        damping: 0.9
+        damping: DAMPING,
+        collisionsWillMove: true
       });
       grid[rowIndex].push({
         entity: entity,
@@ -138,6 +145,8 @@ function createGrid() {
 
   }
 }
+
+// Controller.mousePressEvent.connect(mousePressEvent);
 
 Script.update.connect(update);
 Script.scriptEnding.connect(cleanup)
