@@ -20,7 +20,7 @@ var colorPalette = [{
   green: 208,
   blue: 120
 }, {
-  red: 217,
+  red: 214,
   green: 91,
   blue: 67
 }, {
@@ -87,7 +87,7 @@ function MousePaint() {
 
 
 
-  var LINE_WIDTH = 7;
+  var LINE_WIDTH = 7 ;
   var line;
   var points = [];
 
