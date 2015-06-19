@@ -147,11 +147,11 @@ function mousePressEvent(event) {
   }
 }
 
-function scriptEnding() {
+function cleanup() {
   Overlays.deleteOverlay(offButton);
   Overlays.deleteOverlay(diceButton);
   Overlays.deleteOverlay(deleteButton);
 }
 
 Controller.mousePressEvent.connect(mousePressEvent);
-Script.scriptEnding.connect(scriptEnding);
+Script.scriptEnding.connect(cleanup);

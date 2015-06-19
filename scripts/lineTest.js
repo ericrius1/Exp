@@ -1,83 +1,41 @@
-var time = 0;
-
-var omega = 2 * Math.PI / 8;
-var range = 10;
-
-
+	var center = Vec3.sum(MyAvatar.position, Vec3.multiply(3, Quat.getFront(Camera.getOrientation())));
+var size = 10
 var points = [];
-var lines = [];
-var currentLine;
+var MAX_POINTS = 3;
+var updateInterval = 2000;
 
-var MAX_POINTS_PER_LINE = 20;
+var line;
+
 newLine();
-
-function newLine(point) {
-  points = [];
-  points.push(point);
-  var line = Entities.addEntity({
-    type: "Line",
-    position: point,
-    linePoints: points,
-    color: {
-      red: 200,
-      green: 50,
-      blue: 100
-    },
-    dimensions: {
-      x: 1,
-      y: 1,
-      z: 1
-    },
-    lineWidth: 7
-  });
-  lines.push(line);
-
+function newLine() {
+	line = Entities.addEntity({
+		type: 'Line',
+		position: center,
+		dimensions: {x: size * 2,  y: size * 2, z: size * 2},
+		color: {red: 200, green: 10, blue: 200},
+		linePoints: []
+	});
+	points = []
+	
 }
 
-var basePosition = Vec3.sum(MyAvatar.position, Vec3.multiply(5, Quat.getFront(Camera.getOrientation())));
-var ball = Entities.addEntity({
-  type: 'Sphere',
-  position: basePosition,
-  color: {
-    red: 200,
-    green: 20,
-    blue: 20
-  }
-})
 
-function cleanup() {
-  lines.forEach(function(line) {
-    Entities.deleteEntity(line);
-  })
-  Entities.deleteEntity(ball);
-
+function update() {
+	var point = {x: randFloat(center.x - size, center.x  + size), y: randFloat(center.y - size, center.y + size), z: randFloat(center.z - size, center.z + size) };
+  	points.push(point)
+  	Entities.editEntity(line, {linePoints: points} );
+  	if(points.length === MAX_POINTS) {
+  		newLine();
+  	}
 }
-
-function update(deltaTime) {
-
-  time += deltaTime;
-  var newPosition = {
-      x: basePosition.x + Math.sin(time * omega) / 2.0 * range,
-      y: basePosition.y,
-      z: basePosition.z + Math.cos(time * omega) / 2.0 * range
-  }
-
-
-  Entities.editEntity(ball, {
-    position: newPosition
-  });
-  points.push(newPosition);
-  Entities.editEntity(lines[lines.length - 1], {
-    linePoints: points
-  })
-
-  if (points.length === MAX_POINTS_PER_LINE) {
-    newLine(newPosition);
-  }
-
-
-}
-
 
 Script.update.connect(update);
-Script.scriptEnding.connect(cleanup)
+// Script.setInterval(update, updateInterval);
+
+function randInt(low, high) {
+  return Math.floor(low + Math.random() * (high - low));
+}
+
+randFloat = function(low, high) {
+  return low + Math.random() * (high - low);
+}

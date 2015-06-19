@@ -12,8 +12,9 @@
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 //
 Script.include('lineRider.js')
-var MAX_POINTS_PER_LINE = 80;
-
+var MAX_POINTS_PER_LINE = 30;
+var DRAWING_DISTANCE = 5;
+var LINE_DIMENSIONS = 5;
 
 var colorPalette = [{
   red: 236,
@@ -69,7 +70,7 @@ function hydraCheck() {
 //************ Mouse Paint **************************
 
 function MousePaint() {
-  var DRAWING_DISTANCE = 5;
+
   var lines = [];
   var deletedLines = [];
   var isDrawing = false;
@@ -87,7 +88,7 @@ function MousePaint() {
 
 
 
-  var LINE_WIDTH = 7 ;
+  var LINE_WIDTH = 7;
   var line;
   var points = [];
 
@@ -111,55 +112,55 @@ function MousePaint() {
 
 
   function newLine(point) {
+    if (!point) {
+      return;
+    }
     line = Entities.addEntity({
-      position: MyAvatar.position,
+      position: point,
       type: "Line",
       color: currentColor,
       dimensions: {
-        x: 10,
-        y: 10,
-        z: 10
+        x: LINE_DIMENSIONS,
+        y: LINE_DIMENSIONS,
+        z: LINE_DIMENSIONS
       },
       lineWidth: LINE_WIDTH
     });
     points = [];
-    if (point) {
-      points.push(point);
-      path.push(point);
-    }
+    points.push(point);
+    path.push(point);
     lines.push(line);
   }
 
 
   function mouseMoveEvent(event) {
 
-
-    var pickRay = Camera.computePickRay(event.x, event.y);
-    var addVector = Vec3.multiply(Vec3.normalize(pickRay.direction), DRAWING_DISTANCE);
-    var point = Vec3.sum(Camera.getPosition(), addVector);
-    Entities.editEntity(line, {
-      linePoints: points
-    });
+    var point = computePoint(event)
     Entities.editEntity(brush, {
       position: point
     });
+
     if (!isDrawing) {
       return;
     }
 
     points.push(point);
     path.push(point);
-
-    print("point pos " + JSON.stringify(point))
-    if(point.x > 16000 || point.y > 16000 || point.z > 16000) {
-      print( "HUGE POINT IN SCRIPT!!!")
+    var success = Entities.setAllPoints(line, points);
+    if (!success) {
+      //We're out of bounds of entity bounding box, so start a new line
+      newLine(point)
+      return;
     }
+
 
     if (points.length === MAX_POINTS_PER_LINE) {
       //We need to start a new line!
       newLine(point);
     }
   }
+
+
 
   function undoStroke() {
     var deletedLine = lines.pop();
@@ -175,13 +176,14 @@ function MousePaint() {
   }
 
   function mousePressEvent(event) {
-    if(!event.isLeftButton) {
+    if (!event.isLeftButton) {
       isDrawing = false;
       return;
     }
     lineRider.mousePressEvent(event);
     path = [];
-    newLine();
+    var point = computePoint(event);
+    newLine(point);
     isDrawing = true;
 
 
@@ -201,14 +203,14 @@ function MousePaint() {
     if (event.text === "z") {
       undoStroke();
     }
-    if(event.text === "x") {
+    if (event.text === "x") {
       redoStroke();
     }
   }
 
   function cleanup() {
     lines.forEach(function(line) {
-      Entities.deleteEntity(line);
+      // Entities.deleteEntity(line);
     });
     Entities.deleteEntity(brush);
     lineRider.cleanup();
@@ -484,6 +486,12 @@ function HydraPaint() {
   Script.scriptEnding.connect(cleanup);
   Controller.mousePressEvent.connect(mousePressEvent);
 
+}
+
+function computePoint(event) {
+  var pickRay = Camera.computePickRay(event.x, event.y);
+  var addVector = Vec3.multiply(Vec3.normalize(pickRay.direction), DRAWING_DISTANCE);
+  return Vec3.sum(Camera.getPosition(), addVector);
 }
 
 function randFloat(low, high) {
