@@ -1,6 +1,6 @@
-
-var MAX_POINTS_PER_LINE = 80;
+var MAX_POINTS_PER_LINE = 60;
 var LINE_DIMENSIONS = 1;
+var LIFETIME = 6000;
 MousePaint();
 
 function MousePaint() {
@@ -8,8 +8,8 @@ function MousePaint() {
   var lines = [];
   var isDrawing = false;
 
-  var LINE_WIDTH = 7 ;
-  var line;
+  var LINE_WIDTH = 7;
+  var line, linePosition;
   var points = [];
 
   var BRUSH_SIZE = .05;
@@ -21,7 +21,11 @@ function MousePaint() {
       y: 0,
       z: 0
     },
-    color: {red: 100, green: 10, blue: 100},
+    color: {
+      red: 100,
+      green: 10,
+      blue: 100
+    },
     dimensions: {
       x: BRUSH_SIZE,
       y: BRUSH_SIZE,
@@ -30,23 +34,26 @@ function MousePaint() {
   });
 
 
-  function newLine(point) {
+  function newLine(position) {
+    linePosition = position;
     line = Entities.addEntity({
-      position: point,
+      position: position,
       type: "Line",
-      color: {red: 200, green: 10, blue: 200},
+      color: {
+        red: 200,
+        green: 10,
+        blue: 200
+      },
       dimensions: {
         x: LINE_DIMENSIONS,
         y: LINE_DIMENSIONS,
         z: LINE_DIMENSIONS
       },
       linePoints: [],
-      lineWidth: LINE_WIDTH
+      lineWidth: LINE_WIDTH,
+      lifetime: LIFETIME
     });
     points = [];
-    if (point) {
-      points.push(point);
-    }
     lines.push(line);
   }
 
@@ -54,37 +61,50 @@ function MousePaint() {
   function mouseMoveEvent(event) {
 
 
+    Entities.editEntity(brush, {
+      position: computeWorldPoint(event)
+    });
+
     if (!isDrawing) {
       return;
     }
-    
-    var point = computePoint(event);
-    var success = Entities.setAllPoints(line, points);
-    Entities.editEntity(brush, {
-      position: point
-    });
 
+    var point = computeLocalPoint(event);
     points.push(point);
+    var success = Entities.appendPoint(line, point);
+
+    if(!success) {
+      newLine(computeWorldPoint(event));
+      Entities.appendPoint(line, computeLocalPoint(event));
+      points.push(computeLocalPoint(event));
+      return
+    }
 
     if (points.length === MAX_POINTS_PER_LINE) {
       //We need to start a new line!
-      newLine(point)
+      newLine(computeWorldPoint(event))
+      points.push(computeLocalPoint(event));
     }
   }
 
-  function computePoint(event) {
+  function computeWorldPoint(event) {
     var pickRay = Camera.computePickRay(event.x, event.y);
     var addVector = Vec3.multiply(Vec3.normalize(pickRay.direction), DRAWING_DISTANCE);
     return Vec3.sum(Camera.getPosition(), addVector);
   }
 
+  function computeLocalPoint(event) {
+
+    var localPoint = Vec3.subtract(computeWorldPoint(event), linePosition);
+    return localPoint;
+  }
+
   function mousePressEvent(event) {
-    if(!event.isLeftButton) {
+    if (!event.isLeftButton) {
       isDrawing = false;
       return;
     }
-    var point = computePoint(event);
-    newLine(point);
+    newLine(computeWorldPoint(event));
     isDrawing = true;
 
   }
@@ -96,18 +116,16 @@ function MousePaint() {
 
   function cleanup() {
     lines.forEach(function(line) {
-      Entities.deleteEntity(line);
+      // Entities.deleteEntity(line);
     });
     Entities.deleteEntity(brush);
 
   }
 
-
   Controller.mousePressEvent.connect(mousePressEvent);
   Controller.mouseReleaseEvent.connect(mouseReleaseEvent);
   Controller.mouseMoveEvent.connect(mouseMoveEvent);
   Script.scriptEnding.connect(cleanup);
-
 }
 
 

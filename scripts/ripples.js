@@ -2,7 +2,7 @@ HIFI_PUBLIC_BUCKET = "http://s3.amazonaws.com/hifi-public/";
 // Script.include(HIFI_PUBLIC_BUCKET + 'scripts/utilities.js')
 Script.include('utilities.js');
 
-var NUM_ROWS = 2;
+var NUM_ROWS = 6;
 var NUM_COLUMNS = NUM_ROWS;
 var BOX_SIZE = 1;
 var center = Vec3.sum(MyAvatar.position, Vec3.multiply(BOX_SIZE * 10, Quat.getFront(Camera.getOrientation())));

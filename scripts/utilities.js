@@ -37,8 +37,6 @@ hslToRgb = function (hslColor) {
 
 }
 
-
-
 randFloat = function(low, high) {
   return low + Math.random() * (high - low);
 }
