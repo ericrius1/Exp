@@ -13,6 +13,9 @@
 
 var LINE_DIMENSIONS = 5;
 var LIFETIME = 6000;
+var LINE_WIDTH = .04;
+
+var points = [];
 
 var colorPalette = [{
   red: 236,
@@ -54,7 +57,6 @@ function MousePaint() {
   var lines = [];
   var isDrawing = false;
 
-  var LINE_WIDTH = 7;
   var line, linePosition;
 
   var BRUSH_SIZE = .05;
@@ -77,23 +79,25 @@ function MousePaint() {
 
   function newLine(position) {
     var cameraEuler = Quat.safeEulerAngles(Camera.getOrientation());
+    var towardsMe = Quat.angleAxis(cameraEuler.y + 180, { x: 0, y: 1, z: 0 });
     linePosition = position;
     line = Entities.addEntity({
       position: position,
-      type: "Line",
+      type: "Quad",
       color: currentColor,
       dimensions: {
         x: LINE_DIMENSIONS,
         y: LINE_DIMENSIONS,
         z: LINE_DIMENSIONS
       },
-      // rotation: towardsMe,
       linePoints: [],
       lineWidth: LINE_WIDTH,
       lifetime: LIFETIME
     });
     lines.push(line);
+    points = [];
   }
+
 
 
   function mouseMoveEvent(event) {
@@ -108,12 +112,23 @@ function MousePaint() {
     }
 
     var localPoint = computeLocalPoint(event)
-    var success = Entities.appendPoint(line, localPoint);
-
-    if (!success) {
-      newLine(worldPoint);
-      Entities.appendPoint(line, computeLocalPoint(event));
+    points.push(localPoint)
+    Entities.editEntity(line, {linePoints: points});
+    if(points.length > 30) {
+        newLine(worldPoint);
+        points.push(computeLocalPoint(event));  
     }
+    print("num poiints " +  points.length);
+    // var success = Entities.appendPoint(line, localPoint);
+    // if(success) {
+    //   var normal = Quat.getFront(Camera.getOrientation());
+    // }
+    
+
+    // if (!success) {
+    //   newLine(worldPoint);
+    //   points.push(computeLocalPoint(event));
+    // }
   }
 
   function undoStroke() {
@@ -174,7 +189,7 @@ function MousePaint() {
 
   function cleanup() {
     lines.forEach(function(line) {
-      // Entities.deleteEntity(line);
+      Entities.deleteEntity(line);
     });
     Entities.deleteEntity(brush);
 
