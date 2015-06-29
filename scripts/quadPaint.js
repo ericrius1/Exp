@@ -13,9 +13,10 @@
 
 var LINE_DIMENSIONS = 5;
 var LIFETIME = 6000;
-var LINE_WIDTH = .04;
-
+var LINE_WIDTH = .2;
+var MAX_POINTS = 30;
 var points = [];
+var normals = [];
 
 var colorPalette = [{
   red: 236,
@@ -113,12 +114,14 @@ function MousePaint() {
 
     var localPoint = computeLocalPoint(event)
     points.push(localPoint)
-    Entities.editEntity(line, {linePoints: points});
-    if(points.length > 30) {
+    normals.push(computeNormal(worldPoint, Camera.getPosition()));
+    Entities.editEntity(line, {linePoints: points, normals: normals});
+    if(points.length > MAX_POINTS) {
+        print("NEW POINT!");
         newLine(worldPoint);
         points.push(computeLocalPoint(event));  
+        normals.push(computeNormal(worldPoint, Camera.getPosition()));
     }
-    print("num poiints " +  points.length);
     // var success = Entities.appendPoint(line, localPoint);
     // if(success) {
     //   var normal = Quat.getFront(Camera.getOrientation());
@@ -142,6 +145,10 @@ function MousePaint() {
     var restoredLine = Entities.addEntity(deletedLines.pop());
     Entities.addEntity(restoredLine);
     lines.push(restoredLine);
+  }
+
+  function computeNormal(p1, p2) {
+    return Vec3.normalize(Vec3.subtract(p2, p1));
   }
 
   function computeWorldPoint(event) {
@@ -189,7 +196,7 @@ function MousePaint() {
 
   function cleanup() {
     lines.forEach(function(line) {
-      Entities.deleteEntity(line);
+      // Entities.deleteEntity(line);
     });
     Entities.deleteEntity(brush);
 
