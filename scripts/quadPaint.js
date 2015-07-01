@@ -11,12 +11,14 @@
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 
-var LINE_DIMENSIONS = 5;
+var LINE_DIMENSIONS = 50;
 var LIFETIME = 6000;
-var LINE_WIDTH = .2;
+var LINE_WIDTH = .05;
 var MAX_POINTS = 30;
 var points = [];
 var normals = [];
+var strokeWidths = [];
+var count = 0;
 
 var colorPalette = [{
   red: 236,
@@ -97,12 +99,14 @@ function MousePaint() {
     });
     lines.push(line);
     points = [];
+    normals = []
+    strokeWidths = [];
   }
 
 
 
   function mouseMoveEvent(event) {
-
+    count++;
     var worldPoint = computeWorldPoint(event);
     Entities.editEntity(brush, {
       position: worldPoint
@@ -113,12 +117,14 @@ function MousePaint() {
     }
 
     var localPoint = computeLocalPoint(event)
+    var width = (Math.sin(count/100) + 1.1) /10;
+    strokeWidths.push( width) ;
     points.push(localPoint)
     normals.push(computeNormal(worldPoint, Camera.getPosition()));
-    Entities.editEntity(line, {linePoints: points, normals: normals});
+    Entities.editEntity(line, {linePoints: points, normals: normals, strokeWidths: strokeWidths});
     if(points.length > MAX_POINTS) {
-        print("NEW POINT!");
         newLine(worldPoint);
+        strokeWidths.push(width);
         points.push(computeLocalPoint(event));  
         normals.push(computeNormal(worldPoint, Camera.getPosition()));
     }
