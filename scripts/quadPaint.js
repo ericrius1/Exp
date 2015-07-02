@@ -10,15 +10,18 @@
 //
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
-
-var LINE_DIMENSIONS = 50;
+var LINE_DIMENSIONS = 5;
 var LIFETIME = 6000;
+var EVENT_CHANGE_THRESHOLD = 200;
 var LINE_WIDTH = .05;
-var MAX_POINTS = 30;
+var MAX_POINTS = 10;
 var points = [];
 var normals = [];
 var strokeWidths = [];
 var count = 0;
+var prevEvent = null;
+
+var MIN_POINT_DISTANCE = .01;
 
 var colorPalette = [{
   red: 236,
@@ -81,12 +84,10 @@ function MousePaint() {
 
 
   function newLine(position) {
-    var cameraEuler = Quat.safeEulerAngles(Camera.getOrientation());
-    var towardsMe = Quat.angleAxis(cameraEuler.y + 180, { x: 0, y: 1, z: 0 });
     linePosition = position;
     line = Entities.addEntity({
       position: position,
-      type: "Quad",
+      type: "PolyLine",
       color: currentColor,
       dimensions: {
         x: LINE_DIMENSIONS,
@@ -97,7 +98,6 @@ function MousePaint() {
       lineWidth: LINE_WIDTH,
       lifetime: LIFETIME
     });
-    lines.push(line);
     points = [];
     normals = []
     strokeWidths = [];
@@ -106,38 +106,49 @@ function MousePaint() {
 
 
   function mouseMoveEvent(event) {
+
+    var pickRay = Camera.computePickRay(event.x, event.y);
     count++;
-    var worldPoint = computeWorldPoint(event);
+    var worldPoint = computeWorldPoint(pickRay);
     Entities.editEntity(brush, {
       position: worldPoint
     });
 
+
     if (!isDrawing) {
       return;
     }
-
-    var localPoint = computeLocalPoint(event)
-    var width = (Math.sin(count/100) + 1.1) /10;
-    strokeWidths.push( width) ;
-    points.push(localPoint)
-    normals.push(computeNormal(worldPoint, Camera.getPosition()));
-    Entities.editEntity(line, {linePoints: points, normals: normals, strokeWidths: strokeWidths});
-    if(points.length > MAX_POINTS) {
-        newLine(worldPoint);
-        strokeWidths.push(width);
-        points.push(computeLocalPoint(event));  
-        normals.push(computeNormal(worldPoint, Camera.getPosition()));
+    var eventChange = Math.sqrt(Math.pow(event.x - prevEvent.x, 2) + Math.pow(event.y - prevEvent.y, 2));
+    //print("EVENT CHANGE " + eventChange)
+    if (eventChange > EVENT_CHANGE_THRESHOLD) {
+      print("PAST THRESHOLD!")
+      return;
     }
-    // var success = Entities.appendPoint(line, localPoint);
-    // if(success) {
-    //   var normal = Quat.getFront(Camera.getOrientation());
-    // }
-    
+   
 
-    // if (!success) {
-    //   newLine(worldPoint);
-    //   points.push(computeLocalPoint(event));
-    // }
+    var localPoint = computeLocalPoint(worldPoint);
+    if (Vec3.distance(points[points.length - 1], localPoint) < MIN_POINT_DISTANCE) {
+      print("NOT ENOUGH DISTANCE BETWEEN MOUSE MOVES")
+      return;
+    }
+    var width = (Math.sin(count / 100) + 1.1) / 10;
+    points.push(localPoint)
+    normals.push(computeNormal(worldPoint, pickRay.origin));
+    strokeWidths.push(.07);
+    Entities.editEntity(line, {
+      strokeWidths: strokeWidths,
+      linePoints: points,
+      normals: normals,
+    });
+    if (points.length > MAX_POINTS) {
+      newLine(worldPoint);
+      var localPoint = computeLocalPoint(worldPoint);
+      points.push(localPoint);
+      normals.push(computeNormal(worldPoint, pickRay.origin));
+      strokeWidths.push(.07);
+
+    }
+    prevEvent = event;
   }
 
   function undoStroke() {
@@ -157,15 +168,14 @@ function MousePaint() {
     return Vec3.normalize(Vec3.subtract(p2, p1));
   }
 
-  function computeWorldPoint(event) {
-    var pickRay = Camera.computePickRay(event.x, event.y);
+  function computeWorldPoint(pickRay) {
     var addVector = Vec3.multiply(Vec3.normalize(pickRay.direction), DRAWING_DISTANCE);
-    return Vec3.sum(Camera.getPosition(), addVector);
+    return Vec3.sum(pickRay.origin, addVector);
   }
 
-  function computeLocalPoint(event) {
+  function computeLocalPoint(worldPoint) {
 
-    var localPoint = Vec3.subtract(computeWorldPoint(event), linePosition);
+    var localPoint = Vec3.subtract(worldPoint, linePosition);
     return localPoint;
   }
 
@@ -174,7 +184,14 @@ function MousePaint() {
       isDrawing = false;
       return;
     }
-    newLine(computeWorldPoint(event));
+    var pickRay = Camera.computePickRay(event.x, event.y);
+    prevEvent = {x: event.x, y:event.y};
+    var worldPoint = computeWorldPoint(pickRay);
+    newLine(worldPoint);
+    var localPoint = computeLocalPoint(worldPoint);
+    points.push(localPoint);
+    normals.push(computeNormal(worldPoint, pickRay.origin));
+    strokeWidths.push(0.07);
     isDrawing = true;
 
   }
