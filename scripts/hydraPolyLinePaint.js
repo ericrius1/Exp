@@ -127,9 +127,7 @@ function controller(side, cycleColorButton) {
 
     this.update = function(deltaTime) {
         this.updateControllerState();
-        if(this.cycleColorButtonPressed) {
-            this.cycleColor();
-        }
+  
         var newBrushPosOffset = Vec3.multiply(Vec3.normalize(Vec3.subtract(this.tipPosition, this.palmPosition)), DRAWING_DEPTH);
         var newBrushPos = Vec3.sum(this.palmPosition, newBrushPosOffset);
         Entities.editEntity(this.brush, {
@@ -148,7 +146,7 @@ function controller(side, cycleColorButton) {
         if (this.drawing) {
             var localPoint = Vec3.subtract(newBrushPos, this.linePosition);
             if (Vec3.distance(localPoint, this.points[this.points.length - 1]) < MIN_POINT_DISTANCE) {
-                print("NOT ENOUGH DISTANCE BETWEEN POINTS!!");
+                // print("NOT ENOUGH DISTANCE BETWEEN POINTS!!");
                 return;
             }
 
@@ -181,6 +179,16 @@ function controller(side, cycleColorButton) {
         this.tipPosition = Controller.getSpatialControlPosition(this.tip);
         this.palmNormal = Controller.getSpatialControlNormal(this.palm);
         this.triggerValue = Controller.getTriggerValue(this.trigger);
+
+        
+        if (this.prevCycleColorButtonPressed === true && this.cycleColorButtonPressed === false) {
+            this.cycleColor();
+            Entities.editEntity(this.brush, {
+                // color: this.currentColor
+            });
+        }
+
+        this.prevCycleColorButtonPressed = this.cycleColorButtonPressed;
 
     }
 
