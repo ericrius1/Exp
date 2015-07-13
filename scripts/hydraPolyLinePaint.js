@@ -19,19 +19,19 @@ var LASER_COLOR = {
     green: 150,
     blue: 200
 };
-var TRIGGER_THRESHOLD = .02;
+var TRIGGER_THRESHOLD = .1;
 
-var MAX_POINTS_PER_LINE = 50;
+var MAX_POINTS_PER_LINE = 10;
 
 var LIFETIME = 6000;
-var DRAWING_DEPTH = 2;
+var DRAWING_DEPTH = 3;
 var LINE_DIMENSIONS = 100;
 
 
-var DISTANCE_FROM_HAND = 5;
 var MIN_POINT_DISTANCE = 0.01;
 
-var BRUSH_RADIUS = .05;
+var MIN_BRUSH_RADIUS = 0.04;
+var MAX_BRUSH_RADIUS = 0.08;
 
 var RIGHT_BUTTON_1 = 7
 var RIGHT_BUTTON_2 = 8
@@ -93,9 +93,9 @@ function controller(side, cycleColorButton) {
         },
         color: this.currentColor,
         dimensions: {
-            x: BRUSH_RADIUS,
-            y: BRUSH_RADIUS,
-            z: BRUSH_RADIUS
+            x: MIN_BRUSH_RADIUS,
+            y: MIN_BRUSH_RADIUS,
+            z: MIN_BRUSH_RADIUS
         }
     });
 
@@ -130,15 +130,22 @@ function controller(side, cycleColorButton) {
   
         var newBrushPosOffset = Vec3.multiply(Vec3.normalize(Vec3.subtract(this.tipPosition, this.palmPosition)), DRAWING_DEPTH);
         var newBrushPos = Vec3.sum(this.palmPosition, newBrushPosOffset);
+        var brushRadius = map(this.triggerValue, TRIGGER_THRESHOLD, 1, MIN_BRUSH_RADIUS, MAX_BRUSH_RADIUS)
         Entities.editEntity(this.brush, {
             position: newBrushPos,
-            color: this.currentColor
+            color: this.currentColor,
+            dimensions: {
+                x: brushRadius,
+                y: brushRadius,
+                z: brushRadius
+            }
         });
 
 
         if (this.triggerValue > TRIGGER_THRESHOLD && !this.drawing) {
             this.newLine(this.palmPosition);
             this.drawing = true;
+            print('YAAAAA')
         } else if (this.drawing && this.triggerValue < TRIGGER_THRESHOLD) {
             this.drawing = false;
         }
