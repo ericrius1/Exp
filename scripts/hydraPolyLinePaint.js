@@ -30,8 +30,8 @@ var LINE_DIMENSIONS = 100;
 
 var MIN_POINT_DISTANCE = 0.01;
 
-var MIN_BRUSH_RADIUS = 0.04;
-var MAX_BRUSH_RADIUS = 0.08;
+var MIN_BRUSH_RADIUS = 0.08;
+var MAX_BRUSH_RADIUS = 0.1;
 
 var RIGHT_BUTTON_1 = 7
 var RIGHT_BUTTON_2 = 8
@@ -106,7 +106,6 @@ function controller(side, cycleColorButton) {
         }
     }
     this.newLine = function(position) {
-        print("NEW LINE")
         this.linePosition = position;
         this.line = Entities.addEntity({
             position: position,
@@ -127,7 +126,6 @@ function controller(side, cycleColorButton) {
 
     this.update = function(deltaTime) {
         this.updateControllerState();
-  
         var newBrushPosOffset = Vec3.multiply(Vec3.normalize(Vec3.subtract(this.tipPosition, this.palmPosition)), DRAWING_DEPTH);
         var newBrushPos = Vec3.sum(this.palmPosition, newBrushPosOffset);
         var brushRadius = map(this.triggerValue, TRIGGER_THRESHOLD, 1, MIN_BRUSH_RADIUS, MAX_BRUSH_RADIUS)
@@ -143,9 +141,8 @@ function controller(side, cycleColorButton) {
 
 
         if (this.triggerValue > TRIGGER_THRESHOLD && !this.drawing) {
-            this.newLine(this.palmPosition);
+            this.newLine(newBrushPos);
             this.drawing = true;
-            print('YAAAAA')
         } else if (this.drawing && this.triggerValue < TRIGGER_THRESHOLD) {
             this.drawing = false;
         }
@@ -174,7 +171,14 @@ function controller(side, cycleColorButton) {
                 this.newLine(newBrushPos);
                 this.points.push(Vec3.subtract(newBrushPos, this.linePosition));
                 this.normals.push(computeNormal(newBrushPos, Camera.getPosition()));
-                this.strokeWidths.push(MIN_STROKE_WIDTH);
+                this.strokeWidths.push(strokeWidth);
+
+                // Entities.editEntity(this.line, {
+                //     linePoints: this.points,
+                //     normals: this.normals,
+                //     strokeWidths: this.strokeWidths,
+                //     color: this.currentColor
+                // });
             }
         }
     }
