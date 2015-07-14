@@ -14,7 +14,6 @@
 var Script, Entities, MyAvatar, Window, Overlays, Controller, Vec3, Quat, print, ToolBar, Settings; // Referenced globals provided by High Fidelity.
 Script.include("http://s3.amazonaws.com/hifi-public/scripts/libraries/toolBars.js");
 
-var hand = Settings.getValue("highfidelity.sword.hand", "right");
 var nullActionID = "00000000-0000-0000-0000-000000000000";
 var controllerID;
 var controllerActive;
@@ -27,6 +26,8 @@ var dimensions = {
     z: 2.0
 };
 var BUTTON_SIZE = 32;
+
+var swords = [];
 
 var stickModel = "https://hifi-public.s3.amazonaws.com/eric/models/stick.fbx";
 var swordModel = "https://hifi-public.s3.amazonaws.com/ozan/props/sword/sword.fbx";
@@ -46,7 +47,6 @@ var toolBar = new ToolBar(0, 0, ToolBar.vertical, "highfidelity.sword.toolbar", 
 var SWORD_IMAGE = "https://hifi-public.s3.amazonaws.com/images/sword/sword.svg"; // Toggle between brandishing/sheathing sword (creating if necessary)
 var TARGET_IMAGE = "https://hifi-public.s3.amazonaws.com/images/sword/dummy2.svg"; // Create a target dummy
 var CLEANUP_IMAGE = "http://s3.amazonaws.com/hifi-public/images/delete.png"; // Remove sword and all target dummies.f
-var SWITCH_HANDS_IMAGE = "http://s3.amazonaws.com/hifi-public/images/up-arrow.svg"; // Toggle left vs right hand. Persists in settings.
 var swordButton = toolBar.addOverlay("image", {
     width: BUTTON_SIZE,
     height: BUTTON_SIZE,
@@ -59,12 +59,7 @@ var targetButton = toolBar.addOverlay("image", {
     imageURL: TARGET_IMAGE,
     alpha: 1
 });
-var switchHandsButton = toolBar.addOverlay("image", {
-    width: BUTTON_SIZE,
-    height: BUTTON_SIZE,
-    imageURL: SWITCH_HANDS_IMAGE,
-    alpha: 1
-});
+
 var cleanupButton = toolBar.addOverlay("image", {
     width: BUTTON_SIZE,
     height: BUTTON_SIZE,
@@ -74,8 +69,13 @@ var cleanupButton = toolBar.addOverlay("image", {
 
 var flasher;
 
-var triggerButton = 1;
-var triggerValue;
+var leftTriggerButton = 0;
+var leftTriggerValue = 0;
+var prevLeftTriggerValue = 0;
+
+var rightTriggerButton = 1;
+var prevRightTriggerValue = 0;
+var rightTriggerValue = 0;
 var TRIGGER_THRESHOLD = 0.2;
 
 var swordHeld = false;
@@ -218,14 +218,7 @@ function isFighting() {
     return stickID && (actionID !== nullActionID);
 }
 
-function initControls() {
-    print("Sword hand is " + hand);
-    if (hand === "right") {
-        controllerID = 3; // right handed
-    } else {
-        controllerID = 4; // left handed
-    }
-}
+
 var inHand = false;
 
 function positionStick(stickOrientation) {
@@ -245,28 +238,7 @@ function positionStick(stickOrientation) {
     });
 }
 
-function resetToHand() { // For use with controllers, puts the sword in contact with the hand.
-    // Maybe coordinate with positionStick?
-    if (inHand) { // Optimization: bail if we're already inHand.
-        return;
-    }
-    print('Reset to hand');
-    Entities.updateAction(stickID, actionID, {
-        relativePosition: {
-            x: 0.0,
-            y: 0.0,
-            z: -dimensions.z * 0.5
-        },
-        relativeRotation: Quat.fromVec3Degrees({
-            x: 45.0,
-            y: 0.0,
-            z: 0.0
-        }),
-        hand: hand, // It should not be necessary to repeat these two, but there seems to be a bug in that that
-        timeScale: 0.05 // they do not retain their earlier values if you don't repeat them.
-    });
-    inHand = true;
-}
+
 
 function isControllerActive() {
     // I don't think the hydra API provides any reliable way to know whether a particular controller is active. Ask for both.
@@ -274,23 +246,6 @@ function isControllerActive() {
     return controllerActive;
 }
 
-function mouseMoveEvent(event) {
-    // When a controller like the hydra gives a mouse event, the x/y is not meaningful to us, but we can detect with a truty deviceID
-    if (event.deviceID || !isFighting() || isControllerActive()) {
-        print('Attempting attachment reset');
-        resetToHand();
-        return;
-    }
-    var windowCenterX = Window.innerWidth / 2;
-    var windowCenterY = Window.innerHeight / 2;
-    var mouseXCenterOffset = event.x - windowCenterX;
-    var mouseYCenterOffset = event.y - windowCenterY;
-    var mouseXRatio = mouseXCenterOffset / windowCenterX;
-    var mouseYRatio = mouseYCenterOffset / windowCenterY;
-
-    var stickOrientation = Quat.fromPitchYawRollDegrees(mouseYRatio * 90, mouseXRatio * 90, 0);
-    positionStick(stickOrientation);
-}
 
 function removeSword() {
     if (stickID) {
@@ -324,7 +279,6 @@ function cleanUp(leaveButtons) {
 }
 
 function makeSword() {
-    initControls();
     var swordPosition = Vec3.sum(MyAvatar.position, Vec3.multiply(5, Quat.getFront(MyAvatar.orientation)));
     var orientationAdjustment = Quat.fromPitchYawRollDegrees(90, 0, 0);
 
@@ -402,19 +356,13 @@ function onClick(event) {
                 action: action
             });
             break;
-        case switchHandsButton:
-            cleanUp('leaveButtons');
-            hand = hand === "right" ? "left" : "right";
-            Settings.setValue("highfidelity.sword.hand", hand);
-            makeSword();
-            break;
         case cleanupButton:
             cleanUp('leaveButtons');
             break;
     }
 }
 
-function grabSword() {
+function grabSword(hand) {
         actionID = Entities.addAction("hold", stickID, {
         relativePosition: {
             x: 0.0,
@@ -442,20 +390,31 @@ function releaseSword() {
     actionID = nullActionID;
     Entities.editEntity(stickID, {velocity: {x: 0, y: 0, z: 0}, angularVelocity: {x: 0, y: 0, z: 0}});
     swordHeld = false;
-    print("RELAS")
 }
 
 function update() {
     updateControllerState();
-    if (triggerValue > TRIGGER_THRESHOLD && !swordHeld) {
-        grabSword()
-    } else if(triggerValue < TRIGGER_THRESHOLD && swordHeld) {
-        releaseSword();
-    }
+   
 }
 
 function updateControllerState() {
-    triggerValue = Controller.getTriggerValue(triggerButton);
+    rightTriggerValue = Controller.getTriggerValue(rightTriggerButton);
+    leftTriggerValue = Controller.getTriggerValue(leftTriggerButton);
+
+    if (rightTriggerValue > TRIGGER_THRESHOLD && !swordHeld) {
+        grabSword("right")
+    } else if(rightTriggerValue < TRIGGER_THRESHOLD && prevRightTriggerValue > TRIGGER_THRESHOLD && swordHeld) {
+        releaseSword();
+    }
+
+    if (leftTriggerValue > TRIGGER_THRESHOLD && !swordHeld) {
+        grabSword("left")
+    } else if(leftTriggerValue < TRIGGER_THRESHOLD && prevLeftTriggerValue > TRIGGER_THRESHOLD && swordHeld) {
+        releaseSword();
+    }
+
+    prevRightTriggerValue = rightTriggerValue;
+    prevLeftTriggerValue = leftTriggerValue;
 }
 
 Script.scriptEnding.connect(cleanUp);
