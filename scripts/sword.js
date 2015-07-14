@@ -43,8 +43,8 @@ var toolBar = new ToolBar(0, 0, ToolBar.vertical, "highfidelity.sword.toolbar", 
     };
 });
 
-var SWORD_IMAGE = "http://s3.amazonaws.com/hifi-public/images/billiardsReticle.png"; // Toggle between brandishing/sheathing sword (creating if necessary)
-var TARGET_IMAGE = "http://s3.amazonaws.com/hifi-public/images/puck.png"; // Create a target dummy
+var SWORD_IMAGE = "https://hifi-public.s3.amazonaws.com/images/sword/sword.svg"; // Toggle between brandishing/sheathing sword (creating if necessary)
+var TARGET_IMAGE = "https://hifi-public.s3.amazonaws.com/images/sword/dummy2.svg"; // Create a target dummy
 var CLEANUP_IMAGE = "http://s3.amazonaws.com/hifi-public/images/delete.png"; // Remove sword and all target dummies.f
 var SWITCH_HANDS_IMAGE = "http://s3.amazonaws.com/hifi-public/images/up-arrow.svg"; // Toggle left vs right hand. Persists in settings.
 var swordButton = toolBar.addOverlay("image", {
