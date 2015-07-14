@@ -43,9 +43,9 @@ var LEFT_BUTTON_3 = 3;
 var LEFT_BUTTON_4 = 4;
 
 var colorPalette = [{
-    red: 10,
-    green: 208,
-    blue: 60
+    red: 0,
+    green: 0,
+    blue: 0
 }, {
     red: 214,
     green: 91,
