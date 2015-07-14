@@ -78,6 +78,8 @@ var triggerButton = 1;
 var triggerValue;
 var TRIGGER_THRESHOLD = 0.2;
 
+var swordHeld = false;
+
 function clearFlash() {
     if (!flasher) {
         return;
@@ -88,7 +90,6 @@ function clearFlash() {
 }
 
 function flash(color) {
-    //TODO: REMOVE THIS AFTER DEVELOPMENT
     return;
     clearFlash();
     flasher = {};
@@ -274,7 +275,6 @@ function isControllerActive() {
 }
 
 function mouseMoveEvent(event) {
-    return;
     // When a controller like the hydra gives a mouse event, the x/y is not meaningful to us, but we can detect with a truty deviceID
     if (event.deviceID || !isFighting() || isControllerActive()) {
         print('Attempting attachment reset');
@@ -308,6 +308,7 @@ function removeSword() {
         MyAvatar.collisionSoundURL = originalAvatarCollisionSound;
     }
     removeDisplay();
+    swordHeld = false;
 }
 
 function cleanUp(leaveButtons) {
@@ -322,57 +323,23 @@ function cleanUp(leaveButtons) {
     }
 }
 
-function update() {
-    updateControllerState();
-    if(triggerValue > TRIGGER_THRESHOLD && !actionID) {
-        grabSword();
-    }
-}
-
-function grabSword() {
-     actionID = Entities.addAction("hold", stickID, {
-    relativePosition: {
-        x: 0.0,
-        y: 0.0,
-        z: -dimensions.z * 0.5
-    },
-    relativeRotation: Quat.fromVec3Degrees({
-        x: 45.0,
-        y: 0.0,
-        z: 0.0
-    }),
-    hand: hand,
-    timeScale: 0.05
-});
-    if (actionID === nullActionID) {
-        print('*** FAILED TO MAKE SWORD ACTION ***');
-        cleanUp();
-    }
-   
-}
-
-function updateControllerState() {
-    triggerValue = Controller.getTriggerValue(triggerButton);
-}
-
 function makeSword() {
     initControls();
-    var swordPosition = Vec3.sum(MyAvatar.position, Vec3.multiply(2, Quat.getFront(MyAvatar.orientation)));
+    var swordPosition = Vec3.sum(MyAvatar.position, Vec3.multiply(5, Quat.getFront(MyAvatar.orientation)));
     var orientationAdjustment = Quat.fromPitchYawRollDegrees(90, 0, 0);
+
     stickID = Entities.addEntity({
         type: "Model",
         modelURL: swordModel,
         compoundShapeURL: swordCollisionShape,
         dimensions: dimensions,
         position: swordPosition,
-        rotation: MyAvatar.orientation,
+        rotation: Quat.multiply(MyAvatar.orientation, orientationAdjustment),
         damping: 0.1,
         collisionSoundURL: swordCollisionSoundURL,
         restitution: 0.01,
         collisionsWillMove: true
     });
-
-
 
     if (originalAvatarCollisionSound === undefined) {
         originalAvatarCollisionSound = MyAvatar.collisionSoundURL; // We won't get MyAvatar.collisionWithEntity unless there's a sound URL. (Bug.)
@@ -409,12 +376,12 @@ function onClick(event) {
                     y: 0.7,
                     z: 0.3
                 },
-                color: {red: 80, green: 50, blue: 100},
                 gravity: {
                     x: 0.0,
                     y: -3.0,
                     z: 0.0
                 },
+                color: {red: 100, green: 20, blue: 111},
                 damping: 0.2,
                 collisionsWillMove: true
             });
@@ -445,6 +412,50 @@ function onClick(event) {
             cleanUp('leaveButtons');
             break;
     }
+}
+
+function grabSword() {
+        actionID = Entities.addAction("hold", stickID, {
+        relativePosition: {
+            x: 0.0,
+            y: 0.0,
+            z: -dimensions.z * 0.5
+        },
+        relativeRotation: Quat.fromVec3Degrees({
+            x: 0,
+            y: 0.0,
+            z: 0.0
+        }),
+        hand: hand,
+        timeScale: 0.05
+    });
+    if (actionID === nullActionID) {
+        print('*** FAILED TO MAKE SWORD ACTION ***');
+        cleanUp();
+    } else {
+      swordHeld = true;  
+    }
+}
+
+function releaseSword() {
+    Entities.deleteAction(stickID, actionID);
+    actionID = nullActionID;
+    Entities.editEntity(stickID, {velocity: {x: 0, y: 0, z: 0}, angularVelocity: {x: 0, y: 0, z: 0}});
+    swordHeld = false;
+    print("RELAS")
+}
+
+function update() {
+    updateControllerState();
+    if (triggerValue > TRIGGER_THRESHOLD && !swordHeld) {
+        grabSword()
+    } else if(triggerValue < TRIGGER_THRESHOLD && swordHeld) {
+        releaseSword();
+    }
+}
+
+function updateControllerState() {
+    triggerValue = Controller.getTriggerValue(triggerButton);
 }
 
 Script.scriptEnding.connect(cleanUp);
