@@ -204,6 +204,7 @@ function gotHit(collision) {
 }
 
 function scoreHit(idA, idB, collision) {
+    print("COLLISION");
     var energy = computeEnergy(collision, idA);
     print("Score + " + energy + " from " + JSON.stringify(idA) + " " + JSON.stringify(idB));
     health += energy;
@@ -327,9 +328,9 @@ function onClick(event) {
                 name: "zombie",
                 position: position,
                 dimensions: {
-                    x: 0.3,
-                    y: 0.7,
-                    z: 0.3
+                    x: 0.4,
+                    y: 0.8,
+                    z: 0.4
                 },
                 gravity: {
                     x: 0.0,
@@ -350,7 +351,7 @@ function onClick(event) {
                 pointToOffsetFrom: pointToOffsetFrom,
                 linearDistance: 2.0,
                 // linearTimeScale: 0.005
-                linearTimeScale: 2
+                linearTimeScale: .01
             });
             targetIDs.push({
                 entity: boxId,
