@@ -14,6 +14,8 @@
 var Script, Entities, MyAvatar, Window, Overlays, Controller, Vec3, Quat, print, ToolBar, Settings; // Referenced globals provided by High Fidelity.
 Script.include("http://s3.amazonaws.com/hifi-public/scripts/libraries/toolBars.js");
 
+var ZOMBIE_URL = "https://hifi-public.s3.amazonaws.com/eric/models/zombie.fbx";
+
 var nullActionID = "00000000-0000-0000-0000-000000000000";
 var controllerID;
 var controllerActive;
@@ -27,7 +29,6 @@ var dimensions = {
 };
 var BUTTON_SIZE = 32;
 
-var swords = [];
 
 var stickModel = "https://hifi-public.s3.amazonaws.com/eric/models/stick.fbx";
 var swordModel = "https://hifi-public.s3.amazonaws.com/ozan/props/sword/sword.fbx";
@@ -254,7 +255,6 @@ function removeSword() {
         Entities.deleteEntity(stickID);
         stickID = null;
         actionID = nullActionID;
-        Controller.mouseMoveEvent.disconnect(mouseMoveEvent);
         MyAvatar.collisionWithEntity.disconnect(gotHit);
         // removeEventhHandler happens automatically when the entity is deleted.
     }
@@ -300,7 +300,6 @@ function makeSword() {
         SoundCache.getSound(avatarCollisionSoundURL); // Interface does not currently "preload" this? (Bug?)
     }
     MyAvatar.collisionSoundURL = avatarCollisionSoundURL;
-    Controller.mouseMoveEvent.connect(mouseMoveEvent);
     MyAvatar.collisionWithEntity.connect(gotHit);
     Script.addEventHandler(stickID, 'collisionWithEntity', scoreHit);
     updateDisplay();
@@ -322,8 +321,10 @@ function onClick(event) {
                 z: 0.0
             });
             var boxId = Entities.addEntity({
-                type: "Box",
-                name: "dummy",
+                type: "Model",
+                shapeType: "box",
+                modelURL: ZOMBIE_URL,
+                name: "zombie",
                 position: position,
                 dimensions: {
                     x: 0.3,
@@ -349,7 +350,7 @@ function onClick(event) {
                 pointToOffsetFrom: pointToOffsetFrom,
                 linearDistance: 2.0,
                 // linearTimeScale: 0.005
-                linearTimeScale: 0.1
+                linearTimeScale: 2
             });
             targetIDs.push({
                 entity: boxId,
