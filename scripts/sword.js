@@ -15,6 +15,16 @@ var Script, Entities, MyAvatar, Window, Overlays, Controller, Vec3, Quat, print,
 Script.include("http://s3.amazonaws.com/hifi-public/scripts/libraries/toolBars.js");
 
 var ZOMBIE_URL = "https://hifi-public.s3.amazonaws.com/eric/models/zombie.fbx";
+ZOMBIE_SPAWN_RADIUS = 10;
+
+
+var zombieClips = [SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombie_cry.wav?v1"), SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombie_cry2.wav")];
+var NUM_ZOMBIES = 10;
+var ZOMBIE_HEIGHT = .4;
+var ZOMBIE_SOUND_MIN_INTERVAL = 3000;
+var ZOMBIE_SOUND_MAX_INTERVAL = 15000;
+var floor;
+var zombies = [];
 
 var nullActionID = "00000000-0000-0000-0000-000000000000";
 var controllerID;
@@ -28,6 +38,29 @@ var dimensions = {
     z: 2.0
 };
 var BUTTON_SIZE = 32;
+
+var Y_AXIS = {
+    x: 0,
+    y: 1,
+    z: 0
+};
+var X_AXIS = {
+    x: 1,
+    y: 0,
+    z: 0
+};
+
+var theta = 0.0;
+
+var RAD_TO_DEG = 180.0 / Math.PI;
+
+function orientationOf(vector) {
+    var direction, yaw, pitch;
+    direction = Vec3.normalize(vector);
+    yaw = Quat.angleAxis(Math.atan2(direction.x, direction.z) * RAD_TO_DEG, Y_AXIS);
+    pitch = Quat.angleAxis(Math.asin(-direction.y) * RAD_TO_DEG, X_AXIS);
+    return Quat.multiply(yaw, pitch);
+}
 
 
 var stickModel = "https://hifi-public.s3.amazonaws.com/eric/models/stick.fbx";
@@ -74,6 +107,12 @@ var leftTriggerButton = 0;
 var leftTriggerValue = 0;
 var prevLeftTriggerValue = 0;
 
+
+var LEFT = 0;
+var RIGHT = 1;
+
+var leftPalm = 2 * LEFT;
+var rightPalm = 2 * RIGHT;
 var rightTriggerButton = 1;
 var prevRightTriggerValue = 0;
 var rightTriggerValue = 0;
@@ -193,7 +232,6 @@ function computeEnergy(collision, entityID) {
 
 function gotHit(collision) {
     var energy = computeEnergy(collision);
-    print("Got hit - " + energy + " from " + collision.idA + " " + collision.idB);
     health -= energy;
     flash({
         red: 255,
@@ -204,10 +242,17 @@ function gotHit(collision) {
 }
 
 function scoreHit(idA, idB, collision) {
-    print("COLLISION");
     var energy = computeEnergy(collision, idA);
-    print("Score + " + energy + " from " + JSON.stringify(idA) + " " + JSON.stringify(idB));
+    var entityProps = Entities.getEntityProperties(idB);
+    if(entityProps.name === "zombie") {
+        Script.setTimeout(function() {
+            Entities.deleteEntity(idB);
+            print("LOOG")
+            zombies.splice(zombies.indexOf(idB, 1));
+        }, 2000);   
+    }
     health += energy;
+
     flash({
         red: 0,
         green: 255,
@@ -222,24 +267,6 @@ function isFighting() {
 
 
 var inHand = false;
-
-function positionStick(stickOrientation) {
-    var reorient = Quat.fromPitchYawRollDegrees(0, -90, 0);
-    var baseOffset = {
-        x: -dimensions.z * 0.8,
-        y: 0,
-        z: 0
-    };
-    var offset = Vec3.multiplyQbyV(reorient, baseOffset);
-    stickOrientation = Quat.multiply(reorient, stickOrientation);
-    inHand = false;
-    Entities.updateAction(stickID, actionID, {
-        relativePosition: offset,
-        relativeRotation: stickOrientation,
-        hand: "right"
-    });
-}
-
 
 
 function isControllerActive() {
@@ -269,6 +296,7 @@ function removeSword() {
 
 function cleanUp(leaveButtons) {
     removeSword();
+    Entities.deleteEntity(floor);
     targetIDs.forEach(function(id) {
         Entities.deleteAction(id.entity, id.action);
         Entities.deleteEntity(id.entity);
@@ -277,6 +305,11 @@ function cleanUp(leaveButtons) {
     if (!leaveButtons) {
         toolBar.cleanup();
     }
+
+    zombies.forEach(function(zombie) {
+        Entities.deleteEntity(zombie);
+    });
+    zombies = [];
 }
 
 function makeSword() {
@@ -289,7 +322,7 @@ function makeSword() {
         compoundShapeURL: swordCollisionShape,
         dimensions: dimensions,
         position: swordPosition,
-        rotation: Quat.multiply(MyAvatar.orientation, orientationAdjustment),
+        rotation: Quat.fromPitchYawRollDegrees(90, 0, 0),
         damping: 0.1,
         collisionSoundURL: swordCollisionSoundURL,
         restitution: 0.01,
@@ -316,47 +349,7 @@ function onClick(event) {
             }
             break;
         case targetButton:
-            var position = Vec3.sum(MyAvatar.position, {
-                x: 1.0,
-                y: 0.4,
-                z: 0.0
-            });
-            var boxId = Entities.addEntity({
-                type: "Model",
-                shapeType: "box",
-                modelURL: ZOMBIE_URL,
-                name: "zombie",
-                position: position,
-                dimensions: {
-                    x: 0.4,
-                    y: 0.8,
-                    z: 0.4
-                },
-                gravity: {
-                    x: 0.0,
-                    y: -3.0,
-                    z: 0.0
-                },
-                color: {red: 100, green: 20, blue: 111},
-                damping: 0.2,
-                collisionsWillMove: true
-            });
-
-            var pointToOffsetFrom = Vec3.sum(position, {
-                x: 0.0,
-                y: 2.0,
-                z: 0.0
-            });
-            var action = Entities.addAction("offset", boxId, {
-                pointToOffsetFrom: pointToOffsetFrom,
-                linearDistance: 2.0,
-                // linearTimeScale: 0.005
-                linearTimeScale: .01
-            });
-            targetIDs.push({
-                entity: boxId,
-                action: action
-            });
+            initiateZombieApocalypse()
             break;
         case cleanupButton:
             cleanUp('leaveButtons');
@@ -364,18 +357,110 @@ function onClick(event) {
     }
 }
 
+function initiateZombieApocalypse() {
+
+    floor = Entities.addEntity({
+        type: "Box",
+        position: Vec3.sum(MyAvatar.position, {
+            x: 0,
+            y: -.5,
+            z: 0
+        }),
+        dimensions: {
+            x: 100,
+            y: 1,
+            z: 100
+        },
+        color: {
+            red: 160,
+            green: 5,
+            blue: 30
+        },
+        // ignoreForCollisions: true
+    });
+
+    for (var i = 0; i < NUM_ZOMBIES; i++) {
+        var spawnPosition = Vec3.sum(MyAvatar.position, {
+            x: randFloat(-ZOMBIE_SPAWN_RADIUS, ZOMBIE_SPAWN_RADIUS),
+            y: ZOMBIE_HEIGHT,
+            z: randFloat(-ZOMBIE_SPAWN_RADIUS, ZOMBIE_SPAWN_RADIUS)
+        });
+        spawnZombie(spawnPosition);
+    }
+}
+
+function spawnZombie(position) {
+    var zombie = Entities.addEntity({
+        type: "Model",
+        name: "zombie",
+        position: position,
+        rotation: orientationOf(Vec3.subtract(MyAvatar.position, position)),
+        dimensions: {
+            x: 0.3,
+            y: 0.7,
+            z: 0.3
+        },
+        modelURL: ZOMBIE_URL,
+        shapeType: "box",
+        gravity: {x: 0.0, y: -3.0, z: 0.0},
+        damping: 0.2,
+        collisionsWillMove: true
+    });
+
+    var pointToOffsetFrom = Vec3.sum(position, {
+        x: 0.0,
+        y: 2.0,
+        z: 0.0
+    });
+    var action = Entities.addAction("offset", zombie, {
+        pointToOffsetFrom: pointToOffsetFrom,
+        linearDistance: 2,
+        // linearTimeScale: 0.005
+        linearTimeScale: 0.1
+    });
+    targetIDs.push({
+        entity: zombie,
+        action: action
+    });
+
+    zombies.push(zombie);
+
+    Script.setTimeout(function() {
+        zombieCry(zombie);
+    }, randFloat(ZOMBIE_SOUND_MIN_INTERVAL, ZOMBIE_SOUND_MAX_INTERVAL));
+}
+
+function zombieCry(zombie) {
+    var position = Entities.getEntityProperties(zombie).position;
+    var clip = zombieClips[randInt(0, zombieClips.length)];
+    Audio.playSound(clip, {
+        position: position,
+        volume: 0.2
+    });
+
+    Script.setTimeout(function() {
+        zombieCry(zombie);
+    }, randFloat(ZOMBIE_SOUND_MIN_INTERVAL, ZOMBIE_SOUND_MAX_INTERVAL));
+}
+
 function grabSword(hand) {
-        actionID = Entities.addAction("hold", stickID, {
+    var handRotation;
+    if (hand === "right") {
+        handRotation = MyAvatar.getRightPalmRotation();
+
+    } else if (hand === "left") {
+        handRotation = MyAvatar.getLeftPalmRotation();
+    }
+    var swordRotation = Entities.getEntityProperties(stickID).rotation;
+    print('sword rotation ' + JSON.stringify(swordRotation));
+    var offsetRotation = Quat.multiply(Quat.inverse(handRotation), swordRotation);
+    actionID = Entities.addAction("hold", stickID, {
         relativePosition: {
             x: 0.0,
             y: 0.0,
             z: -dimensions.z * 0.5
         },
-        relativeRotation: Quat.fromVec3Degrees({
-            x: 0,
-            y: 0.0,
-            z: 0.0
-        }),
+        relativeRotation:offsetRotation,
         hand: hand,
         timeScale: 0.05
     });
@@ -383,20 +468,31 @@ function grabSword(hand) {
         print('*** FAILED TO MAKE SWORD ACTION ***');
         cleanUp();
     } else {
-      swordHeld = true;  
+        swordHeld = true;
     }
 }
 
 function releaseSword() {
     Entities.deleteAction(stickID, actionID);
     actionID = nullActionID;
-    Entities.editEntity(stickID, {velocity: {x: 0, y: 0, z: 0}, angularVelocity: {x: 0, y: 0, z: 0}});
+    Entities.editEntity(stickID, {
+        velocity: {
+            x: 0,
+            y: 0,
+            z: 0
+        },
+        angularVelocity: {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    });
     swordHeld = false;
 }
 
 function update() {
     updateControllerState();
-   
+
 }
 
 function updateControllerState() {
@@ -405,19 +501,29 @@ function updateControllerState() {
 
     if (rightTriggerValue > TRIGGER_THRESHOLD && !swordHeld) {
         grabSword("right")
-    } else if(rightTriggerValue < TRIGGER_THRESHOLD && prevRightTriggerValue > TRIGGER_THRESHOLD && swordHeld) {
+    } else if (rightTriggerValue < TRIGGER_THRESHOLD && prevRightTriggerValue > TRIGGER_THRESHOLD && swordHeld) {
         releaseSword();
     }
 
     if (leftTriggerValue > TRIGGER_THRESHOLD && !swordHeld) {
         grabSword("left")
-    } else if(leftTriggerValue < TRIGGER_THRESHOLD && prevLeftTriggerValue > TRIGGER_THRESHOLD && swordHeld) {
+    } else if (leftTriggerValue < TRIGGER_THRESHOLD && prevLeftTriggerValue > TRIGGER_THRESHOLD && swordHeld) {
         releaseSword();
     }
 
     prevRightTriggerValue = rightTriggerValue;
     prevLeftTriggerValue = leftTriggerValue;
 }
+
+randFloat = function(low, high) {
+    return low + Math.random() * (high - low);
+}
+
+
+randInt = function(low, high) {
+    return Math.floor(randFloat(low, high));
+}
+
 
 Script.scriptEnding.connect(cleanUp);
 Script.update.connect(update);
