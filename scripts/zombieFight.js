@@ -1,22 +1,34 @@
+//Start with one zombie. increase waves
+
 ZombieFight = function() {
 
 	var ZOMBIE_URL = "https://hifi-public.s3.amazonaws.com/eric/models/zombie.fbx";
 	ZOMBIE_SPAWN_RADIUS = 10;
 
-
+	var screenSize = Controller.getViewportDimensions();
 	var zombieCryClips = [SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombie_cry.wav?v1"), SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombie_cry2.wav")];
 	var zombieHitClips = [SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombieHit1.wav"),
 		SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombieHit2.wav"),
 		SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombieHit3.wav")
 	];
 
-	var NUM_ZOMBIES = 7;
+
+	//WAVE STUFF
+	var waves = [{
+		numZombies: 1
+	}, {
+		numZombies: 2
+	}];
+	var currentWaveIndex = 0;
+	var waveOverlay;
+
+
 	var ZOMBIE_DIMENSIONS = {
 		x: 0.7,
 		y: 1.7,
 		z: 0.7
 	}
-	var ZOMBIE_HEIGHT = ZOMBIE_DIMENSIONS.y / 2;
+	var ZOMBIE_HEIGHT = -.1;
 	var ZOMBIE_SOUND_MIN_INTERVAL = 3000;
 	var ZOMBIE_SOUND_MAX_INTERVAL = 25000;
 	var floor;
@@ -50,36 +62,21 @@ ZombieFight = function() {
 
 
 	this.cleanup = function() {
+		Overlays.deleteOverlay(waveOverlay);
 		Entities.deleteEntity(floor);
 		zombies.forEach(function(zombie) {
 			Entities.deleteAction(zombie.entity, zombie.action)
 			Entities.deleteEntity(zombie.entity);
 		});
 		zombies = [];
+
+
 	}
 
 	this.initiateZombieApocalypse = function() {
-		floor = Entities.addEntity({
-			type: "Box",
-			position: Vec3.sum(MyAvatar.position, {
-				x: 0,
-				y: -.5,
-				z: 0
-			}),
-			dimensions: {
-				x: 100,
-				y: 1,
-				z: 100
-			},
-			color: {
-				red: 160,
-				green: 5,
-				blue: 30
-			},
-			// ignoreForCollisions: true
-		});
 
-		for (var i = 0; i < NUM_ZOMBIES; i++) {
+
+		for (var i = 0; i < waves[currentWaveIndex].numZombies; i++) {
 			var spawnPosition = Vec3.sum(MyAvatar.position, {
 				x: randFloat(-ZOMBIE_SPAWN_RADIUS, ZOMBIE_SPAWN_RADIUS),
 				y: ZOMBIE_HEIGHT,
@@ -87,6 +84,27 @@ ZombieFight = function() {
 			});
 			this.spawnZombie(spawnPosition);
 		}
+
+		waveOverlay = Overlays.addOverlay("text", {
+			text: "WAVE " + (currentWaveIndex + 1) + " ATTACKING!",
+			font: {
+				size: 20
+			},
+			color: {
+				red: 0,
+				green: 255,
+				blue: 0
+			},
+			backgroundColor: {
+				red: 100,
+				green: 100,
+				blue: 100
+			}, 
+			backgroundAlpha: 0.9,
+			x: screenSize.x/2, 
+			y: 200 
+		});
+
 	}
 
 
@@ -105,7 +123,11 @@ ZombieFight = function() {
 				z: 0.0
 			},
 			damping: 0.2,
-			velocity: {x: .1, y: 0, z: 0},
+			velocity: {
+				x: .1,
+				y: 0,
+				z: 0
+			},
 			collisionsWillMove: true
 		});
 
@@ -121,7 +143,7 @@ ZombieFight = function() {
 		}
 		zombies.push(zombie)
 
-		// Script.addEventHandler(zombie.entity, 'collisionWithEntity', this.gotHit);
+		Script.addEventHandler(zombie.entity, 'collisionWithEntity', this.gotHit);
 
 		Script.setTimeout(function() {
 			// self.zombieMoan(zombie);

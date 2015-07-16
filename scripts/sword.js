@@ -34,7 +34,7 @@ var healthLossOnHit = 10;
 
 var swordModel = "https://hifi-public.s3.amazonaws.com/ozan/props/sword/sword.fbx";
 // var swordCollisionShape = "https://hifi-public.s3.amazonaws.com/ozan/props/sword/sword.obj";
-var swordCollisionShape = "https://hifi-public.s3.amazonaws.com/eric/models/noHandleSwordCollisionShape.obj?=v1";
+var swordCollisionShape = "https://hifi-public.s3.amazonaws.com/eric/models/noHandleSwordCollisionShape.obj?=v2";
 var swordCollisionSoundURL = "http://public.highfidelity.io/sounds/Collisions-hitsandslaps/swordStrike1.wav";
 var avatarCollisionSoundURL = "https://hifi-public.s3.amazonaws.com/eric/sounds/blankSound.wav"; //Just to avoid no collision callback bug
 var whichModel = "sword";
@@ -48,6 +48,8 @@ var toolBar = new ToolBar(0, 0, ToolBar.vertical, "highfidelity.sword.toolbar", 
         y: 380
     };
 });
+
+var gameStarted = false;
 
 var SWORD_IMAGE = "https://hifi-public.s3.amazonaws.com/images/sword/sword.svg"; // Toggle between brandishing/sheathing sword (creating if necessary)
 var TARGET_IMAGE = "https://hifi-public.s3.amazonaws.com/images/sword/dummy2.svg"; // Create a target dummy
@@ -423,9 +425,14 @@ function onClick(event) {
             }
             break;
         case targetButton:
+            if(gameStarted){
+                return;
+            }
             Script.include("zombieFight.js?v1");
             zombieFight = new ZombieFight();
             zombieFight.initiateZombieApocalypse();
+            gameStarted = true;
+
             break;
         case cleanupButton:
             cleanUp('leaveButtons');
