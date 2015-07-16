@@ -3,7 +3,7 @@
 ZombieFight = function() {
 
 	var ZOMBIE_URL = "https://hifi-public.s3.amazonaws.com/eric/models/zombie.fbx";
-	ZOMBIE_SPAWN_RADIUS = 10;
+	ZOMBIE_SPAWN_RADIUS = 5;
 
 	var screenSize = Controller.getViewportDimensions();
 	var zombieCryClips = [SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombie_cry.wav?v1"), SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombie_cry2.wav")];
@@ -117,11 +117,11 @@ ZombieFight = function() {
 			dimensions: ZOMBIE_DIMENSIONS,
 			modelURL: ZOMBIE_URL,
 			shapeType: "box",
-			gravity: {
-				x: 0.0,
-				y: -3.0,
-				z: 0.0
-			},
+			// gravity: {
+			// 	x: 0.0,
+			// 	y: -3.0,
+			// 	z: 0.0
+			// },
 			damping: 0.2,
 			velocity: {
 				x: .1,
@@ -133,9 +133,9 @@ ZombieFight = function() {
 
 		var action = Entities.addAction("offset", zombieEntity, {
 			pointToOffsetFrom: MyAvatar.position,
-			linearDistance: 1,
+			linearDistance: 0,
 			// linearTimeScale: 0.005
-			linearTimeScale: 1
+			linearTimeScale: 2
 		});
 		var zombie = {
 			entity: zombieEntity,
