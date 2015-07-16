@@ -5,7 +5,9 @@ ZombieFight = function() {
 
 
 	var zombieCryClips = [SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombie_cry.wav?v1"), SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombie_cry2.wav")];
-	var zombieHitClips = [SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombieHit1.wav")];
+	var zombieHitClips = [SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombieHit1.wav"), 
+	                      SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombieHit2.wav"),
+	                      SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombieHit3.wav")];
 
 	var NUM_ZOMBIES = 10;
 	var ZOMBIE_HEIGHT = .4;
@@ -99,7 +101,7 @@ ZombieFight = function() {
 
 
 
-		Script.addEventHandler(zombie.entity, 'collisionWithEntity', self.gotHit);
+		Script.addEventHandler(zombie.entity, 'collisionWithEntity', this.gotHit);
 
 		Script.setTimeout(function() {
 			self.zombieMoan(zombie);
@@ -107,7 +109,8 @@ ZombieFight = function() {
 	}
 
 	this.zombieMoan = function(zombie) {
-		var position = Entities.getEntityProperties(zombie).position;
+		print("moan")
+		var position = Entities.getEntityProperties(zombie.entity).position;
 		var clip = zombieCryClips[randInt(0, zombieCryClips.length)];
 		Audio.playSound(clip, {
 			position: position,
@@ -120,9 +123,11 @@ ZombieFight = function() {
 	}
 
 	this.gotHit = function(idA, idB, collision) {
-		Audio.playSound(zombieHitClips[0], {
-			position: MyAvatar.position,
-			volume: 0.5
-		})
+		if(Entities.getEntityProperties(idB).name === "sword"){
+			Audio.playSound(zombieHitClips[randInt(0, zombieHitClips.length)], {
+				position: MyAvatar.position,
+				volume: 0.5
+			})
+		}
 	}
 }
