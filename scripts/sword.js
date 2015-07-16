@@ -14,24 +14,15 @@
 var Script, Entities, MyAvatar, Window, Overlays, Controller, Vec3, Quat, print, ToolBar, Settings; // Referenced globals provided by High Fidelity.
 Script.include("http://s3.amazonaws.com/hifi-public/scripts/libraries/toolBars.js");
 
-var ZOMBIE_URL = "https://hifi-public.s3.amazonaws.com/eric/models/zombie.fbx";
-ZOMBIE_SPAWN_RADIUS = 10;
+var zombieFight;
 
-
-var zombieClips = [SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombie_cry.wav?v1"), SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombie_cry2.wav")];
-var NUM_ZOMBIES = 10;
-var ZOMBIE_HEIGHT = .4;
-var ZOMBIE_SOUND_MIN_INTERVAL = 3000;
-var ZOMBIE_SOUND_MAX_INTERVAL = 15000;
-var floor;
-var zombies = [];
+var hand = "right";
 
 var nullActionID = "00000000-0000-0000-0000-000000000000";
 var controllerID;
 var controllerActive;
 var stickID = null;
 var actionID = nullActionID;
-var targetIDs = [];
 var dimensions = {
     x: 0.3,
     y: 0.15,
@@ -221,18 +212,9 @@ function removeDisplay() {
     }
 }
 
-function computeEnergy(collision, entityID) {
-    var id = entityID || collision.idA || collision.idB;
-    var entity = id && Entities.getEntityProperties(id);
-    var mass = entity ? (entity.density * entity.dimensions.x * entity.dimensions.y * entity.dimensions.z) : 1;
-    var linearVelocityChange = Vec3.length(collision.velocityChange);
-    var energy = 0.5 * mass * linearVelocityChange * linearVelocityChange;
-    return Math.min(Math.max(1.0, Math.round(energy)), 20);
-}
 
 function gotHit(collision) {
-    var energy = computeEnergy(collision);
-    health -= energy;
+    health -= 1;
     flash({
         red: 255,
         green: 0,
@@ -241,24 +223,6 @@ function gotHit(collision) {
     updateDisplay();
 }
 
-function scoreHit(idA, idB, collision) {
-    var energy = computeEnergy(collision, idA);
-    var entityProps = Entities.getEntityProperties(idB);
-    if(entityProps.name === "zombie") {
-        Script.setTimeout(function() {
-            Entities.deleteEntity(idB);
-            zombies.splice(zombies.indexOf(idB, 1));
-        }, 1000);   
-    }
-    health += energy;
-
-    flash({
-        red: 0,
-        green: 255,
-        blue: 0
-    });
-    updateDisplay();
-}
 
 function isFighting() {
     return stickID && (actionID !== nullActionID);
@@ -282,6 +246,7 @@ function removeSword() {
         Entities.deleteEntity(stickID);
         stickID = null;
         actionID = nullActionID;
+        Controller.mouseMoveEvent.disconnect(mouseMoveEvent);
         MyAvatar.collisionWithEntity.disconnect(gotHit);
         // removeEventhHandler happens automatically when the entity is deleted.
     }
@@ -295,20 +260,10 @@ function removeSword() {
 
 function cleanUp(leaveButtons) {
     removeSword();
-    Entities.deleteEntity(floor);
-    targetIDs.forEach(function(id) {
-        Entities.deleteAction(id.entity, id.action);
-        Entities.deleteEntity(id.entity);
-    });
-    targetIDs = [];
+    zombieFight.cleanup();
     if (!leaveButtons) {
         toolBar.cleanup();
     }
-
-    zombies.forEach(function(zombie) {
-        Entities.deleteEntity(zombie);
-    });
-    zombies = [];
 }
 
 function makeSword() {
@@ -317,6 +272,7 @@ function makeSword() {
 
     stickID = Entities.addEntity({
         type: "Model",
+        name: "sword",
         modelURL: swordModel,
         compoundShapeURL: swordCollisionShape,
         dimensions: dimensions,
@@ -333,115 +289,17 @@ function makeSword() {
         originalAvatarCollisionSound = MyAvatar.collisionSoundURL; // We won't get MyAvatar.collisionWithEntity unless there's a sound URL. (Bug.)
         SoundCache.getSound(avatarCollisionSoundURL); // Interface does not currently "preload" this? (Bug?)
     }
+
+    if(!isControllerActive()) {
+        grabSword("right");
+    }
     MyAvatar.collisionSoundURL = avatarCollisionSoundURL;
+    Controller.mouseMoveEvent.connect(mouseMoveEvent);
     MyAvatar.collisionWithEntity.connect(gotHit);
-    Script.addEventHandler(stickID, 'collisionWithEntity', scoreHit);
     updateDisplay();
 }
 
-function onClick(event) {
-    switch (Overlays.getOverlayAtPoint(event)) {
-        case swordButton:
-            if (!stickID) {
-                makeSword();
-            } else {
-                removeSword();
-            }
-            break;
-        case targetButton:
-            initiateZombieApocalypse()
-            break;
-        case cleanupButton:
-            cleanUp('leaveButtons');
-            break;
-    }
-}
 
-function initiateZombieApocalypse() {
-
-    floor = Entities.addEntity({
-        type: "Box",
-        position: Vec3.sum(MyAvatar.position, {
-            x: 0,
-            y: -.5,
-            z: 0
-        }),
-        dimensions: {
-            x: 100,
-            y: 1,
-            z: 100
-        },
-        color: {
-            red: 160,
-            green: 5,
-            blue: 30
-        },
-        // ignoreForCollisions: true
-    });
-
-    for (var i = 0; i < NUM_ZOMBIES; i++) {
-        var spawnPosition = Vec3.sum(MyAvatar.position, {
-            x: randFloat(-ZOMBIE_SPAWN_RADIUS, ZOMBIE_SPAWN_RADIUS),
-            y: ZOMBIE_HEIGHT,
-            z: randFloat(-ZOMBIE_SPAWN_RADIUS, ZOMBIE_SPAWN_RADIUS)
-        });
-        spawnZombie(spawnPosition);
-    }
-}
-
-function spawnZombie(position) {
-    var zombie = Entities.addEntity({
-        type: "Model",
-        name: "zombie",
-        position: position,
-        rotation: orientationOf(Vec3.subtract(MyAvatar.position, position)),
-        dimensions: {
-            x: 0.3,
-            y: 0.7,
-            z: 0.3
-        },
-        modelURL: ZOMBIE_URL,
-        shapeType: "box",
-        gravity: {x: 0.0, y: -3.0, z: 0.0},
-        damping: 0.2,
-        collisionsWillMove: true
-    });
-
-    var pointToOffsetFrom = Vec3.sum(position, {
-        x: 0.0,
-        y: 2.0,
-        z: 0.0
-    });
-    var action = Entities.addAction("offset", zombie, {
-        pointToOffsetFrom: pointToOffsetFrom,
-        linearDistance: 2,
-        // linearTimeScale: 0.005
-        linearTimeScale: 0.1
-    });
-    targetIDs.push({
-        entity: zombie,
-        action: action
-    });
-
-    zombies.push(zombie);
-
-    Script.setTimeout(function() {
-        zombieCry(zombie);
-    }, randFloat(ZOMBIE_SOUND_MIN_INTERVAL, ZOMBIE_SOUND_MAX_INTERVAL));
-}
-
-function zombieCry(zombie) {
-    var position = Entities.getEntityProperties(zombie).position;
-    var clip = zombieClips[randInt(0, zombieClips.length)];
-    Audio.playSound(clip, {
-        position: position,
-        volume: 0.2
-    });
-
-    Script.setTimeout(function() {
-        zombieCry(zombie);
-    }, randFloat(ZOMBIE_SOUND_MIN_INTERVAL, ZOMBIE_SOUND_MAX_INTERVAL));
-}
 
 function grabSword(hand) {
     var handRotation;
@@ -452,7 +310,6 @@ function grabSword(hand) {
         handRotation = MyAvatar.getLeftPalmRotation();
     }
     var swordRotation = Entities.getEntityProperties(stickID).rotation;
-    print('sword rotation ' + JSON.stringify(swordRotation));
     var offsetRotation = Quat.multiply(Quat.inverse(handRotation), swordRotation);
     actionID = Entities.addAction("hold", stickID, {
         relativePosition: {
@@ -522,6 +379,72 @@ randFloat = function(low, high) {
 
 randInt = function(low, high) {
     return Math.floor(randFloat(low, high));
+}
+
+function positionStick(stickOrientation) {
+    var reorient = Quat.fromPitchYawRollDegrees(0, -90, 0);
+    var baseOffset = {x: -dimensions.z * 0.8, y: 0, z: 0};
+    var offset = Vec3.multiplyQbyV(reorient, baseOffset);
+    stickOrientation = Quat.multiply(reorient, stickOrientation);
+    inHand = false;
+    Entities.updateAction(stickID, actionID, {
+        relativePosition: offset,
+        relativeRotation: stickOrientation,
+        hand: "right"
+    });
+}
+function resetToHand() { // For use with controllers, puts the sword in contact with the hand.
+    // Maybe coordinate with positionStick?
+    if (inHand) { // Optimization: bail if we're already inHand.
+        return;
+    }
+    print('Reset to hand');
+    Entities.updateAction(stickID, actionID, {
+        relativePosition: {x: 0.0, y: 0.0, z: -dimensions.z * 0.5},
+        relativeRotation: Quat.fromVec3Degrees({x: 45.0, y: 0.0, z: 0.0}),
+        hand: "right",   // It should not be necessary to repeat these two, but there seems to be a bug in that that
+        timeScale: 0.05  // they do not retain their earlier values if you don't repeat them.
+    });
+    inHand = true;
+}
+
+function mouseMoveEvent(event) {
+    // When a controller like the hydra gives a mouse event, the x/y is not meaningful to us, but we can detect with a truty deviceID
+    // if (event.deviceID || !isFighting() || isControllerActive()) {
+    //     print('Attempting attachment reset');
+    //     resetToHand();
+    //     return;
+    // }
+    var windowCenterX = Window.innerWidth / 2;
+    var windowCenterY = Window.innerHeight / 2;
+    var mouseXCenterOffset = event.x - windowCenterX;
+    var mouseYCenterOffset = event.y - windowCenterY;
+    var mouseXRatio = mouseXCenterOffset / windowCenterX;
+    var mouseYRatio = mouseYCenterOffset / windowCenterY;
+
+    var stickOrientation = Quat.fromPitchYawRollDegrees(mouseYRatio * 90, mouseXRatio * 90, 0);
+    positionStick(stickOrientation);
+}
+
+
+function onClick(event) {
+    switch (Overlays.getOverlayAtPoint(event)) {
+        case swordButton:
+            if (!stickID) {
+                makeSword();
+            } else {
+                removeSword();
+            }
+            break;
+        case targetButton:
+            Script.include("zombieFight.js?v1");
+            zombieFight = new ZombieFight();
+            zombieFight.initiateZombieApocalypse();
+            break;
+        case cleanupButton:
+            cleanUp('leaveButtons');
+            break;
+    }
 }
 
 
