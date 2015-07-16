@@ -247,9 +247,8 @@ function scoreHit(idA, idB, collision) {
     if(entityProps.name === "zombie") {
         Script.setTimeout(function() {
             Entities.deleteEntity(idB);
-            print("LOOG")
             zombies.splice(zombies.indexOf(idB, 1));
-        }, 2000);   
+        }, 1000);   
     }
     health += energy;
 
@@ -326,7 +325,8 @@ function makeSword() {
         damping: 0.1,
         collisionSoundURL: swordCollisionSoundURL,
         restitution: 0.01,
-        collisionsWillMove: true
+        collisionsWillMove: true,
+        collideWithMyAvatar: true
     });
 
     if (originalAvatarCollisionSound === undefined) {
@@ -458,7 +458,7 @@ function grabSword(hand) {
         relativePosition: {
             x: 0.0,
             y: 0.0,
-            z: -dimensions.z * 0.5
+            z: -dimensions.z * 0.7
         },
         relativeRotation:offsetRotation,
         hand: hand,
