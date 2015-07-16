@@ -5,23 +5,48 @@ ZombieFight = function() {
 
 
 	var zombieCryClips = [SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombie_cry.wav?v1"), SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombie_cry2.wav")];
-	var zombieHitClips = [SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombieHit1.wav"), 
-	                      SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombieHit2.wav"),
-	                      SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombieHit3.wav")];
+	var zombieHitClips = [SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombieHit1.wav"),
+		SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombieHit2.wav"),
+		SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombieHit3.wav")
+	];
 
-	var NUM_ZOMBIES = 10;
+	var NUM_ZOMBIES = 7;
 	var ZOMBIE_DIMENSIONS = {
 		x: 0.7,
-		y: 1.7, 
+		y: 1.7,
 		z: 0.7
 	}
-	var ZOMBIE_HEIGHT = ZOMBIE_DIMENSIONS.y/2;
+	var ZOMBIE_HEIGHT = ZOMBIE_DIMENSIONS.y / 2;
 	var ZOMBIE_SOUND_MIN_INTERVAL = 3000;
 	var ZOMBIE_SOUND_MAX_INTERVAL = 25000;
 	var floor;
 	var zombies = [];
 
 	var self = this;
+
+	var Y_AXIS = {
+		x: 0,
+		y: 1,
+		z: 0
+	};
+	var X_AXIS = {
+		x: 1,
+		y: 0,
+		z: 0
+	};
+
+	var theta = 0.0;
+
+	var RAD_TO_DEG = 180.0 / Math.PI;
+
+	function orientationOf(vector) {
+		var direction, yaw, pitch;
+		direction = Vec3.normalize(vector);
+		yaw = Quat.angleAxis(Math.atan2(direction.x, direction.z) * RAD_TO_DEG, Y_AXIS);
+		pitch = Quat.angleAxis(Math.asin(-direction.y) * RAD_TO_DEG, X_AXIS);
+		return Quat.multiply(yaw, pitch);
+	}
+
 
 
 	this.cleanup = function() {
@@ -100,8 +125,6 @@ ZombieFight = function() {
 		}
 		zombies.push(zombie)
 
-
-
 		Script.addEventHandler(zombie.entity, 'collisionWithEntity', this.gotHit);
 
 		Script.setTimeout(function() {
@@ -123,24 +146,25 @@ ZombieFight = function() {
 	}
 
 	this.gotHit = function(idA, idB, collision) {
+		print("IDA " + Entities.getEntityProperties(idA).name);
 		var zombie = self.getZombieFromID(idA);
-		if(!zombie){
+		if (!zombie) {
 			print('zombie doesnt exist!')
 			return;
 		}
-		if(zombie.dead) {
+		if (zombie.dead) {
 			print("zombie is already dead");
 			return;
 		}
-		if(Entities.getEntityProperties(idB).name === "sword"){
+		if (Entities.getEntityProperties(idB).name === "sword") {
 			Audio.playSound(zombieHitClips[randInt(0, zombieHitClips.length)], {
 				position: MyAvatar.position,
 				volume: 0.3
 			})
+			zombie.dead = true;
 			Script.setTimeout(function() {
 				Entities.deleteAction(zombie.entity, zombie.action)
 				Entities.deleteEntity(zombie.entity);
-				zombie.dead = true;
 				zombies.splice(zombies.indexOf(zombie), 1);
 			}, 1000)
 		}
@@ -148,8 +172,8 @@ ZombieFight = function() {
 	}
 
 	this.getZombieFromID = function(id) {
-		for(var i = 0; i < zombies.length; i++) {
-			if(zombies[i].entity === id) {
+		for (var i = 0; i < zombies.length; i++) {
+			if (zombies[i].entity === id) {
 				return zombies[i];
 			}
 		}
