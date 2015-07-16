@@ -259,11 +259,11 @@ function removeSword() {
 }
 
 function cleanUp(leaveButtons) {
-    removeSword();
-    zombieFight.cleanup();
     if (!leaveButtons) {
         toolBar.cleanup();
     }
+    removeSword();
+    zombieFight.cleanup();
 }
 
 function makeSword() {
@@ -446,7 +446,6 @@ function onClick(event) {
             break;
     }
 }
-
 
 Script.scriptEnding.connect(cleanUp);
 Script.update.connect(update);

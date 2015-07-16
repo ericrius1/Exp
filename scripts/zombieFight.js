@@ -10,7 +10,12 @@ ZombieFight = function() {
 	                      SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombieHit3.wav")];
 
 	var NUM_ZOMBIES = 10;
-	var ZOMBIE_HEIGHT = .4;
+	var ZOMBIE_DIMENSIONS = {
+		x: 0.7,
+		y: 1.7, 
+		z: 0.7
+	}
+	var ZOMBIE_HEIGHT = ZOMBIE_DIMENSIONS.y/2;
 	var ZOMBIE_SOUND_MIN_INTERVAL = 3000;
 	var ZOMBIE_SOUND_MAX_INTERVAL = 25000;
 	var floor;
@@ -66,11 +71,7 @@ ZombieFight = function() {
 			name: "zombie",
 			position: position,
 			rotation: orientationOf(Vec3.subtract(MyAvatar.position, position)),
-			dimensions: {
-				x: 0.3,
-				y: 0.7,
-				z: 0.3
-			},
+			dimensions: ZOMBIE_DIMENSIONS,
 			modelURL: ZOMBIE_URL,
 			shapeType: "box",
 			gravity: {
@@ -109,12 +110,11 @@ ZombieFight = function() {
 	}
 
 	this.zombieMoan = function(zombie) {
-		print("moan")
 		var position = Entities.getEntityProperties(zombie.entity).position;
 		var clip = zombieCryClips[randInt(0, zombieCryClips.length)];
 		Audio.playSound(clip, {
 			position: position,
-			volume: 0.1
+			volume: 0.2
 		});
 
 		Script.setTimeout(function() {
@@ -123,11 +123,36 @@ ZombieFight = function() {
 	}
 
 	this.gotHit = function(idA, idB, collision) {
+		var zombie = self.getZombieFromID(idA);
+		if(!zombie){
+			print('zombie doesnt exist!')
+			return;
+		}
+		if(zombie.dead) {
+			print("zombie is already dead");
+			return;
+		}
 		if(Entities.getEntityProperties(idB).name === "sword"){
 			Audio.playSound(zombieHitClips[randInt(0, zombieHitClips.length)], {
 				position: MyAvatar.position,
-				volume: 0.5
+				volume: 0.3
 			})
+			Script.setTimeout(function() {
+				Entities.deleteAction(zombie.entity, zombie.action)
+				Entities.deleteEntity(zombie.entity);
+				zombie.dead = true;
+				zombies.splice(zombies.indexOf(zombie), 1);
+			}, 1000)
 		}
+
+	}
+
+	this.getZombieFromID = function(id) {
+		for(var i = 0; i < zombies.length; i++) {
+			if(zombies[i].entity === id) {
+				return zombies[i];
+			}
+		}
+		return false;
 	}
 }
