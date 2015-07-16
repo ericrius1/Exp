@@ -3,7 +3,7 @@
 ZombieFight = function() {
 
 	var ZOMBIE_URL = "https://hifi-public.s3.amazonaws.com/eric/models/zombie.fbx";
-	ZOMBIE_SPAWN_RADIUS = 5;
+	ZOMBIE_SPAWN_RADIUS = 20;
 
 	var screenSize = Controller.getViewportDimensions();
 	var zombieCryClips = [SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombie_cry.wav?v1"), SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombie_cry2.wav")];
@@ -15,9 +15,18 @@ ZombieFight = function() {
 
 	//WAVE STUFF
 	var waves = [{
-		numZombies: 1
+		numZombies: 1,
+		timeScale: 2
 	}, {
-		numZombies: 2
+		numZombies: 2,
+		timeScale: 1.5
+	}, {
+		numZombies: 4,
+		timeScale: 1.5
+	},
+	{
+		numZombies: 8,
+		timeScale: 1.1
 	}];
 	var currentWaveIndex = 0;
 	var waveOverlay;
@@ -67,7 +76,7 @@ ZombieFight = function() {
 			blue: 100
 		},
 		backgroundAlpha: 0.9,
-		x: screenSize.x / 2,
+		x: 200,
 		y: 200,
 		visible: false
 	});
@@ -130,11 +139,6 @@ ZombieFight = function() {
 			dimensions: ZOMBIE_DIMENSIONS,
 			modelURL: ZOMBIE_URL,
 			shapeType: "box",
-			// gravity: {
-			// 	x: 0.0,
-			// 	y: -3.0,
-			// 	z: 0.0
-			// },
 			damping: 0.2,
 			velocity: {
 				x: .1,
@@ -148,7 +152,7 @@ ZombieFight = function() {
 			pointToOffsetFrom: MyAvatar.position,
 			linearDistance: 0,
 			// linearTimeScale: 0.005
-			linearTimeScale: 2
+			linearTimeScale: waves[currentWaveIndex].timeScale
 		});
 		var zombie = {
 			entity: zombieEntity,
@@ -196,9 +200,32 @@ ZombieFight = function() {
 				Entities.deleteAction(zombie.entity, zombie.action)
 				Entities.deleteEntity(zombie.entity);
 				zombies.splice(zombies.indexOf(zombie), 1);
+
+				//if all zombies from this wave have been destroyed, start the next wave!
+				if(zombies.length === 0) {
+					currentWaveIndex++;
+					if (currentWaveIndex === waves.length) {
+						self.winGame();
+					} else {
+
+					  Overlays.editOverlay(waveOverlay, {
+					  	visible: true,
+					  	text: "NICE WORK. GET READY FOR NEXT WAVE!!"
+					  })
+					  Script.setTimeout(function(){
+					    self.initiateWave();	
+					  }, waveOverlayDisplayTime)
+					}
+				}
 			}, 1000)
 		}
+	}
 
+	this.winGame = function() {
+		Overlays.editOverlay(waveOverlay, {
+			text: "EPIC!!! YOU KILLED ALL THE ZOMBIES",
+			visible: true
+		});
 	}
 
 	this.getZombieFromID = function(id) {

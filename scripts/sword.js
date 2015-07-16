@@ -30,6 +30,7 @@ var dimensions = {
 };
 var BUTTON_SIZE = 32;
 
+var health = 10;
 var healthLossOnHit = 10;
 
 var swordModel = "https://hifi-public.s3.amazonaws.com/ozan/props/sword/sword.fbx";
@@ -115,7 +116,7 @@ function flash(color) {
     flasher.timer = Script.setTimeout(clearFlash, 500);
 }
 
-var health = 100;
+
 var display2d, display3d;
 
 function trackAvatarWithText() {
@@ -201,6 +202,11 @@ function gotHit(collision) {
         volume: 0.5
     });
     health -= healthLossOnHit;
+    if(health <= 30) {
+        Overlays.editOverlay(display2d, {
+            color: {red: 200, green: 10, blue: 10}
+        });
+    }
     flash({
         red: 255,
         green: 0,
