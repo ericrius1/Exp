@@ -105,19 +105,15 @@ ZombieFight = function() {
 				z: 0.0
 			},
 			damping: 0.2,
+			velocity: {x: .1, y: 0, z: 0},
 			collisionsWillMove: true
 		});
 
-		var pointToOffsetFrom = Vec3.sum(position, {
-			x: 0.0,
-			y: 2.0,
-			z: 0.0
-		});
 		var action = Entities.addAction("offset", zombieEntity, {
-			pointToOffsetFrom: pointToOffsetFrom,
-			linearDistance: 2,
+			pointToOffsetFrom: MyAvatar.position,
+			linearDistance: 1,
 			// linearTimeScale: 0.005
-			linearTimeScale: 0.1
+			linearTimeScale: 1
 		});
 		var zombie = {
 			entity: zombieEntity,
@@ -125,10 +121,10 @@ ZombieFight = function() {
 		}
 		zombies.push(zombie)
 
-		Script.addEventHandler(zombie.entity, 'collisionWithEntity', this.gotHit);
+		// Script.addEventHandler(zombie.entity, 'collisionWithEntity', this.gotHit);
 
 		Script.setTimeout(function() {
-			self.zombieMoan(zombie);
+			// self.zombieMoan(zombie);
 		}, randFloat(ZOMBIE_SOUND_MIN_INTERVAL, ZOMBIE_SOUND_MAX_INTERVAL));
 	}
 
@@ -146,7 +142,6 @@ ZombieFight = function() {
 	}
 
 	this.gotHit = function(idA, idB, collision) {
-		print("IDA " + Entities.getEntityProperties(idA).name);
 		var zombie = self.getZombieFromID(idA);
 		if (!zombie) {
 			print('zombie doesnt exist!')

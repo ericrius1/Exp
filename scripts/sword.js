@@ -30,13 +30,17 @@ var dimensions = {
 };
 var BUTTON_SIZE = 32;
 
+var healthLossOnHit = 10;
+
 var swordModel = "https://hifi-public.s3.amazonaws.com/ozan/props/sword/sword.fbx";
 // var swordCollisionShape = "https://hifi-public.s3.amazonaws.com/ozan/props/sword/sword.obj";
 var swordCollisionShape = "https://hifi-public.s3.amazonaws.com/eric/models/noHandleSwordCollisionShape.obj?=v1";
 var swordCollisionSoundURL = "http://public.highfidelity.io/sounds/Collisions-hitsandslaps/swordStrike1.wav";
-var avatarCollisionSoundURL = "https://s3.amazonaws.com/hifi-public/sounds/Collisions-hitsandslaps/airhockey_hit1.wav";
+var avatarCollisionSoundURL = "https://hifi-public.s3.amazonaws.com/eric/sounds/blankSound.wav"; //Just to avoid no collision callback bug
 var whichModel = "sword";
 var originalAvatarCollisionSound;
+
+var avatarCollisionSounds = [SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/avatarHit.wav"), SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/avatarHit2.wav?=v2")];
 
 var toolBar = new ToolBar(0, 0, ToolBar.vertical, "highfidelity.sword.toolbar", function() {
     return {
@@ -190,7 +194,11 @@ function removeDisplay() {
 
 
 function gotHit(collision) {
-    health -= 1;
+    Audio.playSound(avatarCollisionSounds[randInt(0, avatarCollisionSounds.length)], {
+        position: MyAvatar.position,
+        volume: 0.5
+    });
+    health -= healthLossOnHit;
     flash({
         red: 255,
         green: 0,
@@ -277,6 +285,10 @@ function makeSword() {
 
 
 function grabSword(hand) {
+    if(!swordID) {
+      print("Create a sword by clicking on sword icon!")
+      return;
+    }
     var handRotation;
     if (hand === "right") {
         handRotation = MyAvatar.getRightPalmRotation();
