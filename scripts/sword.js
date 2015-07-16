@@ -249,6 +249,7 @@ function cleanUp(leaveButtons) {
         toolBar.cleanup();
     }
     removeSword();
+    gameStarted = false;
     zombieFight.cleanup();
 }
 

@@ -21,6 +21,7 @@ ZombieFight = function() {
 	}];
 	var currentWaveIndex = 0;
 	var waveOverlay;
+	var waveOverlayDisplayTime = 2000;
 
 
 	var ZOMBIE_DIMENSIONS = {
@@ -51,6 +52,26 @@ ZombieFight = function() {
 
 	var RAD_TO_DEG = 180.0 / Math.PI;
 
+	waveOverlay = Overlays.addOverlay("text", {
+		font: {
+			size: 20
+		},
+		color: {
+			red: 0,
+			green: 255,
+			blue: 0
+		},
+		backgroundColor: {
+			red: 100,
+			green: 100,
+			blue: 100
+		},
+		backgroundAlpha: 0.9,
+		x: screenSize.x / 2,
+		y: 200,
+		visible: false
+	});
+
 	function orientationOf(vector) {
 		var direction, yaw, pitch;
 		direction = Vec3.normalize(vector);
@@ -74,8 +95,10 @@ ZombieFight = function() {
 	}
 
 	this.initiateZombieApocalypse = function() {
+		this.initiateWave();
+	}
 
-
+	this.initiateWave = function() {
 		for (var i = 0; i < waves[currentWaveIndex].numZombies; i++) {
 			var spawnPosition = Vec3.sum(MyAvatar.position, {
 				x: randFloat(-ZOMBIE_SPAWN_RADIUS, ZOMBIE_SPAWN_RADIUS),
@@ -85,26 +108,16 @@ ZombieFight = function() {
 			this.spawnZombie(spawnPosition);
 		}
 
-		waveOverlay = Overlays.addOverlay("text", {
+		Overlays.editOverlay(waveOverlay, {
 			text: "WAVE " + (currentWaveIndex + 1) + " ATTACKING!",
-			font: {
-				size: 20
-			},
-			color: {
-				red: 0,
-				green: 255,
-				blue: 0
-			},
-			backgroundColor: {
-				red: 100,
-				green: 100,
-				blue: 100
-			}, 
-			backgroundAlpha: 0.9,
-			x: screenSize.x/2, 
-			y: 200 
+			visible: true
 		});
 
+		Script.setTimeout(function() {
+			Overlays.editOverlay(waveOverlay, {
+				visible: false
+			});
+		}, waveOverlayDisplayTime);
 	}
 
 
