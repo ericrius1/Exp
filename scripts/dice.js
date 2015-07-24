@@ -16,7 +16,7 @@ var isDice = false;
 var NUMBER_OF_DICE = 4;
 var LIFETIME = 10000; //  Dice will live for about 3 hours
 var dice = [];
-var DIE_SIZE = 0.20;
+var DIE_SIZE = 1.20;
 
 var madeSound = true; //  Set false at start of throw to look for collision
 

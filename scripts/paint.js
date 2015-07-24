@@ -12,8 +12,8 @@
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 //
 Script.include('lineRider.js')
-var MAX_POINTS_PER_LINE = 80;
-
+var MAX_POINTS_PER_LINE = 30;
+var LINE_LIFETIME =  60 * 5  //5 minute lifetime
 
 var colorPalette = [{
   red: 236,
@@ -69,7 +69,7 @@ function hydraCheck() {
 //************ Mouse Paint **************************
 
 function MousePaint() {
-  var DRAWING_DISTANCE = 5;
+  var DRAWING_DISTANCE = 2;
   var lines = [];
   var deletedLines = [];
   var isDrawing = false;
@@ -92,7 +92,7 @@ function MousePaint() {
   var points = [];
 
 
-  var BRUSH_SIZE = .05;
+  var BRUSH_SIZE = 0.02;
 
   var brush = Entities.addEntity({
     type: 'Sphere',
@@ -120,10 +120,12 @@ function MousePaint() {
         y: 10,
         z: 10
       },
-      lineWidth: LINE_WIDTH
+      lineWidth: LINE_WIDTH,
+      lifetime: LINE_LIFETIME
     });
     points = [];
     if (point) {
+
       points.push(point);
       path.push(point);
     }
@@ -133,27 +135,22 @@ function MousePaint() {
 
   function mouseMoveEvent(event) {
 
+    if (!isDrawing) {
+      return;
+    }
 
     var pickRay = Camera.computePickRay(event.x, event.y);
     var addVector = Vec3.multiply(Vec3.normalize(pickRay.direction), DRAWING_DISTANCE);
     var point = Vec3.sum(Camera.getPosition(), addVector);
+    points.push(point);
+    path.push(point);
     Entities.editEntity(line, {
       linePoints: points
     });
     Entities.editEntity(brush, {
       position: point
     });
-    if (!isDrawing) {
-      return;
-    }
 
-    points.push(point);
-    path.push(point);
-
-    print("point pos " + JSON.stringify(point))
-    if(point.x > 16000 || point.y > 16000 || point.z > 16000) {
-      print( "HUGE POINT IN SCRIPT!!!")
-    }
 
     if (points.length === MAX_POINTS_PER_LINE) {
       //We need to start a new line!
@@ -258,7 +255,6 @@ function HydraPaint() {
   var maxLineWidth = 10;
   var currentLineWidth = minLineWidth;
   var MIN_PAINT_TRIGGER_THRESHOLD = .01;
-  var LINE_LIFETIME = 20;
   var COLOR_CHANGE_TIME_FACTOR = 0.1;
 
   var RIGHT_BUTTON_1 = 7
@@ -335,7 +331,7 @@ function HydraPaint() {
           z: 10
         },
         lineWidth: 5,
-        // lifetime: LINE_LIFETIME
+        lifetime: LINE_LIFETIME
       });
       this.points = [];
       if (point) {

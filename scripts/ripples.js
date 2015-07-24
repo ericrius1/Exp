@@ -1,14 +1,15 @@
 HIFI_PUBLIC_BUCKET = "http://s3.amazonaws.com/hifi-public/";
 Script.include("utilities.js");
-var NUM_ROWS = 3;
+var NUM_ROWS = 6
 var NUM_COLUMNS = NUM_ROWS;
-var BOX_SIZE = 1;
+var BOX_SIZE = .2;
 var center = Vec3.sum(MyAvatar.position, Vec3.multiply(BOX_SIZE * 10, Quat.getFront(Camera.getOrientation())));
-var DAMPING = 0.96
+var DAMPING = 0.999
 var grid = [];
 var entities = [];
-var IMPULSE = 4;
-var PADDING = BOX_SIZE * .1;
+var IMPULSE = -2;
+var PADDING = BOX_SIZE * .2;
+var VELOCITY_THRESHOLD = 0.01;
 
 var ELASTICITY = .1;
 
@@ -16,28 +17,46 @@ var ELASTICITY = .1;
 var extension, acceleration, neighbor, neighborLocation, cell, newColor;
 
 createGrid();
+createRain();
 //Simulate middle box flung up
 
 function mousePressEvent(event) {
+  print('mouse press')
   var pickRay = Camera.computePickRay(event.x, event.y);
   var pickResults = Entities.findRayIntersection(pickRay);
-  if(!pickResults.intersects){
+  if (!pickResults.intersects) {
+    print('no interset')
+    //reset all velocities of blocks
     return;
   }
+  print('entity velocity ' + Entities.getEntityProperties(pickResults.entityID).velocity.y);
   Entities.editEntity(pickResults.entityID, {
-  velocity: {
-    x: 0,
-    y: IMPULSE,
-    z: 0
-  }
-});
+    velocity: {
+      x: 0,
+      y: IMPULSE,
+      z: 0
+    }
+  });
 
 }
 
 
+function reset() {
+  for (var rowIndex = 0; rowIndex < NUM_ROWS; rowIndex++) {
+    for (var columnIndex = 0; columnIndex < NUM_COLUMNS; columnIndex++) {
+      var cell = grid[rowIndex][columnIndex];
+      Entities.editEntity(cell.entity, {velocity: {x: 0, y: 0, z: 0}});
+    }
+  }
+
+
+
+}
 
 function update(deleteTime) {
+ 
   //We want to cache positions of all the boxes once every update, unecessary to do this n^2 times
+ 
   for (var rowIndex = 0; rowIndex < NUM_ROWS; rowIndex++) {
     for (var columnIndex = 0; columnIndex < NUM_COLUMNS; columnIndex++) {
       var cell = grid[rowIndex][columnIndex];
@@ -52,9 +71,14 @@ function update(deleteTime) {
 
       cell = grid[rowIndex][columnIndex];
       //spring force: f = kx
-      extension =  (cell.props.position.y - cell.basePosition.y);
-      var hue = clamp(map(extension, 0, 1, 0.5, 0.7), 0.5, 0.7);
-      cell.color = hslToRgb({hue: hue, sat: 0.6, light: 0.6});
+      extension = (cell.props.position.y - cell.basePosition.y);
+      var hue = clamp(map(extension, -.05, .1, 0.6, 0.5), 0.5, 0.6);
+      var light = clamp(map(extension, -.05, .1, 0.4, 0.6), 0.4, 0.6);
+      cell.color = hslToRgb({
+        hue: hue,
+        sat: 0.7,
+        light: light
+      });
       acceleration = ELASTICITY * extension;
       cell.props.velocity.y -= acceleration;
       for (var n = 0; n < cell.neighbors.length; n++) {
@@ -110,6 +134,11 @@ function createGrid() {
           y: BOX_SIZE,
           z: BOX_SIZE
         },
+        color: {
+          red: 200,
+          green: 100,
+          blue: 200
+        },
         damping: DAMPING,
         collisionsWillMove: true
       });
@@ -146,7 +175,7 @@ function createGrid() {
   }
 }
 
-// Controller.mousePressEvent.connect(mousePressEvent);
+Controller.mousePressEvent.connect(mousePressEvent);
 
 Script.update.connect(update);
 Script.scriptEnding.connect(cleanup)

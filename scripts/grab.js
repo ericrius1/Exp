@@ -184,7 +184,7 @@ function mousePressEvent(event) {
     print('intersected');
     if (!pickResults.properties.collisionsWillMove) {
         // only grab dynamic objects
-        return;
+        // return;
     }
     print('with physical object');
 

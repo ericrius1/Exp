@@ -84,7 +84,7 @@ var capeStates = {
   }
 }
 capeStates.current = "still";
-var autoCapeOpen = true;
+var autoCapeOpen = false;
 if(autoCapeOpen){
   startCapeRot = Quat.safeEulerAngles(MyAvatar.getJointRotation('RightLeg'));
   startCapeRot.x -= 200;

@@ -3,7 +3,7 @@ HIFI_PUBLIC_BUCKET = "http://s3.amazonaws.com/hifi-public/";
 // Script.include(HIFI_PUBLIC_BUCKET + 'scripts/utilities.js')
 Script.include('utilities.js');
 
-var NUM_ROWS = 2;
+var NUM_ROWS = 10;
 var CUBE_SIZE = 2;
 var cubes = [];
 var cubesSettings = [];
