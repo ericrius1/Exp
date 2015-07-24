@@ -1,6 +1,6 @@
 var walkAnimation = "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/standard_walk.fbx";
 var rightTurnAnimation = "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/right_turn.fbx"
-var leftTurnAnimation = "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/leftdw_turn.fbx"
+var leftTurnAnimation = "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/left_turn.fbx"
 var jumpAnimation = "https://hifi-public.s3.amazonaws.com/ozan/animations/sniperBasicMotion/sniper_jump.fbx";
 var idleAnimation = "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/standard_idle.fbx"
 
@@ -44,12 +44,12 @@ function update() {
       MyAvatar.startAnimation(walkAnimation, 30, 1, true, false, 0, 60);
       currentAnimation = walkAnimation;
     }
-  } else if ((avatarState !== "idle" && avatarState !== "jumping")) {
+  } else if (avatarState === "walking") {
     //don't check for a bit to make sure we're not at apex of jump
     avatarState = "idle";
     print("RETURN")
     MyAvatar.stopAnimation(currentAnimation);
-    MyAvatar.startAnimation(idleAnimation);
+    MyAvatar.startAnimation(idleAnimation, 30, 1, true, false);
     currentAnimation = "idle";
 
   }
@@ -75,9 +75,21 @@ function jump() {
   }
 }
 
+function turn(turnAnimation) {
+  avatarState = "turning";
+  MyAvatar.stopAnimation(currentAnimation);
+  MyAvatar.startAnimation(turnAnimation, 30, 30, false, false)
+  currentAnimation = turnAnimation;
+}
+
+
 function keyPressEvent(event) {
   if (event.text === "e") {
     jump();
+  } else if(event.text === "d") {
+    turn(rightTurnAnimation);
+  } else if(event.text ==="a") {
+    turn(leftTurnAnimation);
   }
 
 }
