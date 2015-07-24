@@ -6,7 +6,7 @@
     function TestBox() {
         this.entity = Entities.addEntity({ type: "Box",
                                            position: spawnPoint,
-                                           dimensions: { x: 1, y: 1, z: 1 },
+                                           dimentions: { x: 1, y: 1, z: 1 },
                                            color: { red: 100, green: 100, blue: 255 },
                                            gravity: { x: 0, y: 0, z: 0 },
                                            visible: true,
@@ -29,29 +29,37 @@
 
     // constructor
     function TestFx(color, emitDirection, emitRate, emitStrength, blinkRate) {
+        var animationSettings = JSON.stringify({ fps: 30,
+                                                 frameIndex: 0,
+                                                 running: true,
+                                                 firstFrame: 0,
+                                                 lastFrame: 30,
+                                                 loop: true });
 
         this.entity = Entities.addEntity({ type: "ParticleEffect",
-                                           animationSettings: "{\"firstFrame\":0,\"fps\":30,\"frameIndex\":0,\"hold\":false,\"lastFrame\":10000,\"loop\":true,\"running\":true,\"startAutomatically\":false}",
+                                           animationSettings: animationSettings,
                                            position: spawnPoint,
-                                           textures: "https://s3.amazonaws.com/hifi-public/cozza13/particle/orb_blue_glow.png",
+                                           // textures: "http://www.hyperlogic.org/images/particle.png",
                                            emitRate: emitRate,
-                                           animationIsPlaying: 1,
                                            emitStrength: emitStrength,
-                                           dimensions: {x: 100, y: 100, z: 100},
-                                           // emitDirection: emitDirection,
+                                           emitDirection: emitDirection,
                                            color: color,
                                            visible: true,
-                                           locked: false,
-                                           startAutomatically: false
-                                            });
+                                           locked: false });
 
+        this.isPlaying = true;
 
-
-
-
+        var self = this;
+        this.timer = Script.setInterval(function () {
+            // flip is playing state
+            self.isPlaying = !self.isPlaying;
+            var animProp = { animationIsPlaying: self.isPlaying };
+            Entities.editEntity(self.entity, animProp);
+        }, (1 / blinkRate) * 1000);
     }
 
     TestFx.prototype.Destroy = function () {
+        Script.clearInterval(this.timer);
         Entities.editEntity(this.entity, { locked: false });
         Entities.deleteEntity(this.entity);
     }
@@ -61,13 +69,13 @@
         objs.push(new TestBox());
         objs.push(new TestFx({ red: 255, blue: 0, green: 0 },
                              { x: 0.5, y: 1.0, z: 0.0 },
-                             10000, 30, 1));
-        // objs.push(new TestFx({ red: 0, blue: 255, green: 0 },
-        //                      { x: 0, y: 1, z: 0 },
-        //                      1000, 5, 0.5));
-        // objs.push(new TestFx({ red: 0, blue: 0, green: 255 },
-        //                      { x: -0.5, y: 1, z: 0 },
-        //                      100, 3, 1));
+                             100, 3, 1));
+        objs.push(new TestFx({ red: 0, blue: 255, green: 0 },
+                             { x: 0, y: 1, z: 0 },
+                             1000, 5, 0.5));
+        objs.push(new TestFx({ red: 0, blue: 0, green: 255 },
+                             { x: -0.5, y: 1, z: 0 },
+                             100, 3, 1));
     }
 
     function ShutDown() {

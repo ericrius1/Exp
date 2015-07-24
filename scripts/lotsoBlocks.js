@@ -54,6 +54,7 @@ function cleanup() {
   boxes.forEach(function(box){
     Entities.deleteEntity(box);
   });
+  print('yaaaa')
 }
 
 Script.scriptEnding.connect(cleanup);
