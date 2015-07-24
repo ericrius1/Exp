@@ -9,7 +9,7 @@ var velocityLength;
 var avatarForward;
 
 
-var VELOCITY_THRESHOLD = .5;
+var VELOCITY_THRESHOLD = .1;
 
 var avatarState = "idle";
 
@@ -49,21 +49,16 @@ function update() {
     avatarForward = Quat.getFront(sanitizedAvatarRotation);
 
     avatarOrientationVelocityDotProduct = Vec3.dot(Vec3.normalize(avatarVelocity), avatarForward);
-    print("dot product" + avatarOrientationVelocityDotProduct)
+    // print("dot product" + avatarOrientationVelocityDotProduct)
     if(avatarOrientationVelocityDotProduct > 0.95 &&  avatarState !== "walking") {
       avatarState = "walking";
       MyAvatar.stopAnimation(currentAnimation);
       MyAvatar.startAnimation(walkAnimation, 30, 1, true, false, 0, 30);
       currentAnimation = walkAnimation;
     }
-    else if(avatarOrientationVelocityDotProduct < 0.05 && avatarState!=="jumping") {
-      avatarState = "jumping";
-      MyAvatar.stopAnimation(currentAnimation);
-      MyAvatar.startAnimation(jumpAnimation, 10, 1, false, false);
-      currentAnimation = jumpAnimation;
-    }
 
-  } else if(avatarState !== "idle") {
+  } 
+  else if(avatarState !== "idle" && avatarState!=="jumping") {
     avatarState = "idle";
     MyAvatar.stopAnimation(currentAnimation);
     MyAvatar.startAnimation(idelAnimation);
@@ -71,8 +66,22 @@ function update() {
   }
 
 
-  updateAnimations();
 
+
+}
+
+function jump() {
+      avatarState = "jumping";
+      MyAvatar.stopAnimation(currentAnimation);
+      MyAvatar.startAnimation(jumpAnimation, 60, 1, false, false, 0, 60);
+      currentAnimation = jumpAnimation;
+}
+
+function keyPressEvent(event) {
+  print(event.text);
+  if(event.text === "e"){
+    jump();
+  }
 
 }
 
@@ -81,5 +90,7 @@ function cleanup() {
   MyAvatar.stopAnimation(currentAnimation)
 }
 
+
+Controller.keyPressEvent.connect(keyPressEvent);
 Script.scriptEnding.connect(cleanup);
 Script.update.connect(update);
