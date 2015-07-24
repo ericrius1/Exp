@@ -12,23 +12,10 @@ ZombieFight = function() {
 		SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/zombieHit3.wav")
 	];
 
-
+	var gameInitiated = false;
 	//WAVE STUFF
-	var waves = [{
-		numZombies: 1,
-		timeScale: 2
-	}, {
-		numZombies: 2,
-		timeScale: 1.5
-	}, {
-		numZombies: 4,
-		timeScale: 1.5
-	},
-	{
-		numZombies: 8,
-		timeScale: 1.1
-	}];
-	var currentWaveIndex = 0;
+	var waves = [];
+	var currentWaveIndex;
 	var waveOverlay;
 	var waveOverlayDisplayTime = 2000;
 
@@ -104,10 +91,23 @@ ZombieFight = function() {
 	}
 
 	this.initiateZombieApocalypse = function() {
+		if(gameInitiated){
+			return;
+		}
+		this.newGame();
+		gameInitiated = true;
+
+	}
+
+	this.newGame = function() {
+		currentWaveIndex = 0;
+		this.createWaves();
 		this.initiateWave();
+
 	}
 
 	this.initiateWave = function() {
+		zombies = [];
 		for (var i = 0; i < waves[currentWaveIndex].numZombies; i++) {
 			var spawnPosition = Vec3.sum(MyAvatar.position, {
 				x: randFloat(-ZOMBIE_SPAWN_RADIUS, ZOMBIE_SPAWN_RADIUS),
@@ -160,6 +160,10 @@ ZombieFight = function() {
 		}
 		zombies.push(zombie)
 
+		Script.setTimeout(function() {
+			self.zombieMove(zombie);
+		}, 2000);
+
 		Script.addEventHandler(zombie.entity, 'collisionWithEntity', this.gotHit);
 
 		Script.setTimeout(function() {
@@ -167,12 +171,26 @@ ZombieFight = function() {
 		}, randFloat(ZOMBIE_SOUND_MIN_INTERVAL, ZOMBIE_SOUND_MAX_INTERVAL));
 	}
 
+	this.zombieMove = function(zombie) {
+		if (zombie.dead) {
+			return;
+		}
+		var zombiePosition = Entities.getEntityProperties(zombie.entity).position
+		// var  newOrientation = Vec3.subtract(MyAvatar.position, zombiePosition);
+		Entities.updateAction(zombie.entity, zombie.action, {
+			pointToOffsetFrom: MyAvatar.position
+		});
+		Script.setTimeout(function() {
+			self.zombieMove(zombie);
+		}, 2000);
+	}
+
 	this.zombieMoan = function(zombie) {
 		var position = Entities.getEntityProperties(zombie.entity).position;
 		var clip = zombieCryClips[randInt(0, zombieCryClips.length)];
 		Audio.playSound(clip, {
 			position: position,
-			volume: 0.2
+			volume: 0.05
 		});
 
 		Script.setTimeout(function() {
@@ -183,17 +201,17 @@ ZombieFight = function() {
 	this.gotHit = function(idA, idB, collision) {
 		var zombie = self.getZombieFromID(idA);
 		if (!zombie) {
-			print('zombie doesnt exist!')
+			// print('zombie doesnt exist!')
 			return;
 		}
 		if (zombie.dead) {
-			print("zombie is already dead");
+			// print("zombie is already dead");
 			return;
 		}
 		if (Entities.getEntityProperties(idB).name === "sword") {
 			Audio.playSound(zombieHitClips[randInt(0, zombieHitClips.length)], {
 				position: MyAvatar.position,
-				volume: 0.3
+				volume: 0.15
 			})
 			zombie.dead = true;
 			Script.setTimeout(function() {
@@ -202,19 +220,19 @@ ZombieFight = function() {
 				zombies.splice(zombies.indexOf(zombie), 1);
 
 				//if all zombies from this wave have been destroyed, start the next wave!
-				if(zombies.length === 0) {
+				if (zombies.length === 0) {
 					currentWaveIndex++;
 					if (currentWaveIndex === waves.length) {
 						self.winGame();
 					} else {
 
-					  Overlays.editOverlay(waveOverlay, {
-					  	visible: true,
-					  	text: "NICE WORK. GET READY FOR NEXT WAVE!!"
-					  })
-					  Script.setTimeout(function(){
-					    self.initiateWave();	
-					  }, waveOverlayDisplayTime)
+						Overlays.editOverlay(waveOverlay, {
+							visible: true,
+							text: "NICE WORK. GET READY FOR NEXT WAVE!!"
+						})
+						Script.setTimeout(function() {
+							self.initiateWave();
+						}, waveOverlayDisplayTime)
 					}
 				}
 			}, 1000)
@@ -223,9 +241,58 @@ ZombieFight = function() {
 
 	this.winGame = function() {
 		Overlays.editOverlay(waveOverlay, {
-			text: "EPIC!!! YOU KILLED ALL THE ZOMBIES",
+			text: "EPIC!! YOU KILLED ALL THE ZOMBIES! YOU ARE AWESOME",
 			visible: true
 		});
+
+		Script.setTimeout(function() {
+			self.resetGame();
+		}, waveOverlayDisplayTime);
+	}
+
+	this.resetGame = function() {
+		this.createWaves();
+		zombies = [];
+		gameInitiated = false;
+		Overlays.editOverlay(waveOverlay, {
+			visible: false
+		})
+	}
+	this.createWaves = function() {
+		waves = [{
+			numZombies: 1,
+			timeScale: 2
+		}, {
+			numZombies: 2,
+			timeScale: 1.5
+		}, {
+			numZombies: 4,
+			timeScale: 1.5
+		}, {
+			numZombies: 8,
+			timeScale: 1.1
+		}];
+
+		// waves = [{
+		// 	numZombies: 1,
+		// 	timeScale: 2
+		// }];
+	}
+
+	this.loseGame = function() {
+		Overlays.editOverlay(waveOverlay, {
+			color: {
+				red: 200,
+				green: 10,
+				blue: 0
+			},
+			text: "YOU GOT KILLED AND LOST. YOU'RE FUCKING PATHETIC.",
+			visible: true
+		});
+		Script.setTimeout(function() {
+			Script.stop();
+		}, 2000);
+
 	}
 
 	this.getZombieFromID = function(id) {

@@ -13,8 +13,12 @@
 /*jslint vars: true*/
 var Script, Entities, MyAvatar, Window, Overlays, Controller, Vec3, Quat, print, ToolBar, Settings; // Referenced globals provided by High Fidelity.
 Script.include("http://s3.amazonaws.com/hifi-public/scripts/libraries/toolBars.js");
+var zombieGameScriptURL = "https://hifi-public.s3.amazonaws.com/eric/scripts/zombieFight.js?v2";
+// var zombieGameScriptURL = "zombieFight.js";
+Script.include(zombieGameScriptURL);
 
-var zombieFight;
+
+var zombieFight = new ZombieFight();
 
 var hand = "right";
 
@@ -30,7 +34,7 @@ var dimensions = {
 };
 var BUTTON_SIZE = 32;
 
-var health = 10;
+var health = 100;
 var healthLossOnHit = 10;
 
 var swordModel = "https://hifi-public.s3.amazonaws.com/ozan/props/sword/sword.fbx";
@@ -133,7 +137,6 @@ function trackAvatarWithText() {
 function updateDisplay() {
     var text = health.toString();
     if (!display2d) {
-        health = 100;
         display2d = Overlays.addOverlay("text", {
             text: text,
             font: {
@@ -199,13 +202,21 @@ function removeDisplay() {
 function gotHit(collision) {
     Audio.playSound(avatarCollisionSounds[randInt(0, avatarCollisionSounds.length)], {
         position: MyAvatar.position,
-        volume: 0.5
+        volume: 0.2
     });
     health -= healthLossOnHit;
-    if(health <= 30) {
+    if (health <= 30) {
         Overlays.editOverlay(display2d, {
-            color: {red: 200, green: 10, blue: 10}
+            color: {
+                red: 200,
+                green: 10,
+                blue: 10
+            }
         });
+    }
+
+    if (health <= 0 && zombieFight) {
+        zombieFight.loseGame();
     }
     flash({
         red: 255,
@@ -282,7 +293,7 @@ function makeSword() {
         SoundCache.getSound(avatarCollisionSoundURL); // Interface does not currently "preload" this? (Bug?)
     }
 
-    if(!isControllerActive()) {
+    if (!isControllerActive()) {
         grabSword("right");
     }
     MyAvatar.collisionSoundURL = avatarCollisionSoundURL;
@@ -294,9 +305,9 @@ function makeSword() {
 
 
 function grabSword(hand) {
-    if(!swordID) {
-      print("Create a sword by clicking on sword icon!")
-      return;
+    if (!swordID) {
+        print("Create a sword by clicking on sword icon!")
+        return;
     }
     var handRotation;
     if (hand === "right") {
@@ -313,7 +324,7 @@ function grabSword(hand) {
             y: 0.0,
             z: -dimensions.z * 0.5
         },
-        relativeRotation:offsetRotation,
+        relativeRotation: offsetRotation,
         hand: hand,
         timeScale: 0.05
     });
@@ -379,7 +390,11 @@ randInt = function(low, high) {
 
 function positionSword(swordOrientation) {
     var reorient = Quat.fromPitchYawRollDegrees(0, -90, 0);
-    var baseOffset = {x: -dimensions.z * 0.8, y: 0, z: 0};
+    var baseOffset = {
+        x: -dimensions.z * 0.8,
+        y: 0,
+        z: 0
+    };
     var offset = Vec3.multiplyQbyV(reorient, baseOffset);
     swordOrientation = Quat.multiply(reorient, swordOrientation);
     inHand = false;
@@ -389,6 +404,7 @@ function positionSword(swordOrientation) {
         hand: "right"
     });
 }
+
 function resetToHand() { // For use with controllers, puts the sword in contact with the hand.
     // Maybe coordinate with positionSword?
     if (inHand) { // Optimization: bail if we're already inHand.
@@ -396,10 +412,18 @@ function resetToHand() { // For use with controllers, puts the sword in contact 
     }
     print('Reset to hand');
     Entities.updateAction(swordID, actionID, {
-        relativePosition: {x: 0.0, y: 0.0, z: -dimensions.z * 0.5},
-        relativeRotation: Quat.fromVec3Degrees({x: 45.0, y: 0.0, z: 0.0}),
-        hand: "right",   // It should not be necessary to repeat these two, but there seems to be a bug in that that
-        timeScale: 0.05  // they do not retain their earlier values if you don't repeat them.
+        relativePosition: {
+            x: 0.0,
+            y: 0.0,
+            z: -dimensions.z * 0.5
+        },
+        relativeRotation: Quat.fromVec3Degrees({
+            x: 45.0,
+            y: 0.0,
+            z: 0.0
+        }),
+        hand: "right", // It should not be necessary to repeat these two, but there seems to be a bug in that that
+        timeScale: 0.05 // they do not retain their earlier values if you don't repeat them.
     });
     inHand = true;
 }
@@ -432,11 +456,6 @@ function onClick(event) {
             }
             break;
         case targetButton:
-            if(gameStarted){
-                return;
-            }
-            Script.include("zombieFight.js?v1");
-            zombieFight = new ZombieFight();
             zombieFight.initiateZombieApocalypse();
             gameStarted = true;
 

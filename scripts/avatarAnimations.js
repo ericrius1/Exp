@@ -1,47 +1,30 @@
-var walkAnimation = "https://hifi-public.s3.amazonaws.com/ozan/animations/sniperBasicMotion/sniper_walking.fbx";
-// var turnAnimation = "https://hifi-public.s3.amazonaws.com/ozan/animations/sniperBasicMotion/sniper_right_turn_90.fbx"
+var walkAnimation = "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/standard_walk.fbx";
+var turnAnimation = "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/right_turn.fbx"
 var jumpAnimation = "https://hifi-public.s3.amazonaws.com/ozan/animations/sniperBasicMotion/sniper_jump.fbx";
-var idelAnimation = " https://hifi-public.s3.amazonaws.com/ozan/animations/sniperBasicMotion/sniper_idle.fbx"
+var idleAnimation = "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/standard_idle.fbx"
 
 var currentAnimation = null;;
-var avatarVelocity, 
-var velocityLength;
+var avatarVelocity,
+  var velocityLength;
 var avatarForward;
 
 
 var VELOCITY_THRESHOLD = .1;
 
 var avatarState = "idle";
+MyAvatar.startAnimation(idleAnimation, 30, 1, true, true);
 
 
 var animationDetails;
-
-function updateAnimations() {
-  animationDetails = MyAvatar.getAnimationDetails(currentAnimation);
-  // print(animationDetails.frameIndex)
-  // avatarVelocity = MyAvatar.getVelocity();
-  // velocityLength = Vec3.length(avatarVelocity);
-  // if(velocityLength > VELOCITY_THRESHOLD && avatarState !== "walking") {
-  //   MyAvatar.stopAnimation(currentAnimation);
-  //   currentAnimation = walkAnimation;
-  //   MyAvatar.startAnimation(currentAnimation, 30, 1.0, true, false, 0, 30);
-  //   avatarState = "walking";
-  // } else if (velocityLength < VELOCITY_THRESHOLD && avatarState === "walking" && animationDetails.frameIndex < 1) {
-  //   avatarState = "idle";
-  //   MyAvatar.stopAnimation(currentAnimation)
-  //   currentAnimation = idelAnimation;
-  //   MyAvatar.startAnimation(idelAnimation, 30, 1, true);
-  // }
-
-}
+var alreadyChecked = false;
 
 
 
 function update() {
-   avatarVelocity = MyAvatar.getVelocity();
+  animationDetails = MyAvatar.getAnimationDetails(currentAnimation);
+  avatarVelocity = MyAvatar.getVelocity();
   velocityLength = Vec3.length(avatarVelocity);
-  if(velocityLength > VELOCITY_THRESHOLD) {
-    var yawOrientation = Quat.ge
+  if (velocityLength > VELOCITY_THRESHOLD) {
     var yawOrientation = Quat.safeEulerAngles(MyAvatar.orientation);
     yawOrientation.x = 0;
     yawOrientation.z = 0;
@@ -50,36 +33,34 @@ function update() {
 
     avatarOrientationVelocityDotProduct = Vec3.dot(Vec3.normalize(avatarVelocity), avatarForward);
     // print("dot product" + avatarOrientationVelocityDotProduct)
-    if(avatarOrientationVelocityDotProduct > 0.95 &&  avatarState !== "walking") {
+    if (avatarOrientationVelocityDotProduct > 0.95 && (avatarState !== "walking")) {
       avatarState = "walking";
       MyAvatar.stopAnimation(currentAnimation);
-      MyAvatar.startAnimation(walkAnimation, 30, 1, true, false, 0, 30);
+      MyAvatar.startAnimation(walkAnimation, 30, 1, true, false, 0, 60);
       currentAnimation = walkAnimation;
+    } 
+  } else if (avatarState !== "idle" && avatarState !== "jumping") {
+      //don't check for a bit to make sure we're not at apex of jump
+      avatarState = "idle";
+      MyAvatar.stopAnimation(currentAnimation);
+      MyAvatar.startAnimation(idleAnimation);
+      currentAnimation = "idle";
+
     }
-
-  } 
-  else if(avatarState !== "idle" && avatarState!=="jumping") {
-    avatarState = "idle";
-    MyAvatar.stopAnimation(currentAnimation);
-    MyAvatar.startAnimation(idelAnimation);
-    currentAnimation = idelAnimation;
-  }
-
-
-
-
 }
 
 function jump() {
-      avatarState = "jumping";
-      MyAvatar.stopAnimation(currentAnimation);
-      MyAvatar.startAnimation(jumpAnimation, 60, 1, false, false, 0, 60);
-      currentAnimation = jumpAnimation;
+  if(avatarState !== "jumping") {
+
+    avatarState = "jumping";
+    MyAvatar.stopAnimation(currentAnimation);
+    MyAvatar.startAnimation(jumpAnimation, 25, 1, false, false, 15, 70);
+    currentAnimation = jumpAnimation;
+  }
 }
 
 function keyPressEvent(event) {
-  print(event.text);
-  if(event.text === "e"){
+  if (event.text === "e") {
     jump();
   }
 

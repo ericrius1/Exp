@@ -21,10 +21,10 @@ var LASER_COLOR = {
 };
 var TRIGGER_THRESHOLD = .1;
 
-var MAX_POINTS_PER_LINE = 10;
+var MAX_POINTS_PER_LINE = 30;
 
 var LIFETIME = 6000;
-var DRAWING_DEPTH = 3;
+var DRAWING_DEPTH = 1;
 var LINE_DIMENSIONS = 100;
 
 
@@ -43,9 +43,9 @@ var LEFT_BUTTON_3 = 3;
 var LEFT_BUTTON_4 = 4;
 
 var colorPalette = [{
-    red: 0,
-    green: 0,
-    blue: 0
+    red: 40,
+    green: 50,
+    blue: 150
 }, {
     red: 214,
     green: 91,
@@ -147,7 +147,7 @@ function controller(side, cycleColorButton) {
             this.drawing = false;
         }
 
-        if (this.drawing) {
+        if (this.drawing && this.points.length < MAX_POINTS_PER_LINE) {
             var localPoint = Vec3.subtract(newBrushPos, this.linePosition);
             if (Vec3.distance(localPoint, this.points[this.points.length - 1]) < MIN_POINT_DISTANCE) {
                 // print("NOT ENOUGH DISTANCE BETWEEN POINTS!!");
@@ -168,17 +168,12 @@ function controller(side, cycleColorButton) {
             });
 
             if (this.points.length > MAX_POINTS_PER_LINE) {
-                this.newLine(newBrushPos);
-                this.points.push(Vec3.subtract(newBrushPos, this.linePosition));
-                this.normals.push(computeNormal(newBrushPos, Camera.getPosition()));
-                this.strokeWidths.push(strokeWidth);
-
-                // Entities.editEntity(this.line, {
-                //     linePoints: this.points,
-                //     normals: this.normals,
-                //     strokeWidths: this.strokeWidths,
-                //     color: this.currentColor
-                // });
+                //We want to have actual brush strokes with tail and all
+                // this.drawing = false
+                // this.newLine(newBrushPos);
+                // this.points.push(Vec3.subtract(newBrushPos, this.linePosition));
+                // this.normals.push(computeNormal(newBrushPos, Camera.getPosition()));
+                // this.strokeWidths.push(strokeWidth);
             }
         }
     }
