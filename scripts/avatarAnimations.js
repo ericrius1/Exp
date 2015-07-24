@@ -1,5 +1,6 @@
 var walkAnimation = "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/standard_walk.fbx";
-var turnAnimation = "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/right_turn.fbx"
+var rightTurnAnimation = "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/right_turn.fbx"
+var leftTurnAnimation = "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/leftdw_turn.fbx"
 var jumpAnimation = "https://hifi-public.s3.amazonaws.com/ozan/animations/sniperBasicMotion/sniper_jump.fbx";
 var idleAnimation = "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/standard_idle.fbx"
 
@@ -8,8 +9,11 @@ var avatarVelocity,
   var velocityLength;
 var avatarForward;
 
+var jumpStartFrame = 15;
+var jumpEndFrame = 70;
 
-var VELOCITY_THRESHOLD = .1;
+
+var WALKING_VELOCITY_THRESHOLD = .1;
 
 var avatarState = "idle";
 MyAvatar.startAnimation(idleAnimation, 30, 1, true, true);
@@ -24,7 +28,7 @@ function update() {
   animationDetails = MyAvatar.getAnimationDetails(currentAnimation);
   avatarVelocity = MyAvatar.getVelocity();
   velocityLength = Vec3.length(avatarVelocity);
-  if (velocityLength > VELOCITY_THRESHOLD) {
+  if (velocityLength > WALKING_VELOCITY_THRESHOLD) {
     var yawOrientation = Quat.safeEulerAngles(MyAvatar.orientation);
     yawOrientation.x = 0;
     yawOrientation.z = 0;
@@ -33,28 +37,40 @@ function update() {
 
     avatarOrientationVelocityDotProduct = Vec3.dot(Vec3.normalize(avatarVelocity), avatarForward);
     // print("dot product" + avatarOrientationVelocityDotProduct)
-    if (avatarOrientationVelocityDotProduct > 0.95 && (avatarState !== "walking")) {
+    print(avatarState)
+    if (avatarOrientationVelocityDotProduct > 0.95 && (avatarState !== "walking" && avatarState !== "jumping")) {
       avatarState = "walking";
       MyAvatar.stopAnimation(currentAnimation);
       MyAvatar.startAnimation(walkAnimation, 30, 1, true, false, 0, 60);
       currentAnimation = walkAnimation;
-    } 
-  } else if (avatarState !== "idle" && avatarState !== "jumping") {
-      //don't check for a bit to make sure we're not at apex of jump
-      avatarState = "idle";
-      MyAvatar.stopAnimation(currentAnimation);
-      MyAvatar.startAnimation(idleAnimation);
-      currentAnimation = "idle";
-
     }
+  } else if ((avatarState !== "idle" && avatarState !== "jumping")) {
+    //don't check for a bit to make sure we're not at apex of jump
+    avatarState = "idle";
+    print("RETURN")
+    MyAvatar.stopAnimation(currentAnimation);
+    MyAvatar.startAnimation(idleAnimation);
+    currentAnimation = "idle";
+
+  }
+
+  if ((avatarState === "jumping" && animationDetails.frameIndex > jumpEndFrame - 1)) {
+    avatarState = "idle";
+    print("RETURN")
+    MyAvatar.stopAnimation(currentAnimation);
+    MyAvatar.startAnimation(idleAnimation);
+    currentAnimation = "idle";
+  }
+
+
 }
 
 function jump() {
-  if(avatarState !== "jumping") {
+  if (avatarState !== "jumping") {
 
     avatarState = "jumping";
     MyAvatar.stopAnimation(currentAnimation);
-    MyAvatar.startAnimation(jumpAnimation, 25, 1, false, false, 15, 70);
+    MyAvatar.startAnimation(jumpAnimation, 25, 1, false, false, jumpStartFrame, jumpEndFrame);
     currentAnimation = jumpAnimation;
   }
 }
