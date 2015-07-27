@@ -1,4 +1,4 @@
-var SPAWN_RANGE = 10;
+var SPAWN_RANGE = 3;
 var basePosition, avatarRot;
 
 avatarRot = Quat.fromPitchYawRollDegrees(0, MyAvatar.bodyYaw, 0.0);
