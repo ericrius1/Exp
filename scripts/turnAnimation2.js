@@ -1,5 +1,5 @@
 Script.include("https://hifi-public.s3.amazonaws.com/eric/scripts/tween.js", function() {
-	print("turn animation complete")
+	print("tween loading complete")
 	init();
 })
 
