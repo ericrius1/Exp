@@ -1,4 +1,4 @@
-Script.include("https://hifi-public.s3.amazonaws.com/eric/scripts/tween.js", function() {
+Script.include("tween.js", function() {
 	init();
 })
 
@@ -12,97 +12,67 @@ function init() {
 
 	var phi;
 
-	var startingCamYaw, currentCamYaw;
-	var startingNeckJointYaw, startingHipJointYaw;
+	var currentCamYaw;
+	var startingCamYaw = Quat.safeEulerAngles(Camera.getOrientation()).y;
 
 
+    var animating = false;
 
-	var yawIncrement = 1;
-	var checkIntervalTime = 100;
-	var cameraRotating = false
+	var checkIntervalTime = 500;
 	var bodyTurning = false;
-	var minDeltaYawForTurn = 20;
+	var minDeltaYawForTurn = 45;
 
 
 	var currentAnimation;
 
-	var checkTimeout;
 
-	// MyAvatar.startAnimation(leftTurnAnimation, 7, 1, false, false)
+	function cleanup() {
 
-	function keyPressEvent(event) {
-		if (event.text === "a") {
-			turn(leftTurnAnimation, yawIncrement)
-		} else if (event.text === "d") {
-			turn(rightTurnAnimation, -yawIncrement);
-		}
-
+		// MyAvatar.setJointData(hipJoint, Quat.fromVec3Degrees({
+		// 	x: 0,
+		// 	y: 0,
+		// 	z: 0
+		// }));
+		// MyAvatar.setJointData(neckJoint, Quat.fromVec3Degrees({
+		// 	x: 0,
+		// 	y: 0,
+		// 	z: 0
+		// }));
 	}
 
-	function turn(turnAnimation, yawIncrement) {
+	function update(deltaTime) {
 		currentCamYaw = Quat.safeEulerAngles(Camera.getOrientation()).y;
-		if (!cameraRotating) {
-		    startingCamYaw = currentCamYaw;
-		    startingNeckJointYaw = currentCamYaw
-		    startingHipJointYaw = -currentCamYaw;
-			cameraRotating = true;
-			checkTimeout = Script.setTimeout(function() {
-				// checkForTurn(turnAnimation);
-			}, checkIntervalTime)
-		}
+		phi = startingCamYaw - currentCamYaw;
+		checkForTurn();
 
 		hipJointRotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(hipJoint));
-		var phi= startingCamYaw - currentCamYaw;
-		print("delta yaw " + phi)
-		hipJointRotation.y = -phi
+		hipJointRotation.y = -phi;
 
 		neckJointRotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(neckJoint));
 		neckJointRotation.y = phi
 
 		MyAvatar.setJointData(hipJoint, Quat.fromVec3Degrees(hipJointRotation));
 		MyAvatar.setJointData(neckJoint, Quat.fromVec3Degrees(neckJointRotation));
-		// if (!bodyTurning) {
-		// MyAvatar.headYaw += yawIncrement;
-		// }
-	}
+		
 
-
-
-	function cleanup() {
-		MyAvatar.headYaw = 0;
-		Script.clearInterval(checkTimeout);
-		MyAvatar.stopAnimation(currentAnimation);
-
-		MyAvatar.setJointData(hipJoint, Quat.fromVec3Degrees({
-			x: 0,
-			y: 0,
-			z: 0
-		}));
-		MyAvatar.setJointData(neckJoint, Quat.fromVec3Degrees({
-			x: 0,
-			y: 0,
-			z: 0
-		}));
-	}
-
-	function update(deltaTime) {
 		TWEEN.update();
 	}
 
 
 	function checkForTurn(turnAnimation) {
-		// currentCamYaw = Quat.safeEulerAngles(Camera.getOrientation()).y;
-		var deltaYaw = currentCamYaw - startingCamYaw;
-		if (Math.abs(deltaYaw) > minDeltaYawForTurn) {
+		print('turn ' + phi)
+		if (Math.abs(phi) > minDeltaYawForTurn) {
 			animateTurn(turnAnimation);
 		}
-		cameraRotating = false
 	}
 
 	function animateTurn(turnAnimation) {
-		print('turn');
-		// MyAvatar.startAnimation(turnAnimation, 30, 1, false, false);
+		if(animating) {
+			return;
+		}
+		animating = true;
 		currentAnimation = turnAnimation;
+		currentCamYaw = Quat.safeEulerAngles(Camera.getOrientation()).y;
 		var neckJointRotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(neckJoint));
 		var hipJointRotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(hipJoint));
 		var curProps = {
@@ -110,20 +80,31 @@ function init() {
 			neckYaw: neckJointRotation.y
 		};
 		var endProps = {
-			hipYaw: startingHipJointYaw,
-			neckYaw: startingNeckJointYaw
+			hipYaw: 0.01,
+			neckYaw: 0.01
 		}
-		print("TURN")
 		var turnTween = new TWEEN.Tween(curProps).
-		  to(endProps, 1000).
-		  onUpdate(function() {
-		  	// MyAvatar.setJointData(neckJoint, Quat.fromVec3Degrees({x: neckJointRotation.x, y: curProps.neckYaw, z: neckJointRotation.z}));
-		  	MyAvatar.setJointData(hipJoint, Quat.fromVec3Degrees({x: hipJointRotation.x, y: curProps.hipYaw, z: hipJointRotation.z}));
-		  }).start();
+		to(endProps, 700).
+		onUpdate(function() {
+			MyAvatar.setJointData(neckJoint, Quat.fromVec3Degrees({
+				x: neckJointRotation.x,
+				y: curProps.neckYaw,
+				z: neckJointRotation.z
+			}));
+			MyAvatar.setJointData(hipJoint, Quat.fromVec3Degrees({
+				x: hipJointRotation.x,
+				y: curProps.hipYaw,
+				z: hipJointRotation.z
+			}));
+		}).start();
+
+		turnTween.onComplete(function() {
+			startingCamYaw = Quat.safeEulerAngles(Camera.getOrientation()).y;	
+			animating = false;
+		});
 	}
 
 
-	Controller.keyPressEvent.connect(keyPressEvent);
 	Script.scriptEnding.connect(cleanup);
 	Script.update.connect(update);
 }
