@@ -45,12 +45,16 @@ function init() {
 
 
 	function update() {
+		TWEEN.update();
+		if(animating) {
+			return;
+		}
 		dPosition = Vec3.multiply(Vec3.subtract(MyAvatar.position, previousPosition), 10);
 		//convert to localFrame
 		dPosition = Vec3.multiplyQbyV(Quat.inverse(MyAvatar.orientation), dPosition);
 		mDPosition = Vec3.sum(mDPosition, dPosition);
-		leftLegRotation = Quat.multiply(leftLegRotation, Quat.angleAxis(dPosition.x, Z_AXIS));
-		rightLegRotation = Quat.multiply(rightLegRotation, Quat.angleAxis(dPosition.x, Z_AXIS));
+		leftLegRotation = Quat.multiply(leftLegRotation, Quat.angleAxis(-dPosition.x, Z_AXIS));
+		rightLegRotation = Quat.multiply(rightLegRotation, Quat.angleAxis(-dPosition.x, Z_AXIS));
 		MyAvatar.setJointData(rightLegJoint, rightLegRotation);
 		MyAvatar.setJointData(leftLegJoint, leftLegRotation);
 		previousPosition = MyAvatar.position;
@@ -59,7 +63,6 @@ function init() {
 			animateSidestep();
 		}
 
-		TWEEN.update();
 
 	}
 
@@ -84,9 +87,12 @@ function init() {
 		  }).start();
 		  stepTween.onComplete(function() {
 		  	mDPosition = VEC_ZERO;
-		  	animating = false;
 		  	leftLegRotation = MyAvatar.getJointRotation(leftLegJoint);
 		  	rightLegRotation = MyAvatar.getJointRotation(rightLegJoint);
+		  	// MyAvatar.setJointData(leftLegJoint, leftLegRotation);
+		  	// MyAvatar.setJointData(rightLegJoint, interpolatedRightLegRotation);
+		  	animating = false;
+		  	previousPosition = MyAvatar.position;
 		  });
 
 
@@ -103,6 +109,7 @@ function init() {
 			y: 0,
 			z: 0
 		}));
+	
 	}
 
 
