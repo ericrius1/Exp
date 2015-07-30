@@ -1,6 +1,4 @@
 var walkAnimation = "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/standard_walk.fbx";
-var rightTurnAnimation = "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/right_turn.fbx"
-var leftTurnAnimation = "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/left_turn.fbx"
 var jumpAnimation = "https://hifi-public.s3.amazonaws.com/ozan/animations/sniperBasicMotion/sniper_jump.fbx";
 var idleAnimation = "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/standard_idle.fbx"
 
@@ -22,8 +20,6 @@ MyAvatar.startAnimation(idleAnimation, 30, 1, true, true);
 var animationDetails;
 var alreadyChecked = false;
 
-
-
 function update() {
   animationDetails = MyAvatar.getAnimationDetails(currentAnimation);
   avatarVelocity = MyAvatar.getVelocity();
@@ -37,7 +33,6 @@ function update() {
 
     avatarOrientationVelocityDotProduct = Vec3.dot(Vec3.normalize(avatarVelocity), avatarForward);
     // print("dot product" + avatarOrientationVelocityDotProduct)
-    print(avatarState)
     if (avatarOrientationVelocityDotProduct > 0.95 && (avatarState !== "walking" && avatarState !== "jumping")) {
       avatarState = "walking";
       MyAvatar.stopAnimation(currentAnimation);
@@ -47,7 +42,6 @@ function update() {
   } else if (avatarState === "walking") {
     //don't check for a bit to make sure we're not at apex of jump
     avatarState = "idle";
-    print("RETURN")
     MyAvatar.stopAnimation(currentAnimation);
     MyAvatar.startAnimation(idleAnimation, 30, 1, true, false);
     currentAnimation = "idle";
@@ -56,12 +50,10 @@ function update() {
 
   if ((avatarState === "jumping" && animationDetails.frameIndex > jumpEndFrame - 1)) {
     avatarState = "idle";
-    print("RETURN")
     MyAvatar.stopAnimation(currentAnimation);
     MyAvatar.startAnimation(idleAnimation);
     currentAnimation = "idle";
   }
-
 
 }
 
@@ -75,21 +67,10 @@ function jump() {
   }
 }
 
-function turn(turnAnimation) {
-  avatarState = "turning";
-  MyAvatar.stopAnimation(currentAnimation);
-  MyAvatar.startAnimation(turnAnimation, 30, 30, false, false)
-  currentAnimation = turnAnimation;
-}
-
 
 function keyPressEvent(event) {
   if (event.text === "e") {
     jump();
-  } else if(event.text === "d") {
-    turn(rightTurnAnimation);
-  } else if(event.text ==="a") {
-    turn(leftTurnAnimation);
   }
 
 }

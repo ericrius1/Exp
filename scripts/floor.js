@@ -10,7 +10,7 @@ basePosition.y -= SPAWN_RANGE;
 
 var ground = Entities.addEntity({
   type: "Model",
-  modelURL: "https://hifi-public.s3.amazonaws.com/eric/models/woodFloor.fbx",
+  modelURL: "https://hifi-public.s3.amazonaws.com/eric/models/floor.fbx?v11",
   dimensions: {
     x: size,
     y: 1,
