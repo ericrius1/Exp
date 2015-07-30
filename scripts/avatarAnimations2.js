@@ -6,9 +6,6 @@ Script.include("tween.js", function() {
 function init() {
 
 	var stepLeftAnimation = "https://hifi-public.s3.amazonaws.com/ozan/animations/fightclub_bot_anims/side_step_left_inPlace.fbx";
-	var stepRightAnimation = "https://hifi-public.s3.amazonaws.com/ozan/animations/fightclub_bot_anims/side_step_right_inPlace.fbx";
-	var walkAnimation = "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/standard_walk.fbx";
-	var idleAnimation = "https://hifi-public.s3.amazonaws.com/ozan/animations/fightclub_bot_anims/idle.fbx";
 
 	var MOVE_THRESHOLD = 0.001;
 	var previousPosition = MyAvatar.position;
@@ -21,14 +18,20 @@ function init() {
 
 	var direction;
 
-	var sideStepProps = {
+	var sideStepAnimation = {
+		url: "https://hifi-public.s3.amazonaws.com/ozan/animations/fightclub_bot_anims/side_step_right_inPlace.fbx",
 		numFrames: 31,
 		frameIncrementFactor: 2
 	}
 
-	var walkProps = {
+	var walkAnimation = {
+		url: "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/standard_walk.fbx",
 		numFrames: 36,
 		frameIncrementFactor: 1
+	}
+
+	var idleAnimation = {
+		url: "https://hifi-public.s3.amazonaws.com/ozan/animations/fightclub_bot_anims/idle.fbx"
 	}
 	var currentFrame = 0;
 	var nextFrame;
@@ -45,13 +48,13 @@ function init() {
 	}
 
 	function finishQuickly(callback) {
-		var frameIndex = MyAvatar.getAnimationDetails(currentAnimation).frameIndex;
-		print("frame index "  + JSON.stringify(frameIndex))
+		var frameIndex = MyAvatar.getAnimationDetails(currentAnimation.url).frameIndex;
+		print("frame index "  + JSON.stringify(frameIndex));
 		var finishTween = new TWEEN.Tween({frameIndex : nextFrame}).
-		to({frameIndex: nextFrame > 16 ? 36 : 0}, 500).
+		to({frameIndex: nextFrame > currentAnimation.numFrames/2 ? currentAnimation.numFrames : 0}, 500).
 		onUpdate(function() {
 			// print(this.function() {};rameIndex)
-			MyAvatar.startAnimation(currentAnimation, 24, 1, false, false, this.frameIndex, this.frameIndex + .1)
+			MyAvatar.startAnimation(currentAnimation.url, 24, 1, false, false, this.frameIndex, this.frameIndex + .1);
 		}).start()
 
 		finishTween.onComplete(function() {
@@ -73,8 +76,9 @@ function init() {
 				  avatarState = "idling";
 				//We're in another animation, so finish this animation quickly and then start idle animation on complete
 				finishQuickly(function(){
-				  MyAvatar.stopAnimation(currentAnimation);
-				  MyAvatar.startAnimation(idleAnimation, 24, 1, true, false);
+					//must stop current animation for frameIndex is fucked
+				  MyAvatar.stopAnimation(currentAnimation.url);
+				  MyAvatar.startAnimation(idleAnimation.url, 24, 1, true, false);
 				  currentAnimation = idleAnimation;
 				  currentFrame = 0;
 				});
@@ -93,15 +97,15 @@ function init() {
 	}
 
 	function walk() {
-		MyAvatar.startAnimation(walkAnimation, 24, 1, false, false, currentFrame, nextFrame);
+		MyAvatar.startAnimation(walkAnimation.url, 24, 1, false, false, currentFrame, nextFrame);
 		currentAnimation = walkAnimation;
 
 
 		direction = dPosition.z > 0 ? -1 : 1
-		frameIncrement = direction * walkProps.frameIncrementFactor;
+		frameIncrement = direction * walkAnimation.frameIncrementFactor;
 		currentFrame = currentFrame + frameIncrement
 		nextFrame = currentFrame + frameIncrement;
-		if (currentFrame > walkProps.numFrames) {
+		if (currentFrame > walkAnimation.numFrames) {
 			currentFrame = 0;
 			nextFrame = frameIncrement;
 		}
@@ -110,20 +114,21 @@ function init() {
 	}
 
 	function sideStep() {
-		currentAnimation = stepRightAnimation;
-		MyAvatar.startAnimation(stepRightAnimation, 24, 1, false, false, currentFrame, nextFrame);
+		currentAnimation = sideStepAnimation;
+
+		MyAvatar.startAnimation(currentAnimation.url, 24, 1, false, false, currentFrame, nextFrame);
 
 		direction = dPosition.x > 0 ? 1 : -1;
-		frameIncrement = direction * sideStepProps.frameIncrementFactor;
+		frameIncrement = direction * sideStepAnimation.frameIncrementFactor;
 		currentFrame = currentFrame + frameIncrement;
 		nextFrame = currentFrame + frameIncrement;
-		if (currentFrame > sideStepProps.numFrames) {
+		if (currentFrame > sideStepAnimation.numFrames) {
 			currentFrame = 0;
 			nextFrame = frameIncrement;
 		}
 		if (currentFrame < 0) {
-			currentFrame = sideStepProps.numFrames;
-			sideStepProps.numFrames - frameIncrement;
+			currentFrame = sideStepAnimation.numFrames;
+			sideStepAnimation.numFrames - frameIncrement;
 		}
 
 
