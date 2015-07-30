@@ -93,7 +93,6 @@ function init() {
 			return;
 		}
 		animating = true;
-		print("turn animation " + turnAnimation)
 		MyAvatar.startAnimation(turnAnimation, 30, 1, false, false);
 		currentAnimation = turnAnimation;
 		var neckJointRotation = Quat.safeEulerAngles(MyAvatar.getJointRotation(neckJoint));
@@ -133,6 +132,7 @@ function init() {
 		turnTween.onComplete(function() {
 			startingCamYaw = Quat.safeEulerAngles(Camera.getOrientation()).y;
 			animating = false;
+			MyAvatar.stopAnimation(turnAnimation);
 		});
 	}
 

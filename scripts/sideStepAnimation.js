@@ -10,8 +10,8 @@ function init() {
 	var LEAN_THRESHOLD = 5	
 	var HORIZONTAL_DMOVE_THRESHOLD = 1;
 
-	var stepLeftAnimation = "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/side_step_left_inPlace.fbx";
-	var stepRightAnimation = "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/side_step_right_inPlace.fbx";
+	var stepLeftAnimation = "https://hifi-public.s3.amazonaws.com/ozan/animations/fightclub_bot_anims/side_step_left_inPlace.fbx";
+	var stepRightAnimation = "https://hifi-public.s3.amazonaws.com/ozan/animations/fightclub_bot_anims/side_step_right_inPlace.fbx";
 	var currentAnimation;
 
 	var spineJoint = "Spine";
@@ -61,7 +61,6 @@ function init() {
 			return;
 		}
 
-		print("AHHAHAHAHAHAHHAHAHA");
 		mDPosition = Vec3.sum(mDPosition, dPosition);
 		leftLegRotation = Quat.multiply(leftLegRotation, Quat.angleAxis(-dPosition.x, Z_AXIS));
 		rightLegRotation = Quat.multiply(rightLegRotation, Quat.angleAxis(-dPosition.x, Z_AXIS));
@@ -83,9 +82,9 @@ function init() {
 		var finalLeftLegRotation = MyAvatar.getJointRotation(leftLegJoint);
 		var finalRightLegRotation = MyAvatar.getJointRotation(rightLegJoint);
 
-
+		print('step animation')
 		var stepTween = new TWEEN.Tween({t: 0}).
-		  to({t: 1}, 300).
+		  to({t: 1}, 1000).
 		  onUpdate(function() {
 		  	interpolatedLeftLegRotation = Quat.slerp(finalLeftLegRotation, startingLeftLegRotation, this.t);
 		  	interpolatedRightLegRotation =  Quat.slerp(finalRightLegRotation, startingRightLegRotation, this.t);
@@ -104,7 +103,11 @@ function init() {
 			} else {
 				currentAnimation = stepLeftAnimation;
 			}
-			MyAvatar.startAnimation(currentAnimation, 24, 1, false, false);
+			MyAvatar.startAnimation(currentAnimation, 24, 1, false, false, 1, 24);
+				print("STOPP")
+			Script.setTimeout(function() {
+				MyAvatar.stopAnimation(currentAnimation);
+			}, 1000)
 		  });
 	}
 
