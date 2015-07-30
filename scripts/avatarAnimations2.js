@@ -14,7 +14,7 @@ var direction;
 
 var sideStepProps = {
 	numFrames: 31,
-	frameIncrementFactor: 0.5
+	frameIncrementFactor: 1
 }
 
 var walkProps = {
@@ -23,6 +23,7 @@ var walkProps = {
 }
 var currentFrame = 0;
 var nextFrame;
+var frameIncrement;
 
 // MyAvatar.startAnimation(walkAnimation, 24, 1, true, false);
 
@@ -53,11 +54,12 @@ function walk() {
 
 
 	direction = dPosition.z > 0 ? -1 : 1
-	currentFrame = currentFrame + (direction * walkProps.frameIncrementFactor);
-	nextFrame = currentFrame + (direction * walkProps.frameIncrementFactor);
+	frameIncrement = direction * walkProps.frameIncrementFactor;
+	currentFrame = currentFrame + frameIncrement
+	nextFrame = currentFrame + frameIncrement;
 	if(currentFrame > walkProps.numFrames) {
 		currentFrame = 0;
-		nextFrame  = (direction * walkProps.frameIncrementFactor);
+		nextFrame  = frameIncrement;
 	}
 	currentAnimation = walkAnimation;
 
@@ -65,17 +67,20 @@ function walk() {
 }
 
 function sideStep() {
-	currentAnimation = stepRightAnimation;
+	MyAvatar.startAnimation(stepRightAnimation, 6, 1, false, false, currentFrame, nextFrame);
+
 	direction = dPosition.x > 0 ? 1 : -1;
-	currentFrame = currentFrame + direction;
+	frameIncrement = direction * sideStepProps.frameIncrementFactor;
+	currentFrame = currentFrame + frameIncrement;
+	nextFrame = currentFrame + frameIncrement;
 	if(currentFrame > sideStepProps.numFrames) {
 		currentFrame = 0;
-	} else if( currentFrame < 1) {
-		currentFrame = 24
+		nextFrame = frameIncrement;
 	}
-
-	// print("current frame: " + currentFrame);
-	MyAvatar.startAnimation(currentAnimation, 12, 1, false, false, currentFrame, currentFrame+direction);
+	if ( currentFrame < 0 ) {
+		currentFrame = sideStepProps.numFrames;
+		sideStepProps.numFrames - frameIncrement;
+	}
 
 
 }
