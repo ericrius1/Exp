@@ -9,15 +9,14 @@ function init() {
 	var MOVE_THRESHOLD = 0.001;
 	var previousPosition = MyAvatar.position;
 	var dPosition;
-	var previousAvatarYaw = getAvatarYaw();
 
 	var currentAnimation = idleAnimation;
 	avatarState = "idling";
 	MyAvatar.startAnimation(currentAnimation, 24, 1, true, false);
 	var numFrames = 24;
 
-	var D_YAW_THRESHOLD = 1;
-	var dYaw, dQ;
+	var MD_YAW_THRESHOLD = 1	;
+	var dYaw, dQ, mDYaw = 0;
 	var previousOrientation = MyAvatar.orientation;
 
 	var direction;
@@ -39,9 +38,14 @@ function init() {
 		frameIncrementFactor: 1
 	}
 
-	var turnAnimation = {
-
+	var rightTurnAnimation = {
+		url: "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/right_turn_noHipRotation.fbx"
 	}
+
+	var leftTurnAnimation = {
+		url: "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/left_turn_noHipRotation.fbx"
+	}
+
 
 	var idleAnimation = {
 		url: "https://hifi-public.s3.amazonaws.com/ozan/animations/fightclub_bot_anims/idle.fbx"
@@ -66,25 +70,33 @@ function init() {
 			stillFramesCounter++;
 
 			//Only turn if we're not moving!
-			dYaw = getAvatarYaw() - previousAvatarYaw;
 			dQ = Quat.multiply(MyAvatar.orientation, Quat.inverse(previousOrientation));
 			dYaw = Math.asin(-2 * (dQ.x * dQ.z - dQ.w * dQ.y));
-			print("D YAW " + dYaw)
-			if (dYaw > D_YAW_THRESHOLD) {
+			mDYaw += dYaw;
+			if ( Math.abs(mDYaw) > MD_YAW_THRESHOLD && avatarState !== "turning") {
+				avatarState = "turning";
+				print("turning")
+				if(mDYaw > 0) {
+					currentAnimation = leftTurnAnimation;
+				} else {
+					currentAnimation = rightTurnAnimation;
+				}
+				MyAvatar.startAnimation(currentAnimation.url, 24, 1, false, false);
+				mDYaw = 0;
 
 			}
 			//If we're barely moving just idle and return;
 			if (avatarState !== "idling" && stillFramesCounter >= STILL_FRAMES_THRESHOLD) {
 				avatarState = "idling";
 				//We're in another animation, so finish this animation quickly and then start idle animation on complete
-				finishQuickly(function() {
-					//must stop current animation for frameIndex is fucked
-					MyAvatar.stopAnimation(currentAnimation.url);
-					MyAvatar.startAnimation(idleAnimation.url, 24, 1, true, false);
-					currentAnimation = idleAnimation;
-					currentFrame = 0;
+				// finishQuickly(function() {
+				// 	//must stop current animation for frameIndex is fucked
+				// 	MyAvatar.stopAnimation(currentAnimation.url);
+				// 	MyAvatar.startAnimation(idleAnimation.url, 24, 1, true, false);
+				// 	currentAnimation = idleAnimation;
+				// 	currentFrame = 0;
 
-				});
+				// });
 			}
 		} else {
 			stillFramesCounter = 0;
@@ -99,7 +111,6 @@ function init() {
 
 
 		}
-		previousAvatarYaw = getAvatarYaw();
 		previousOrientation = MyAvatar.orientation;
 
 	}
@@ -161,12 +172,6 @@ function init() {
 
 	}
 
-
-
-	function getAvatarYaw() {
-		var q = MyAvatar.orientation;
-		return Math.asin(-2 * (q.x * q.z - q.w * q.y));
-	}
 
 	function cleanup() {
 		if (currentAnimation) {
