@@ -9,11 +9,16 @@ function init() {
 	var MOVE_THRESHOLD = 0.001;
 	var previousPosition = MyAvatar.position;
 	var dPosition;
+	var previousAvatarYaw = getAvatarYaw();
 
 	var currentAnimation = idleAnimation;
 	avatarState = "idling";
 	MyAvatar.startAnimation(currentAnimation, 24, 1, true, false);
 	var numFrames = 24;
+
+	var D_YAW_THRESHOLD = 1;
+	var dYaw, dQ;
+	var previousOrientation = MyAvatar.orientation;
 
 	var direction;
 
@@ -51,22 +56,6 @@ function init() {
 		TWEEN.update();
 	}
 
-	function finishQuickly(callback) {
-		print('THRESHOLD REACHEd')
-		var frameIndex = MyAvatar.getAnimationDetails(currentAnimation.url).frameIndex;
-		var finishTween = new TWEEN.Tween({frameIndex : nextFrame}).
-		to({frameIndex: nextFrame > currentAnimation.numFrames/2 ? currentAnimation.numFrames : 0}, 500).
-		onUpdate(function() {
-			MyAvatar.startAnimation(currentAnimation.url, 24, 1, false, false, this.frameIndex, this.frameIndex + .1);
-		}).start()
-
-		finishTween.onComplete(function() {
-			callback();
-		});
-
-	}
-
-
 	function slowUpdate() {
 		dPosition = Vec3.subtract(MyAvatar.position, previousPosition);
 		//convert to localFrame
@@ -75,23 +64,30 @@ function init() {
 		previousPosition = MyAvatar.position;
 		if (Vec3.length(dPosition) < MOVE_THRESHOLD) {
 			stillFramesCounter++;
+
+			//Only turn if we're not moving!
+			dYaw = getAvatarYaw() - previousAvatarYaw;
+			dQ = Quat.multiply(MyAvatar.orientation, Quat.inverse(previousOrientation));
+			dYaw = Math.asin(-2 * (dQ.x * dQ.z - dQ.w * dQ.y));
+			print("D YAW " + dYaw)
+			if (dYaw > D_YAW_THRESHOLD) {
+
+			}
 			//If we're barely moving just idle and return;
-			print("FRAME COUNTER:  " + stillFramesCounter	)
 			if (avatarState !== "idling" && stillFramesCounter >= STILL_FRAMES_THRESHOLD) {
-				  avatarState = "idling";
+				avatarState = "idling";
 				//We're in another animation, so finish this animation quickly and then start idle animation on complete
-				finishQuickly(function(){
-				//must stop current animation for frameIndex is fucked
-				  MyAvatar.stopAnimation(currentAnimation.url);
-				  MyAvatar.startAnimation(idleAnimation.url, 24, 1, true, false);
-				  currentAnimation = idleAnimation;
-				  currentFrame = 0;
-			
+				finishQuickly(function() {
+					//must stop current animation for frameIndex is fucked
+					MyAvatar.stopAnimation(currentAnimation.url);
+					MyAvatar.startAnimation(idleAnimation.url, 24, 1, true, false);
+					currentAnimation = idleAnimation;
+					currentFrame = 0;
+
 				});
-			} 
-			return;
+			}
 		} else {
-		    stillFramesCounter = 0;
+			stillFramesCounter = 0;
 			if (Math.abs(dPosition.x) > Math.abs(dPosition.z) * 5) {
 				// if we're moving more than double side to side then forward, sidestep
 				avatarState = "sideStepping"
@@ -101,8 +97,10 @@ function init() {
 				walk();
 			}
 
-			
+
 		}
+		previousAvatarYaw = getAvatarYaw();
+		previousOrientation = MyAvatar.orientation;
 
 	}
 
@@ -118,7 +116,6 @@ function init() {
 			currentFrame = 0;
 			nextFrame = frameIncrement;
 		}
-		print("WALK")
 		if (currentFrame < 0) {
 			currentFrame = walkAnimation.numFrames;
 			nextFrame = walkAnimation.numFrames + frameIncrement;
@@ -144,8 +141,31 @@ function init() {
 			currentFrame = sideStepAnimation.numFrames;
 			nextFrame = sideStepAnimation.numFrames + frameIncrement;
 		}
+	}
+
+	function finishQuickly(callback) {
+		var frameIndex = MyAvatar.getAnimationDetails(currentAnimation.url).frameIndex;
+		var finishTween = new TWEEN.Tween({
+			frameIndex: nextFrame
+		}).
+		to({
+			frameIndex: nextFrame > currentAnimation.numFrames / 2 ? currentAnimation.numFrames : 0
+		}, 500).
+		onUpdate(function() {
+			MyAvatar.startAnimation(currentAnimation.url, 24, 1, false, false, this.frameIndex, this.frameIndex + .1);
+		}).start()
+
+		finishTween.onComplete(function() {
+			callback();
+		});
+
+	}
 
 
+
+	function getAvatarYaw() {
+		var q = MyAvatar.orientation;
+		return Math.asin(-2 * (q.x * q.z - q.w * q.y));
 	}
 
 	function cleanup() {
