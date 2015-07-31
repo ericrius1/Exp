@@ -95,11 +95,11 @@ function init() {
 
 
 			//If we're barely moving just idle and return;
-			else if (avatarState !== "idling" && stillFramesCounter >= STILL_FRAMES_THRESHOLD) {
+			else if ( (avatarState !== "idling" && avatarState !== "finishing") && stillFramesCounter >= STILL_FRAMES_THRESHOLD) {
 				avatarState = "finishing";
 				//We're in another animation, so finish this animation quickly and then start idle animation on complete
-				finishQuickly(idle);
-				// idle();
+				// finishQuickly(idle);
+				idle();
 			}
 		} else {
 			stillFramesCounter = 0;
@@ -187,14 +187,20 @@ function init() {
 
 	function finishQuickly(callback) {
 		var frameIndex = MyAvatar.getAnimationDetails(currentAnimation.url).frameIndex;
-		var finishTween = new TWEEN.Tween({
-			frameIndex: nextFrame
-		}).
-		to({
-			frameIndex: nextFrame > currentAnimation.numFrames / 2 ? currentAnimation.numFrames : 0
-		}, 500).
+		print("FRAME INDEX: " + frameIndex);
+
+		var curProps = {
+			frameIndex: frameIndex
+		};
+
+		var endProps = {
+			frameIndex: direction === 1 ?  currentAnimation.numFrames: 0
+		};
+		var finishTween = new TWEEN.Tween(curProps).
+		to(endProps, 500).
 		onUpdate(function() {
-			MyAvatar.startAnimation(currentAnimation.url, 24, 1, false, false, this.frameIndex, this.frameIndex + .1);
+			print(curProps.frameIndex);
+			MyAvatar.startAnimation(currentAnimation.url, 24, 1, false, false, curProps.frameIndex, curProps.frameIndex + (.1 * direction));
 		}).start()
 
 		finishTween.onComplete(function() {
