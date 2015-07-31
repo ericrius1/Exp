@@ -6,7 +6,8 @@ Script.include("tween.js", function() {
 function init() {
 
 
-	var MOVE_THRESHOLD = 0.001;
+	var MOVE_THRESHOLD = 0.01;
+	var Z_MOVEMENT_THRESHOLD = 0.01;
 	var previousPosition = MyAvatar.position;
 	var dPosition;
 
@@ -21,10 +22,14 @@ function init() {
 
 	var direction;
 
-	var stillFramesCounter = 0;
 	//How many frames to wait before we are at idle. 
 	//This prevents changing state when we're quickly changing direction in a walk, sidestep, etc
 	var STILL_FRAMES_THRESHOLD = 10;
+	var stillFramesCounter = 0;
+
+	var WALK_FRAMES_THRESHOLD = 3;
+	var walkFramesCounter = 0;
+
 
 	var sideStepAnimation = {
 		url: "https://hifi-public.s3.amazonaws.com/ozan/animations/fightclub_bot_anims/side_step_right_inPlace.fbx",
@@ -39,11 +44,15 @@ function init() {
 	}
 
 	var rightTurnAnimation = {
-		url: "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/right_turn_noHipRotation.fbx"
+		url: "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/right_turn_noHipRotation.fbx",
+		numFrames: 31,
+		frameIncrementFactor: 1
 	}
 
 	var leftTurnAnimation = {
-		url: "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/left_turn_noHipRotation.fbx"
+		url: "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/left_turn_noHipRotation.fbx",
+		numFrames: 29,
+		frameIncrementFactor: 1
 	}
 
 
@@ -82,27 +91,30 @@ function init() {
 			else if (avatarState !== "idling" && stillFramesCounter >= STILL_FRAMES_THRESHOLD) {
 				avatarState = "idling";
 				//We're in another animation, so finish this animation quickly and then start idle animation on complete
-				// finishQuickly(function() {
-				// 	//must stop current animation for frameIndex is fucked
-				// 	MyAvatar.stopAnimation(currentAnimation.url);
-				// 	MyAvatar.startAnimation(idleAnimation.url, 24, 1, true, false);
-				// 	currentAnimation = idleAnimation;
-				// 	currentFrame = 0;
+				print("FINISH")
+				finishQuickly(function() {
+					//must stop current animation for frameIndex is fucked
+					MyAvatar.stopAnimation(currentAnimation.url);
+					MyAvatar.startAnimation(idleAnimation.url, 24, 1, true, false);
+					currentAnimation = idleAnimation;
+					currentFrame = 0;
 
-				// });
+				});
 			}
 		} else {
 			stillFramesCounter = 0;
-			if (Math.abs(dPosition.x) > Math.abs(dPosition.z) * 5) {
-				// if we're moving more than double side to side then forward, sidestep
-				avatarState = "sideStepping"
-				sideStep();
-			} else {
+			//We only want to sidestep if theres no z movement at all!
+			if (Math.abs(dPosition.z) > Z_MOVEMENT_THRESHOLD) {
 				avatarState = "walking"
 				walk();
+				walkFramesCounter = 0;
+			} else {
+				walkFramesCounter++;
+				if(walkFramesCounter > WALK_FRAMES_THRESHOLD) {
+				  avatarState = "sideStepping"
+				  sideStep();
+				}
 			}
-
-
 		}
 		previousOrientation = MyAvatar.orientation;
 
@@ -110,7 +122,20 @@ function init() {
 
 	function turn() {
 		currentAnimation = rightTurnAnimation;
-		MyAvatar.startAnimation(currentAnimation.url, 24, 1, false, false)
+		direction = dYaw > 0 ? 1 : -1;
+		frameIncrement = direction * currentAnimation.frameIncrementFactor;
+		currentFrame = currentFrame + frameIncrement;
+		nextFrame = currentFrame + frameIncrement;
+
+		MyAvatar.startAnimation(currentAnimation.url, 24, 1, false, false, currentFrame, nextFrame);
+
+		if (currentFrame > currentAnimation.numFrames) {
+			currentFrame = 0;
+			nextFrame = frameIncrement;
+		} else if ( currentFrame < 0) {
+			currentFrame = currentAnimation.numFrames;
+			nextFrame = currentAnimation.numFrames + frameIncrement;
+		}
 
 	}
 
@@ -125,8 +150,7 @@ function init() {
 		if (currentFrame > walkAnimation.numFrames) {
 			currentFrame = 0;
 			nextFrame = frameIncrement;
-		}
-		if (currentFrame < 0) {
+		} else if (currentFrame < 0) {
 			currentFrame = walkAnimation.numFrames;
 			nextFrame = walkAnimation.numFrames + frameIncrement;
 		}

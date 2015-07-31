@@ -1,4 +1,4 @@
-var currentAnimation = "https://hifi-public.s3.amazonaws.com/ozan/animations/fightclub_bot_anims/side_step_right_inPlace.fbx";
+var currentAnimation = "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/left_turn_noHipRotation.fbx";
 
 
 MyAvatar.startAnimation(currentAnimation, 6, 1, true, false, 0);
