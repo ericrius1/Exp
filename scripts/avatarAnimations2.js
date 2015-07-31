@@ -77,8 +77,11 @@ function init() {
 		dPosition = Vec3.subtract(MyAvatar.position, previousPosition);
 		//convert to localFrame
 		dPosition = Vec3.multiplyQbyV(Quat.inverse(MyAvatar.orientation), dPosition);
-
 		previousPosition = MyAvatar.position;
+
+		if(avatarState === "jumping") {
+			return;
+		}
 		if (Vec3.length(dPosition) < MOVE_THRESHOLD) {
 			stillFramesCounter++;
 
@@ -93,17 +96,10 @@ function init() {
 
 			//If we're barely moving just idle and return;
 			else if (avatarState !== "idling" && stillFramesCounter >= STILL_FRAMES_THRESHOLD) {
-				avatarState = "idling";
+				avatarState = "finishing";
 				//We're in another animation, so finish this animation quickly and then start idle animation on complete
-				print("FINISH")
-				finishQuickly(function() {
-					//must stop current animation for frameIndex is fucked
-					MyAvatar.stopAnimation(currentAnimation.url);
-					MyAvatar.startAnimation(idleAnimation.url, 24, 1, true, false);
-					currentAnimation = idleAnimation;
-					currentFrame = 0;
-
-				});
+				finishQuickly(idle);
+				// idle();
 			}
 		} else {
 			stillFramesCounter = 0;
@@ -121,6 +117,16 @@ function init() {
 			}
 		}
 		previousOrientation = MyAvatar.orientation;
+
+	}
+
+	function idle() {
+		avatarState = "idling";
+		MyAvatar.stopAnimation(currentAnimation.url);
+		MyAvatar.startAnimation(idleAnimation.url, 24, 1, true, false);
+		currentAnimation = idleAnimation;
+		currentFrame = 0;
+		print("IDLE")
 
 	}
 
@@ -198,7 +204,12 @@ function init() {
 	}
 
 	function jump() {
+		avatarState = "jumping";
+		currentAnimation = jumpAnimation;
 		MyAvatar.startAnimation(jumpAnimation.url, 24, 1, false, false, jumpAnimation.startFrame, jumpAnimation.endFrame);
+		var timeoutTime = (jumpAnimation.endFrame - jumpAnimation.startFrame)/24 * 1000;
+		print("timeout time: " + timeoutTime)
+		Script.setTimeout(idle, timeoutTime);
 	}
 
 
