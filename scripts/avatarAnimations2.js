@@ -8,6 +8,7 @@ function init() {
 
 	var MOVE_THRESHOLD = 0.01;
 	var Z_MOVEMENT_THRESHOLD = 0.01;
+	var X_MOVEMENT_THRESHOLD = 0.01;
 	var previousPosition = MyAvatar.position;
 	var dPosition;
 
@@ -24,7 +25,7 @@ function init() {
 
 	//How many frames to wait before we are at idle. 
 	//This prevents changing state when we're quickly changing direction in a walk, sidestep, etc
-	var STILL_FRAMES_THRESHOLD = 10;
+	var STILL_FRAMES_THRESHOLD = 5;
 	var stillFramesCounter = 0;
 
 	var WALK_FRAMES_THRESHOLD = 3;
@@ -35,30 +36,33 @@ function init() {
 		url: "https://hifi-public.s3.amazonaws.com/ozan/animations/fightclub_bot_anims/side_step_right_inPlace.fbx",
 		numFrames: 31,
 		frameIncrementFactor: 2
-	}
+	};
 
 	var walkAnimation = {
 		url: "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/standard_walk.fbx",
 		numFrames: 36,
 		frameIncrementFactor: 1
-	}
+	};
 
 	var rightTurnAnimation = {
 		url: "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/right_turn_noHipRotation.fbx",
 		numFrames: 31,
 		frameIncrementFactor: 1
-	}
+	};
 
 	var leftTurnAnimation = {
 		url: "https://hifi-public.s3.amazonaws.com/ozan/support/FightClubBotTest1/Animations/left_turn_noHipRotation.fbx",
 		numFrames: 29,
 		frameIncrementFactor: 1
-	}
-
-
+	};
 	var idleAnimation = {
 		url: "https://hifi-public.s3.amazonaws.com/ozan/animations/fightclub_bot_anims/idle.fbx"
-	}
+	};
+	var jumpAnimation = {
+		url: "https://hifi-public.s3.amazonaws.com/ozan/animations/sniperBasicMotion/sniper_jump.fbx",
+		startFrame: 15,
+		endFrame: 70
+	};
 	var currentFrame = 0;
 	var nextFrame;
 	var frameIncrement;
@@ -108,7 +112,7 @@ function init() {
 				avatarState = "walking"
 				walk();
 				walkFramesCounter = 0;
-			} else {
+			} else if(Math.abs(dPosition.x) > X_MOVEMENT_THRESHOLD) {
 				walkFramesCounter++;
 				if(walkFramesCounter > WALK_FRAMES_THRESHOLD) {
 				  avatarState = "sideStepping"
@@ -193,6 +197,10 @@ function init() {
 
 	}
 
+	function jump() {
+		MyAvatar.startAnimation(jumpAnimation.url, 24, 1, false, false, jumpAnimation.startFrame, jumpAnimation.endFrame);
+	}
+
 
 	function cleanup() {
 		if (currentAnimation) {
@@ -200,7 +208,14 @@ function init() {
 		}
 	}
 
+	function keyPressEvent(event) {
+		if(event.text === "e") {
+			jump();
+		}
+	}
+
 
 	Script.scriptEnding.connect(cleanup);
 	Script.update.connect(update);
+	Controller.keyPressEvent.connect(keyPressEvent);
 }
