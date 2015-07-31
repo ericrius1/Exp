@@ -15,8 +15,8 @@ function init() {
 	MyAvatar.startAnimation(currentAnimation, 24, 1, true, false);
 	var numFrames = 24;
 
-	var MD_YAW_THRESHOLD = 1	;
-	var dYaw, dQ, mDYaw = 0;
+	var D_YAW_THRESHOLD = 0.02;
+	var dYaw, dQ;
 	var previousOrientation = MyAvatar.orientation;
 
 	var direction;
@@ -72,21 +72,14 @@ function init() {
 			//Only turn if we're not moving!
 			dQ = Quat.multiply(MyAvatar.orientation, Quat.inverse(previousOrientation));
 			dYaw = Math.asin(-2 * (dQ.x * dQ.z - dQ.w * dQ.y));
-			mDYaw += dYaw;
-			if ( Math.abs(mDYaw) > MD_YAW_THRESHOLD && avatarState !== "turning") {
+			if (Math.abs(dYaw) > D_YAW_THRESHOLD) {
 				avatarState = "turning";
-				print("turning")
-				if(mDYaw > 0) {
-					currentAnimation = leftTurnAnimation;
-				} else {
-					currentAnimation = rightTurnAnimation;
-				}
-				MyAvatar.startAnimation(currentAnimation.url, 24, 1, false, false);
-				mDYaw = 0;
-
+				turn();
 			}
+
+
 			//If we're barely moving just idle and return;
-			if (avatarState !== "idling" && stillFramesCounter >= STILL_FRAMES_THRESHOLD) {
+			else if (avatarState !== "idling" && stillFramesCounter >= STILL_FRAMES_THRESHOLD) {
 				avatarState = "idling";
 				//We're in another animation, so finish this animation quickly and then start idle animation on complete
 				// finishQuickly(function() {
@@ -115,9 +108,15 @@ function init() {
 
 	}
 
+	function turn() {
+		currentAnimation = rightTurnAnimation;
+		MyAvatar.startAnimation(currentAnimation.url, 24, 1, false, false)
+
+	}
+
 	function walk() {
-		MyAvatar.startAnimation(walkAnimation.url, 24, 1, false, false, currentFrame, nextFrame);
 		currentAnimation = walkAnimation;
+		MyAvatar.startAnimation(currentAnimation.url, 24, 1, false, false, currentFrame, nextFrame);
 
 		direction = dPosition.z < 0 ? 1 : -1
 		frameIncrement = direction * walkAnimation.frameIncrementFactor;
@@ -131,13 +130,11 @@ function init() {
 			currentFrame = walkAnimation.numFrames;
 			nextFrame = walkAnimation.numFrames + frameIncrement;
 		}
-
-
 	}
+
 
 	function sideStep() {
 		currentAnimation = sideStepAnimation;
-
 		MyAvatar.startAnimation(currentAnimation.url, 24, 1, false, false, currentFrame, nextFrame);
 
 		direction = dPosition.x > 0 ? 1 : -1;
