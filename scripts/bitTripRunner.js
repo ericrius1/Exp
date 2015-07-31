@@ -1,41 +1,47 @@
-var startingDistance = 5;
-var objectPosition = Vec3.sum(MyAvatar.position, Vec3.multiply(Quat.getFront(MyAvatar.orientation), startingDistance));
-
 var IDENTITY_QUAT = Quat.fromPitchYawRollDegrees(0, 0, 0);
+var obstacles = [];	
 
-var speed = 2;
+
+spawnObstacle();
 
 
-var velocity = Vec3.subtract(MyAvatar.position, objectPosition);
-velocity = Vec3.normalize(velocity);
-velocity = Vec3.sum(velocity, speed);
-velocity.y = 0;
-var obstacle = Entities.addEntity({
-	type: 'Box',
-	position: objectPosition,
-	dimensions: {
-		x: 1,
-		y: .2,
-		z: .1
-	},
-	rotation: orientationOf(Vec3.subtract(MyAvatar.position, objectPosition)),
-	color: {
-		red: 100,
-		green: 20,
-		blue: 100
-	},
-	velocity: velocity,
-	damping: 0
 
-});
+function spawnObstacle() {
+	var startingDistance = randFloat(3, 6);
+	var objectPosition = Vec3.sum(MyAvatar.position, Vec3.multiply(Quat.getFront(MyAvatar.orientation), startingDistance));
+	var speed = randFloat(1, 3);
 
-function update() {
 
+	var velocity = Vec3.subtract(MyAvatar.position, objectPosition);
+	velocity = Vec3.normalize(velocity);
+	velocity = Vec3.sum(velocity, speed);
+	velocity.y = 0;
+	var obstacle = Entities.addEntity({
+		type: 'Box',
+		position: objectPosition,
+		dimensions: {
+			x: 1,
+			y: .2,
+			z: .1
+		},
+		rotation: orientationOf(Vec3.subtract(MyAvatar.position, objectPosition)),
+		color: {
+			red: 100,
+			green: 20,
+			blue: 100
+		},
+		velocity: velocity,
+		damping: 0
+	});
+
+	Script.setTimeout(spawnObstacle, randInt(1000, 5000));
+	obstacles.push(obstacle);
 }
 
-
 function cleanup() {
-	Entities.deleteEntity(obstacle);
+   	obstacles.forEach(function(obstacle){
+   		Entities.deleteEntity(obstacle);
+   	});
 }
 
 function orientationOf(vector) {
@@ -62,10 +68,12 @@ function orientationOf(vector) {
 
 
 
-randFloat = function(low, high) {
+function randFloat(low, high) {
 	return low + Math.random() * (high - low);
 }
+function randInt(low, high) {
+  return Math.floor(randFloat(low, high));
+}
+
 
 Script.scriptEnding.connect(cleanup);
-
-Script.update.connect(update);

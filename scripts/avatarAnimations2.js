@@ -63,6 +63,10 @@ function init() {
 		startFrame: 15,
 		endFrame: 70
 	};
+
+	var crouchAnimation = {
+		url: "https://hifi-public.s3.amazonaws.com/ozan/animations/fightclub_bot_anims/crouch.fbx"
+	}
 	var currentFrame = 0;
 	var nextFrame;
 	var frameIncrement;
@@ -79,7 +83,7 @@ function init() {
 		dPosition = Vec3.multiplyQbyV(Quat.inverse(MyAvatar.orientation), dPosition);
 		previousPosition = MyAvatar.position;
 
-		if(avatarState === "jumping") {
+		if(avatarState === "jumping" || avatarState === "crouching") {
 			return;
 		}
 		if (Vec3.length(dPosition) < MOVE_THRESHOLD) {
@@ -95,7 +99,7 @@ function init() {
 
 
 			//If we're barely moving just idle and return;
-			else if ( (avatarState !== "idling" && avatarState !== "finishing") && stillFramesCounter >= STILL_FRAMES_THRESHOLD) {
+			else if ( (avatarState !== "idling" && avatarState !== "finishing") && stillFramesCounter >= STILL_FRAMES_THRESHOLD && walkFramesCounter >= WALK_FRAMES_THRESHOLD) {
 				avatarState = "finishing";
 				//We're in another animation, so finish this animation quickly and then start idle animation on complete
 				// finishQuickly(idle);
@@ -126,7 +130,6 @@ function init() {
 		MyAvatar.startAnimation(idleAnimation.url, 24, 1, true, false);
 		currentAnimation = idleAnimation;
 		currentFrame = 0;
-		print("IDLE")
 
 	}
 
@@ -157,10 +160,10 @@ function init() {
 		frameIncrement = direction * walkAnimation.frameIncrementFactor;
 		currentFrame = currentFrame + frameIncrement
 		nextFrame = currentFrame + frameIncrement;
-		if (currentFrame > walkAnimation.numFrames) {
+		if (currentFrame >= walkAnimation.numFrames) {
 			currentFrame = 0;
 			nextFrame = frameIncrement;
-		} else if (currentFrame < 0) {
+		} else if (currentFrame <= 0) {
 			currentFrame = walkAnimation.numFrames;
 			nextFrame = walkAnimation.numFrames + frameIncrement;
 		}
@@ -187,7 +190,6 @@ function init() {
 
 	function finishQuickly(callback) {
 		var frameIndex = MyAvatar.getAnimationDetails(currentAnimation.url).frameIndex;
-		print("FRAME INDEX: " + frameIndex);
 
 		var curProps = {
 			frameIndex: frameIndex
@@ -199,7 +201,6 @@ function init() {
 		var finishTween = new TWEEN.Tween(curProps).
 		to(endProps, 500).
 		onUpdate(function() {
-			print(curProps.frameIndex);
 			MyAvatar.startAnimation(currentAnimation.url, 24, 1, false, false, curProps.frameIndex, curProps.frameIndex + (.1 * direction));
 		}).start()
 
@@ -214,8 +215,16 @@ function init() {
 		currentAnimation = jumpAnimation;
 		MyAvatar.startAnimation(jumpAnimation.url, 24, 1, false, false, jumpAnimation.startFrame, jumpAnimation.endFrame);
 		var timeoutTime = (jumpAnimation.endFrame - jumpAnimation.startFrame)/24 * 1000;
-		print("timeout time: " + timeoutTime)
 		Script.setTimeout(idle, timeoutTime);
+	}
+
+	function crouch() {
+		avatarState = "crouching";
+		currentAnimation = crouchAnimation;
+		print("CROUCh")
+		MyAvatar.startAnimation(crouchAnimation.url, 30, 1, false, false);
+
+		Script.setTimeout(idle, 2000);
 	}
 
 
@@ -228,6 +237,8 @@ function init() {
 	function keyPressEvent(event) {
 		if(event.text === "e") {
 			jump();
+		} else if( event.text === "c") {
+			crouch();
 		}
 	}
 
