@@ -1,6 +1,8 @@
+Script.include('friction.js')
+
 var basePosition, avatarRot;
 
-var floorSize = 100
+var worldSize = 100
 
 var entityList = [];
 
@@ -19,31 +21,40 @@ var ground = Entities.addEntity({
 	type: "Model",
 	modelURL: "https://hifi-public.s3.amazonaws.com/eric/models/floor.fbx?v11",
 	dimensions: {
-		x: floorSize,
+		x: worldSize,
 		y: 1,
-		z: floorSize
+		z: worldSize
 	},
 	shapeType: 'box',
 });
 entityList.push(ground);
 
-var box = Entities.addEntity({
-	type: 'Box',
-	position: Vec3.sum(basePosition, {x: 0, y: 2, z: 0}),
-	dimensions: {x: 1, y: 1, z: 1},
-	color: {red: 200, green: 20, blue: 200},
-	velocity: {x: 2, y: 0, z: 0},
-	gravity: {x: 0, y: -2, z: 0},
-	collisionsWillMove: true,
-	friction: 0,
-	resitution: 1
+var zone = Entities.addEntity({
+	type: 'Zone',
+	position: basePosition,
+	dimensions: {x: worldSize, y: worldSize, z: worldSize},
+	backgroundMode: "skybox",
+	skybox: {
+		url: "https://hifi-public.s3.amazonaws.com/images/SkyboxTextures/TropicalSunnyDay1024Compressed2.jpg"
+	}
 });
-entityList.push(box);
+
+entityList.push(zone);
+
+var frictionExamplePosition = Vec3.sum(basePosition, {
+	x: 0,
+	y: 2,
+	z: 0
+});
+var frictionExample = new FrictionExample(frictionExamplePosition);
+
+
 
 function cleanup() {
-	entityList.forEach(function(entity){
+	entityList.forEach(function(entity) {
 		Entities.deleteEntity(entity);
 	});
+	frictionExample.cleanup();
 }
 
 Script.scriptEnding.connect(cleanup);
