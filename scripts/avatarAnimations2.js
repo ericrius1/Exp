@@ -6,9 +6,9 @@ Script.include("tween.js", function() {
 function init() {
 
 
-	var MOVE_THRESHOLD = 0.01;
+	var MOVE_THRESHOLD = 0.001;
 	var Z_MOVEMENT_THRESHOLD = 0.01;
-	var X_MOVEMENT_THRESHOLD = 0.01;
+	var X_MOVEMENT_THRESHOLD = 0.001;
 	var previousPosition = MyAvatar.position;
 	var dPosition;
 
@@ -28,7 +28,7 @@ function init() {
 	var STILL_FRAMES_THRESHOLD = 5;
 	var stillFramesCounter = 0;
 
-	var WALK_FRAMES_THRESHOLD = 3;
+	var WALK_FRAMES_THRESHOLD = 5;
 	var walkFramesCounter = 0;
 
 
@@ -99,7 +99,7 @@ function init() {
 
 
 			//If we're barely moving just idle and return;
-			else if ( (avatarState !== "idling" && avatarState !== "finishing") && stillFramesCounter >= STILL_FRAMES_THRESHOLD && walkFramesCounter >= WALK_FRAMES_THRESHOLD) {
+			else if ( (avatarState !== "idling" && avatarState !== "finishing") && stillFramesCounter >= STILL_FRAMES_THRESHOLD) {
 				avatarState = "finishing";
 				//We're in another animation, so finish this animation quickly and then start idle animation on complete
 				// finishQuickly(idle);
@@ -111,12 +111,13 @@ function init() {
 			if (Math.abs(dPosition.z) > Z_MOVEMENT_THRESHOLD) {
 				avatarState = "walking"
 				walk();
-				walkFramesCounter = 0;
 			} else if(Math.abs(dPosition.x) > X_MOVEMENT_THRESHOLD) {
 				walkFramesCounter++;
-				if(walkFramesCounter > WALK_FRAMES_THRESHOLD) {
+				if( avatarState !== "walking" || walkFramesCounter > WALK_FRAMES_THRESHOLD) {
+
 				  avatarState = "sideStepping"
 				  sideStep();
+				  walkFramesCounter = 0;
 				}
 			}
 		}

@@ -1,4 +1,5 @@
 var IDENTITY_QUAT = Quat.fromPitchYawRollDegrees(0, 0, 0);
+var startingAvatarHeight = MyAvatar.position.y;
 var obstacles = [];	
 
 
@@ -8,23 +9,24 @@ spawnObstacle();
 
 function spawnObstacle() {
 	var startingDistance = randFloat(3, 6);
-	var objectPosition = Vec3.sum(MyAvatar.position, Vec3.multiply(Quat.getFront(MyAvatar.orientation), startingDistance));
+	var obstaclePosition = Vec3.sum(MyAvatar.position, Vec3.multiply(Quat.getFront(MyAvatar.orientation), startingDistance));
+    obstaclePosition.y  = randFloat(startingAvatarHeight - 1, startingAvatarHeight + 1);
 	var speed = randFloat(1, 3);
 
 
-	var velocity = Vec3.subtract(MyAvatar.position, objectPosition);
+	var velocity = Vec3.subtract(MyAvatar.position, obstaclePosition);
 	velocity = Vec3.normalize(velocity);
 	velocity = Vec3.sum(velocity, speed);
 	velocity.y = 0;
 	var obstacle = Entities.addEntity({
 		type: 'Box',
-		position: objectPosition,
+		position: obstaclePosition,
 		dimensions: {
-			x: 1,
-			y: .2,
+			x: randFloat(1, 2),
+			y: randFloat(0.1, 2),
 			z: .1
 		},
-		rotation: orientationOf(Vec3.subtract(MyAvatar.position, objectPosition)),
+		rotation: orientationOf(Vec3.subtract(MyAvatar.position, obstaclePosition)),
 		color: {
 			red: 100,
 			green: 20,

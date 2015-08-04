@@ -1,5 +1,5 @@
 //
-//  hydraPaint.js
+//  hydraPolyLinePaint.js
 //  examples
 //
 //  Created by Eric Levin on 5/14/15.
@@ -21,11 +21,11 @@ var LASER_COLOR = {
 };
 var TRIGGER_THRESHOLD = .1;
 
-var MAX_POINTS_PER_LINE = 30;
+var MAX_POINTS_PER_LINE = 40;
 
 var LIFETIME = 6000;
 var DRAWING_DEPTH = 1;
-var LINE_DIMENSIONS = 100;
+var LINE_DIMENSIONS = 20;
 
 
 var MIN_POINT_DISTANCE = 0.01;
@@ -83,6 +83,8 @@ function controller(side, cycleColorButton) {
     this.currentColorIndex = 0;
     this.currentColor = colorPalette[this.currentColorIndex];
 
+    var self = this;
+
 
     this.brush = Entities.addEntity({
         type: 'Sphere',
@@ -116,7 +118,6 @@ function controller(side, cycleColorButton) {
                 y: LINE_DIMENSIONS,
                 z: LINE_DIMENSIONS
             },
-            lineWidth: 0.1,
             lifetime: LIFETIME
         });
         this.points = [];
@@ -150,7 +151,7 @@ function controller(side, cycleColorButton) {
         if (this.drawing && this.points.length < MAX_POINTS_PER_LINE) {
             var localPoint = Vec3.subtract(newBrushPos, this.linePosition);
             if (Vec3.distance(localPoint, this.points[this.points.length - 1]) < MIN_POINT_DISTANCE) {
-                // print("NOT ENOUGH DISTANCE BETWEEN POINTS!!");
+                //Need a minimum distance to avoid binormal NANs
                 return;
             }
 
@@ -167,14 +168,6 @@ function controller(side, cycleColorButton) {
                 color: this.currentColor
             });
 
-            if (this.points.length > MAX_POINTS_PER_LINE) {
-                //We want to have actual brush strokes with tail and all
-                // this.drawing = false
-                // this.newLine(newBrushPos);
-                // this.points.push(Vec3.subtract(newBrushPos, this.linePosition));
-                // this.normals.push(computeNormal(newBrushPos, Camera.getPosition()));
-                // this.strokeWidths.push(strokeWidth);
-            }
         }
     }
 
@@ -199,7 +192,7 @@ function controller(side, cycleColorButton) {
     }
 
     this.cleanup = function() {
-        Entities.deleteEntity(this.brush);
+        Entities.deleteEntity(self.brush);
     }
 }
 
