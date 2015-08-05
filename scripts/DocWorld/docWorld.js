@@ -1,4 +1,6 @@
-Script.include('friction.js')
+Script.include('friction.js?v1')
+
+MyAvatar.orientation = Quat.fromPitchYawRollRadians(0, 0, 0);
 
 var basePosition, avatarRot;
 
@@ -12,8 +14,12 @@ var basePosition = {
 	z: 8000
 };
 
-basePosition = Vec3.sum(MyAvatar.position, Vec3.multiply(3, Quat.getFront(MyAvatar.orientation)));
+var groundWidth = 7;
+var halfWidth = groundWidth/2;
+
+basePosition = Vec3.sum(MyAvatar.position, Vec3.multiply(5, Quat.getFront(MyAvatar.orientation)));
 basePosition.y -= 2
+basePosition.x += halfWidth/2;
 
 
 var ground = Entities.addEntity({
@@ -21,7 +27,7 @@ var ground = Entities.addEntity({
 	type: "Model",
 	modelURL: "https://hifi-public.s3.amazonaws.com/eric/models/floor.fbx?v11",
 	dimensions: {
-		x: worldSize,
+		x: groundWidth,
 		y: 1,
 		z: worldSize
 	},
@@ -29,24 +35,19 @@ var ground = Entities.addEntity({
 });
 entityList.push(ground);
 
-var zone = Entities.addEntity({
-	type: 'Zone',
-	position: basePosition,
-	dimensions: {x: worldSize, y: worldSize, z: worldSize},
-	backgroundMode: "skybox",
-	skybox: {
-		url: "https://hifi-public.s3.amazonaws.com/images/SkyboxTextures/TropicalSunnyDay1024Compressed2.jpg"
-	}
-});
 
-entityList.push(zone);
-
-var frictionExamplePosition = Vec3.sum(basePosition, {
-	x: 0,
-	y: 2,
+var entityPosition = Vec3.sum(basePosition, {
+	x: -groundWidth/2,
+	y: 1.5,
 	z: 0
 });
-var frictionExample = new FrictionExample(frictionExamplePosition);
+
+var panelPosition =  Vec3.sum(basePosition, {
+	x: 0, y: 2, z: -1
+});
+
+var frictionExample = new FrictionExample(entityPosition, panelPosition);
+frictionExample.play();
 
 
 
