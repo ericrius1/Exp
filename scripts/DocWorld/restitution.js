@@ -1,11 +1,11 @@
 RestitutionExample = function(entityPosition, panelPosition) {
-	this.updateInterval = 4000;
+	this.updateInterval = 10000;
 	this.startingEntityPosition = entityPosition;
 	this.values = [0.0, 0.3, 0.6, 1.0];
     this.currentValuesIndex = 0;
 
 	this.box = Entities.addEntity({
-		type: 'Box',
+		type: 'Sphere',
 		dimensions: {
 			x: 0.5,
 			y: 0.5,
@@ -51,20 +51,22 @@ RestitutionExample.prototype.play = function() {
 	}
 	Entities.editEntity(self.box, {
 	    position: self.startingEntityPosition,
-		velocity: {
-			x: 2,
-			y: 0,
-			z: 0
-		},
 		gravity: {
 			x: 0,
-			y: -2,
+			y: -10,
 			z: 0
 		},
-		friction: newFriction
+		velocity: {
+			x: 0, 
+			y: -1,
+			z: 0
+		},
+		restitution: 1.0,
+		damping: 0,
+		friction: 0
 	});
 	Entities.editEntity(self.panel, {
-		text: "Friction \n" + newFriction
+		text: "Restitution \n" + newFriction
 	});
 	Script.setTimeout(function() {
 		self.play();
