@@ -1,5 +1,6 @@
-Script.include('friction.js?v1')
-Script.include('restitution.js?v1')
+Script.include('friction.js')
+Script.include('restitution.js')
+Script.include('gravity.js?v1')
 
 
 MyAvatar.position = {
@@ -77,13 +78,29 @@ panelPosition = Vec3.sum(basePosition, {
 });
 var restitutionExample = new RestitutionExample(entityPosition, panelPosition);
 restitutionExample.play();
+MyAvatar.position = Vec3.sum(MyAvatar.position, {x: 0, y: 0, z: -interExampleZSpace});
 examples.push(restitutionExample);
 
-MyAvatar.position = Vec3.sum(MyAvatar.position, {
+
+//GRAVITY
+
+entityPosition = Vec3.sum(basePosition, {
 	x: 0,
-	y: 0,
-	z: -interExampleZSpace
+	y: 2,
+	z: -(interExampleZSpace * examples.length)
 });
+
+panelPosition = Vec3.sum(basePosition, {
+	x: 0,
+	y: 2,
+	z: -(interExampleZSpace * examples.length + panelZSPace)
+});
+var gravityExample = new GravityExample(entityPosition, panelPosition);
+gravityExample.play();
+
+MyAvatar.position = Vec3.sum(MyAvatar.position, {x: 0, y: 0, z: -interExampleZSpace});	
+examples.push(gravityExample);
+
 
 
 
@@ -93,6 +110,7 @@ function cleanup() {
 	});
 	frictionExample.cleanup();
 	restitutionExample.cleanup();
+	gravityExample.cleanup();
 }
 
 Script.scriptEnding.connect(cleanup);

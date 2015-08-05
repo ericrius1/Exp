@@ -1,11 +1,11 @@
-FrictionExample = function(entityPosition, panelPosition) {
+GravityExample = function(entityPosition, panelPosition) {
 	this.updateInterval = 4000;
 	this.startingEntityPosition = entityPosition;
-	this.values = [0.0, 0.3, 0.6, 1.0];
+	this.values = [-20, -9.8, 0, 5];
     this.currentValuesIndex = 0;
 
 	this.entity = Entities.addEntity({
-		type: 'Box',
+		type: 'Sphere',
 		dimensions: {
 			x: 0.5,
 			y: 0.5,
@@ -17,7 +17,6 @@ FrictionExample = function(entityPosition, panelPosition) {
 			blue: 200
 		},
 		collisionsWillMove: true,
-		damping: 0.0
 	});
 
 	this.panel = Entities.addEntity({
@@ -43,35 +42,35 @@ FrictionExample = function(entityPosition, panelPosition) {
 
 }
 
-FrictionExample.prototype.play = function() {
+GravityExample.prototype.play = function() {
 	var self = this;
-	var newFriction =  self.values[self.currentValuesIndex++]
+	var currentValue =  self.values[self.currentValuesIndex++]
 	if(self.currentValuesIndex === self.values.length) {
 		self.currentValuesIndex = 0;
 	}
+	print("CURRENT VALUE " + currentValue)
 	Entities.editEntity(self.entity, {
 	    position: self.startingEntityPosition,
-		velocity: {
-			x: 2,
-			y: 0,
-			z: 0
-		},
 		gravity: {
 			x: 0,
-			y: -2,
+			y: currentValue,
 			z: 0
 		},
-		friction: newFriction
+		velocity: {
+			x: 0, 
+			y: -.01,
+			z: 0
+		},
 	});
 	Entities.editEntity(self.panel, {
-		text: "Friction \n" + newFriction
+		text: "Gravity \n" + currentValue
 	});
 	Script.setTimeout(function() {
 		self.play();
 	}, self.updateInterval)
 }
 
-FrictionExample.prototype.cleanup = function() {
+GravityExample.prototype.cleanup = function() {
 	Entities.deleteEntity(this.entity);
 	Entities.deleteEntity(this.panel);
 }

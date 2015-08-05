@@ -4,7 +4,7 @@ RestitutionExample = function(entityPosition, panelPosition) {
 	this.values = [1.0, 0.8, 0.5, 0.0];
     this.currentValuesIndex = 0;
 
-	this.box = Entities.addEntity({
+	this.entity = Entities.addEntity({
 		type: 'Sphere',
 		dimensions: {
 			x: 0.5,
@@ -49,7 +49,7 @@ RestitutionExample.prototype.play = function() {
 	if(self.currentValuesIndex === self.values.length) {
 		self.currentValuesIndex = 0;
 	}
-	Entities.editEntity(self.box, {
+	Entities.editEntity(self.entity, {
 	    position: self.startingEntityPosition,
 		gravity: {
 			x: 0,
@@ -72,6 +72,6 @@ RestitutionExample.prototype.play = function() {
 }
 
 RestitutionExample.prototype.cleanup = function() {
-	Entities.deleteEntity(this.box);
+	Entities.deleteEntity(this.entity);
 	Entities.deleteEntity(this.panel);
 }
