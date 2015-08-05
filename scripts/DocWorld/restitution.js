@@ -1,7 +1,7 @@
 RestitutionExample = function(entityPosition, panelPosition) {
-	this.updateInterval = 10000;
+	this.updateInterval = 6000;
 	this.startingEntityPosition = entityPosition;
-	this.values = [0.0, 0.3, 0.6, 1.0];
+	this.values = [1.0, 0.8, 0.5, 0.0];
     this.currentValuesIndex = 0;
 
 	this.box = Entities.addEntity({
@@ -45,7 +45,7 @@ RestitutionExample = function(entityPosition, panelPosition) {
 
 RestitutionExample.prototype.play = function() {
 	var self = this;
-	var newFriction =  self.values[self.currentValuesIndex++]
+	var currentValue =  self.values[self.currentValuesIndex++]
 	if(self.currentValuesIndex === self.values.length) {
 		self.currentValuesIndex = 0;
 	}
@@ -61,12 +61,10 @@ RestitutionExample.prototype.play = function() {
 			y: -1,
 			z: 0
 		},
-		restitution: 1.0,
-		damping: 0,
-		friction: 0
+		restitution: currentValue,
 	});
 	Entities.editEntity(self.panel, {
-		text: "Restitution \n" + newFriction
+		text: "Restitution \n" + currentValue
 	});
 	Script.setTimeout(function() {
 		self.play();
