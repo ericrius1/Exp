@@ -114,11 +114,11 @@ panelPosition = Vec3.sum(basePosition, {
 	y: 2,
 	z: -(interExampleZSpace * examples.length + panelZSPace)
 });
-var particleExample = new ParticleExample(entityPosition, panelPosition);
-particleExample.play();
+var particleEmitStrengthExample = new ParticleEmitStrengthExample(entityPosition, panelPosition);
+particleEmitStrengthExample.play();
 
 MyAvatar.position = Vec3.sum(MyAvatar.position, {x: 0, y: 0, z: -interExampleZSpace});	
-examples.push(particleExample);
+examples.push(particleEmitStrengthExample);
 
 
 
