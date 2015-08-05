@@ -1,7 +1,7 @@
-Script.include('friction.js')
-Script.include('restitution.js')
-Script.include('gravity.js?v1')
-
+Script.include('frictionExample.js')
+Script.include('restitutionExample.js')
+Script.include('gravityExample.js')
+Script.include('particleExamples/emitStrengthExample.js')
 
 MyAvatar.position = {
 	x: 1000,
@@ -11,7 +11,7 @@ MyAvatar.position = {
 MyAvatar.orientation = Quat.fromPitchYawRollRadians(0, 0, 0);
 
 var basePosition, avatarRot;
-var worldSize = 100
+var floorLength = 100
 
 var entityList = [];
 
@@ -29,13 +29,13 @@ basePosition.y -= 2
 
 
 var ground = Entities.addEntity({
-	position: basePosition,
+	position: Vec3.sum(basePosition, {x: 0, y: 0, z: -floorLength/2 + 20}),
 	type: "Model",
 	modelURL: "https://hifi-public.s3.amazonaws.com/eric/models/floor.fbx?v11",
 	dimensions: {
 		x: groundWidth,
 		y: 1,
-		z: worldSize
+		z: floorLength
 	},
 	shapeType: 'box',
 
@@ -101,6 +101,25 @@ gravityExample.play();
 MyAvatar.position = Vec3.sum(MyAvatar.position, {x: 0, y: 0, z: -interExampleZSpace});	
 examples.push(gravityExample);
 
+//PARTICLES
+
+entityPosition = Vec3.sum(basePosition, {
+	x: 0,
+	y: 1,
+	z: -(interExampleZSpace * examples.length)
+});
+
+panelPosition = Vec3.sum(basePosition, {
+	x: 0,
+	y: 2,
+	z: -(interExampleZSpace * examples.length + panelZSPace)
+});
+var particleExample = new ParticleExample(entityPosition, panelPosition);
+particleExample.play();
+
+MyAvatar.position = Vec3.sum(MyAvatar.position, {x: 0, y: 0, z: -interExampleZSpace});	
+examples.push(particleExample);
+
 
 
 
@@ -108,9 +127,10 @@ function cleanup() {
 	entityList.forEach(function(entity) {
 		Entities.deleteEntity(entity);
 	});
-	frictionExample.cleanup();
-	restitutionExample.cleanup();
-	gravityExample.cleanup();
+
+	examples.forEach(function(example){
+		example.cleanup();
+	});
 }
 
 Script.scriptEnding.connect(cleanup);
