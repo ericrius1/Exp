@@ -15,6 +15,7 @@ Script.include('modelExamples/animationFPSExample.js');
 
 //LIGHT
 Script.include('lightExamples/lightIntensityExample.js');
+Script.include('lightExamples/lightCutoffExample.js');
 
 MyAvatar.position = {
 	x: 1000,
@@ -249,6 +250,7 @@ examples.push(modelAnimationExample);
 
 //LIGHTS
 
+//light intensity
 entityPosition = Vec3.sum(basePosition, {
 	x: 0,
 	y: 2,
@@ -269,6 +271,30 @@ MyAvatar.position = Vec3.sum(MyAvatar.position, {
 	z: -interExampleZSpace
 });
 examples.push(lightIntensityExample);
+
+//light cutoff
+entityPosition = Vec3.sum(basePosition, {
+	x: 0,
+	y: 2,
+	z: -(interExampleZSpace * examples.length) + 1
+});
+
+panelPosition = Vec3.sum(basePosition, {
+	x: 0,
+	y: 2,
+	z: -(interExampleZSpace * examples.length + panelZSPace)
+});
+var lightCutoffExample = new LightCutoffExample(entityPosition, panelPosition);
+lightCutoffExample.play();
+
+MyAvatar.position = Vec3.sum(MyAvatar.position, {
+	x: 0,
+	y: 0,
+	z: -interExampleZSpace
+});
+examples.push(lightCutoffExample);
+
+
 
 
 function cleanup() {
