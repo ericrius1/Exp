@@ -73,7 +73,6 @@ ParticleEmitStrengthExample = function(entityPosition, panelPosition) {
 ParticleEmitStrengthExample.prototype.play = function() {
 	var self = this;
 	var strength = (2 + Math.sin(self.count / 20) * 2).toFixed(1);
-	print('STRENGTH ' + strength);
 	Entities.editEntity(
 		self.emitter, {
 			emitStrength: strength

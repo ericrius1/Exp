@@ -1,7 +1,9 @@
 Script.include('frictionExample.js')
-Script.include('restitutionExample.js')
-Script.include('gravityExample.js')
-Script.include('particleExamples/emitStrengthExample.js')
+Script.include('restitutionExample.js');
+Script.include('gravityExample.js');
+Script.include('particleExamples/emitStrengthExample.js');
+
+Script.include('lineExamples/dynamicLineExample.js');
 
 MyAvatar.position = {
 	x: 1000,
@@ -119,6 +121,26 @@ particleEmitStrengthExample.play();
 
 MyAvatar.position = Vec3.sum(MyAvatar.position, {x: 0, y: 0, z: -interExampleZSpace});	
 examples.push(particleEmitStrengthExample);
+
+
+//LINES
+
+entityPosition = Vec3.sum(basePosition, {
+	x: 0,
+	y: 1,
+	z: -(interExampleZSpace * examples.length)
+});
+
+panelPosition = Vec3.sum(basePosition, {
+	x: 0,
+	y: 2,
+	z: -(interExampleZSpace * examples.length + panelZSPace)
+});
+var lineDynamicExample = new LineDynamicExample(entityPosition, panelPosition);
+lineDynamicExample.play();
+
+MyAvatar.position = Vec3.sum(MyAvatar.position, {x: 0, y: 0, z: -interExampleZSpace});	
+examples.push(lineDynamicExample);
 
 
 
