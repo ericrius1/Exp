@@ -1,12 +1,32 @@
 LightIntensityExample = function(entityPosition, panelPosition) {
-	this.updateInterval = 30;
+	this.updateInterval = 100;
+	this.count = 0;
+	this.maxIntensity = 10;
+	var color = {
+		red: 200,
+		green: 50,
+		blue: 200
+	}
+	this.bulb = Entities.addEntity({
+		type: "Sphere",
+		dimensions: {
+			x: 0.05,
+			y: 0.05,
+			z: 0.05
+		},
+		position: entityPosition,
+		color: color
+	});
 
 	this.light = Entities.addEntity({
 		type: "Light",
 		position: entityPosition,
-		intensity: 1,
-		color: {red: 200, green: 50, blue: 200},
-		dimensions: {x: 5, y: 5, z: 5}
+		color: color,
+		dimensions: {
+			x: 5,
+			y: 5,
+			z: 5
+		}
 	});
 
 	this.panel = Entities.addEntity({
@@ -34,9 +54,21 @@ LightIntensityExample = function(entityPosition, panelPosition) {
 
 LightIntensityExample.prototype.play = function() {
 	var self = this;
+	var intensity = ( self.maxIntensity/2 + Math.sin(self.count/10) * self.maxIntensity/2).toFixed(2);
+	Entities.editEntity(self.light, {intensity: intensity});
+	Entities.editEntity(self.panel, {
+		text: "light intensity: \n" + intensity
+	});
+	self.count++;
+
+	Script.setTimeout(function() {
+		self.play();
+	}, self.updateInterval);
 }
 
 LightIntensityExample.prototype.cleanup = function() {
-	Entities.deleteEntity(this.line);
+	Entities.deleteEntity(this.light);
+	Entities.deleteEntity(this.panel);
+	Entities.deleteEntity(this.bulb);
 
 }
