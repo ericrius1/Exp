@@ -1,11 +1,18 @@
 LineDynamicExample = function(entityPosition, panelPosition) {
 	this.updateInterval = 30;
+	this.linePoints = [];
+	this.count = 0;
+	for(var x = 0; x < 1; x+=.1) {
+		this.linePoints.push({x: x, y: 0, z: 0})
+	}
 
 	this.line = Entities.addEntity({
 		type: "Line",
 		position: entityPosition,
-		color: {red: 200, green: 50, blue: 200},
-		dimensions: {x: 5, y: 5, z: 5}
+		color: {red: 10, green: 10, blue: 200},
+		dimensions: {x: 20, y: 20, z: 20},
+		linePoints: this.linePoints,
+		lineWidth: 4
 	});
 
 	this.panel = Entities.addEntity({
@@ -27,23 +34,21 @@ LineDynamicExample = function(entityPosition, panelPosition) {
 			blue: 0
 		},
 		lineHeight: 0.1,
-		text: "line \n [{x: 0, y: 0, z: 0}, {x: 1, y: 1, z: -2	}]"
+		text: "dynamic line"
 	});
 }
 
 LineDynamicExample.prototype.play = function() {
 	var self = this;
-	Entities.editEntity(self.line, {
-		linePoints: [{
-			x: 0,
-			y: 0,
-			z: 0
-		}, {
-			x: 1,
-			y: 1,
-			z: -2
-		}]
-	});
+	var points = Entities.getEntityProperties(self.line).linePoints;
+	points[0].y = Math.sin(self.count/10);
+	points[points.length-1].y = Math.sin(self.count/10);
+	Entities.editEntity(self.line, {linePoints: points});
+
+	Script.setTimeout(function() {
+		self.play();
+	}, self.updateInterval);
+	self.count++;
 }
 
 LineDynamicExample.prototype.cleanup = function() {
