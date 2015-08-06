@@ -26,7 +26,8 @@ LineDynamicExample = function(entityPosition, panelPosition) {
 			green: 255,
 			blue: 0
 		},
-		lineHeight: 0.1
+		lineHeight: 0.1,
+		text: "line \n [{x: 0, y: 0, z: 0}, {x: 1, y: 1, z: -2	}]"
 	});
 }
 
@@ -40,7 +41,7 @@ LineDynamicExample.prototype.play = function() {
 		}, {
 			x: 1,
 			y: 1,
-			z: 1
+			z: -2
 		}]
 	});
 }

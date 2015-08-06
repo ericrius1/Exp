@@ -1,7 +1,10 @@
 Script.include('frictionExample.js')
 Script.include('restitutionExample.js');
 Script.include('gravityExample.js');
+
+//particles
 Script.include('particleExamples/emitStrengthExample.js');
+Script.include('particleExamples/emitDirectionExample.js');
 
 Script.include('lineExamples/dynamicLineExample.js');
 
@@ -105,6 +108,7 @@ examples.push(gravityExample);
 
 //PARTICLES
 
+//emitStrength
 entityPosition = Vec3.sum(basePosition, {
 	x: 0,
 	y: 1,
@@ -122,9 +126,7 @@ particleEmitStrengthExample.play();
 MyAvatar.position = Vec3.sum(MyAvatar.position, {x: 0, y: 0, z: -interExampleZSpace});	
 examples.push(particleEmitStrengthExample);
 
-
-//LINES
-
+//emitDirection
 entityPosition = Vec3.sum(basePosition, {
 	x: 0,
 	y: 1,
@@ -136,11 +138,34 @@ panelPosition = Vec3.sum(basePosition, {
 	y: 2,
 	z: -(interExampleZSpace * examples.length + panelZSPace)
 });
-var lineDynamicExample = new LineDynamicExample(entityPosition, panelPosition);
-lineDynamicExample.play();
+var particleDirectionExample = new ParticleDirectionExample(entityPosition, panelPosition);
+particleDirectionExample.play();
 
 MyAvatar.position = Vec3.sum(MyAvatar.position, {x: 0, y: 0, z: -interExampleZSpace});	
-examples.push(lineDynamicExample);
+examples.push(particleDirectionExample);
+
+
+
+
+
+//LINES
+
+// entityPosition = Vec3.sum(basePosition, {
+// 	x: 0,
+// 	y: 1,
+// 	z: -(interExampleZSpace * examples.length)
+// });
+
+// panelPosition = Vec3.sum(basePosition, {
+// 	x: 0,
+// 	y: 2,
+// 	z: -(interExampleZSpace * examples.length + panelZSPace)
+// });
+// var lineDynamicExample = new LineDynamicExample(entityPosition, panelPosition);
+// lineDynamicExample.play();
+
+// MyAvatar.position = Vec3.sum(MyAvatar.position, {x: 0, y: 0, z: -interExampleZSpace});	
+// examples.push(lineDynamicExample);
 
 
 
