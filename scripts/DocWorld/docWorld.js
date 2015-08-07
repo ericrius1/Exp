@@ -251,48 +251,48 @@ examples.push(modelAnimationExample);
 //LIGHTS
 
 //light intensity
-entityPosition = Vec3.sum(basePosition, {
-	x: 0,
-	y: 2,
-	z: -(interExampleZSpace * examples.length)
-});
+// entityPosition = Vec3.sum(basePosition, {
+// 	x: 0,
+// 	y: 2,
+// 	z: -(interExampleZSpace * examples.length)
+// });
 
-panelPosition = Vec3.sum(basePosition, {
-	x: 0,
-	y: 2,
-	z: -(interExampleZSpace * examples.length + panelZSPace)
-});
-var lightIntensityExample = new LightIntensityExample(entityPosition, panelPosition);
-lightIntensityExample.play();
+// panelPosition = Vec3.sum(basePosition, {
+// 	x: 0,
+// 	y: 2,
+// 	z: -(interExampleZSpace * examples.length + panelZSPace)
+// });
+// var lightIntensityExample = new LightIntensityExample(entityPosition, panelPosition);
+// lightIntensityExample.play();
 
-MyAvatar.position = Vec3.sum(MyAvatar.position, {
-	x: 0,
-	y: 0,
-	z: -interExampleZSpace
-});
-examples.push(lightIntensityExample);
+// MyAvatar.position = Vec3.sum(MyAvatar.position, {
+// 	x: 0,
+// 	y: 0,
+// 	z: -interExampleZSpace
+// });
+// examples.push(lightIntensityExample);
 
-//light cutoff
-entityPosition = Vec3.sum(basePosition, {
-	x: 0,
-	y: 2,
-	z: -(interExampleZSpace * examples.length) + 1
-});
+// //light cutoff
+// entityPosition = Vec3.sum(basePosition, {
+// 	x: 0,
+// 	y: 2,
+// 	z: -(interExampleZSpace * examples.length) + 1
+// });
 
-panelPosition = Vec3.sum(basePosition, {
-	x: 0,
-	y: 2,
-	z: -(interExampleZSpace * examples.length + panelZSPace)
-});
-var lightCutoffExample = new LightCutoffExample(entityPosition, panelPosition);
-lightCutoffExample.play();
+// panelPosition = Vec3.sum(basePosition, {
+// 	x: 0,
+// 	y: 2,
+// 	z: -(interExampleZSpace * examples.length + panelZSPace)
+// });
+// var lightCutoffExample = new LightCutoffExample(entityPosition, panelPosition);
+// lightCutoffExample.play();
 
-MyAvatar.position = Vec3.sum(MyAvatar.position, {
-	x: 0,
-	y: 0,
-	z: -interExampleZSpace
-});
-examples.push(lightCutoffExample);
+// MyAvatar.position = Vec3.sum(MyAvatar.position, {
+// 	x: 0,
+// 	y: 0,
+// 	z: -interExampleZSpace
+// });
+// examples.push(lightCutoffExample);
 
 
 

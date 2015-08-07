@@ -1,12 +1,26 @@
 ModelAnimationExample = function(entityPosition, panelPosition) {
-	this.updateInterval = 30;
-	var url = "https://hifi-public.s3.amazonaws.com/eric/models/windmill.fbx";
+	this.updateInterval = 4000;
+	//var url = "https://hifi-public.s3.amazonaws.com/eric/models/windmillNoAnimation.fbx";
+	var url = "file:///Users/ericlevin/Desktop/windmill.fbx?v1";
+	this.values = [5, 15, 30, 60, 120, 240];
+	this.currentValueIndex = 0;
+	var animationSettings = {
+		fps: this.minFPS,
+		running: true,
+	}
+
 	this.model = Entities.addEntity({
 		type: "Model",
+		animationSettings: JSON.stringify(animationSettings),
 		position: entityPosition,
 		modelURL: url,
 		animationURL: url,
-		dimensions: {x: 5, y: 5, z: 5}
+		dimensions: {
+			x: 0.2,
+			y: 0.5,
+			z: 0.2
+		},
+		animationIsPlaying: false
 	});
 
 	this.panel = Entities.addEntity({
@@ -28,14 +42,30 @@ ModelAnimationExample = function(entityPosition, panelPosition) {
 			blue: 0
 		},
 		lineHeight: 0.1,
+		text: "model fps"
 	});
 }
 
 ModelAnimationExample.prototype.play = function() {
-	
+	var self = this;
+	if(self.currentValueIndex === self.values.length) {
+		self.currentValueIndex = 0;
+	}
+	var fps = self.values[self.currentValueIndex++];
+	print("FPS" + fps)
+	Entities.editEntity(self.model, {
+		animationSettings: JSON.stringify({fps: fps, running: true})
+	});
+	Entities.editEntity(self.panel, {
+		text: "model fps\n" + fps
+	})
+	Script.setTimeout(function(){
+		self.play();
+	}, self.updateInterval);
 }
 
 ModelAnimationExample.prototype.cleanup = function() {
 	Entities.deleteEntity(this.model);
+	Entities.deleteEntity(this.panel);
 
 }
