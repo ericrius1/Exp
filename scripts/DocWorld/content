@@ -1,0 +1,71 @@
+
+---
+######fps:
+Determines the frames per second at which the animation is played
+type: float
+unit: frames/second
+Default Value: 30.0
+
+######firstFrame:
+type: float
+Specifies the first frame of the animation to play from
+Default Value: 0
+
+######lastFrame:
+Specifies the final frame of the animation to play to
+Default Value: 100000 (If the animation is less than this many frames, the animation with automatically stop unless looping is enabled)
+
+#####loop:
+type: boolean
+Default Value: false
+Specifies whether or not the animation will automatically loop.
+
+#####running
+type: boolean
+Default Value: false
+Specifies whether or not this animation is currently running. NOTE: If another sub-property of animationSettings, 
+
+---
+##Text Entity
+
+The Text Entity displays text against a flat plane, similar to a whiteboard or blackboard.
+
+###lineHeight:
+type: float
+Default Value: 0.1
+Specifies the height of the line of text, in meters
+
+##textColor:
+Specifies the text color in RGB format
+The range of each color component is between 0 and 255.
+Default Value: {red: 255, green: 255, blue: 255}
+
+##backgroundColor:
+Specifies the color of the plane the text appears on, in RGB format.
+The range of each color component is between 0 and 255.
+Default Value: {red: 0, green: 0, blue: 0}
+
+##defaultFaceCamera:
+type: boolean
+Default Value: false
+
+If enabled, the text entity will always face the camera. This is also known as billboarding.
+
+##Particle Effect Entity
+
+###emitStrength
+type: float
+The speed at which the particles are emitted, in meters/second. 
+Default: 25
+
+[Live Example](hifi://fantasia/1000,999.625,970/0,0,0,1)
+
+###emitDirection
+
+The normalized direction at which the particles are emitted
+Default Value: {x: 0, y: 1, z: 0}
+
+[Live Example](hifi://fantasia/1000,999.625,960/0,0,0,1)
+
+---
+Example:

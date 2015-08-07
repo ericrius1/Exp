@@ -6,7 +6,8 @@ ModelAnimationExample = function(entityPosition, panelPosition) {
 	this.currentValueIndex = 0;
 	var animationSettings = {
 		fps: this.minFPS,
-		running: true,
+		// running: true,
+		startAutomatically: true
 	}
 
 	this.model = Entities.addEntity({
