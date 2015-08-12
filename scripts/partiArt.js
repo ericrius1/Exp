@@ -23,6 +23,8 @@ var rightTip = 2 * RIGHT + 1;
 var leftPalm = 2 * LEFT;
 var leftTip = 2 * LEFT + 1;
 
+var EMITTER_SPEED = 0.5;
+
 var particleRadius = 0.01;
 
 var HIDDEN_POSITION = {x: -100, y: -100, z: -100};
@@ -54,7 +56,7 @@ function update() {
 	if (triggerHeld) {
 		Entities.editEntity(emitter, {
 			position: Controller.getSpatialControlPosition(rightTip),
-			emitVelocity: Controller.getSpatialControlNormal(rightTip),
+			emitVelocity: Vec3.multiply(Controller.getSpatialControlNormal(rightTip), EMITTER_SPEED),
 			particleRadius: particleRadius
 		});
 	}
@@ -95,6 +97,7 @@ function createEmitter(position) {
 		textures: "https://raw.githubusercontent.com/ericrius1/SantasLair/santa/assets/smokeparticle.png",
 		emitRate: 100,
 		velocitySpread: {x: .1, y: .1, z: .1},
+		accelerationSpread: {x: .1, y: .1, z: .1},
 		color: colorPalette[0],
 		lifespan: 40,
 	});
