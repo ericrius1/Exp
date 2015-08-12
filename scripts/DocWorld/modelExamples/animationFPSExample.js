@@ -6,8 +6,7 @@ ModelAnimationExample = function(entityPosition, panelPosition) {
 	this.currentValueIndex = 0;
 	var animationSettings = {
 		fps: this.minFPS,
-		// running: true,
-		startAutomatically: true
+		running: true,
 	}
 
 	this.model = Entities.addEntity({
@@ -53,7 +52,6 @@ ModelAnimationExample.prototype.play = function() {
 		self.currentValueIndex = 0;
 	}
 	var fps = self.values[self.currentValueIndex++];
-	print("FPS" + fps)
 	Entities.editEntity(self.model, {
 		animationSettings: JSON.stringify({fps: fps, running: true})
 	});

@@ -22,8 +22,8 @@ LightCutoffExample = function(entityPosition, panelPosition) {
 		type: "Light",
 		position: entityPosition,
 		color: color,
-		isSpotlight: true,
-		intensity: 10,
+		isSpotlight: false,
+		intensity: 100,
 		dimensions: {
 			x: 5,
 			y: 5,

@@ -43,9 +43,9 @@ var LEFT_BUTTON_3 = 3;
 var LEFT_BUTTON_4 = 4;
 
 var colorPalette = [{
-    red: 250,
+    red: 0,
     green: 0,
-    blue: 0
+    blue: 250
 }, {
     red: 214,
     green: 91,
@@ -161,6 +161,7 @@ function controller(side, cycleColorButton) {
             this.normals.push(normal);
             var strokeWidth = map(this.triggerValue, TRIGGER_THRESHOLD, 1, MIN_STROKE_WIDTH, MAX_STROKE_WIDTH);
             this.strokeWidths.push(strokeWidth);
+            print("CURRENT COLOR " + JSON.stringify( this.currentColor));
             Entities.editEntity(this.line, {
                 linePoints: this.points,
                 normals: this.normals,

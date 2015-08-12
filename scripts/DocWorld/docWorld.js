@@ -251,41 +251,41 @@ examples.push(modelAnimationExample);
 //LIGHTS
 
 //light intensity
+entityPosition = Vec3.sum(basePosition, {
+	x: 0,
+	y: 2,
+	z: -(interExampleZSpace * examples.length)
+});
+
+panelPosition = Vec3.sum(basePosition, {
+	x: 0,
+	y: 2,
+	z: -(interExampleZSpace * examples.length + panelZSPace)
+});
+var lightIntensityExample = new LightIntensityExample(entityPosition, panelPosition);
+lightIntensityExample.play();
+
+MyAvatar.position = Vec3.sum(MyAvatar.position, {
+	x: 0,
+	y: 0,
+	z: -interExampleZSpace
+});
+examples.push(lightIntensityExample);
+
+//light cutoff
 // entityPosition = Vec3.sum(basePosition, {
 // 	x: 0,
 // 	y: 2,
-// 	z: -(interExampleZSpace * examples.length)
+// 	z: -(interExampleZSpace * examples.length) + 3
 // });
 
 // panelPosition = Vec3.sum(basePosition, {
 // 	x: 0,
 // 	y: 2,
-// 	z: -(interExampleZSpace * examples.length + panelZSPace)
-// });
-// var lightIntensityExample = new LightIntensityExample(entityPosition, panelPosition);
-// lightIntensityExample.play();
-
-// MyAvatar.position = Vec3.sum(MyAvatar.position, {
-// 	x: 0,
-// 	y: 0,
-// 	z: -interExampleZSpace
-// });
-// examples.push(lightIntensityExample);
-
-// //light cutoff
-// entityPosition = Vec3.sum(basePosition, {
-// 	x: 0,
-// 	y: 2,
-// 	z: -(interExampleZSpace * examples.length) + 1
-// });
-
-// panelPosition = Vec3.sum(basePosition, {
-// 	x: 0,
-// 	y: 2,
-// 	z: -(interExampleZSpace * examples.length + panelZSPace)
+// 	z: -(interExampleZSpace * examples.length + panelZSPace) 	
 // });
 // var lightCutoffExample = new LightCutoffExample(entityPosition, panelPosition);
-// lightCutoffExample.play();
+// // lightCutoffExample.play();
 
 // MyAvatar.position = Vec3.sum(MyAvatar.position, {
 // 	x: 0,
