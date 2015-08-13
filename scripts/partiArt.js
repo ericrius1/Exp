@@ -8,7 +8,12 @@ var EMITTER_DISTANCE = 3;
 var RIGHT_TRIGGER = 1;
 var prevRightTriggerValue = 0;
 var TRIGGER_THRESHOLD = 0.2;
-var triggerHeld = false;
+var rightTriggerHeld = false;
+
+var LEFT_TRIGGER = 0;
+var prevLeftTriggerValue = 0;
+var TRIGGER_THRESHOLD = 0.2;
+var leftTriggerHeld = false;
 
 var RIGHT = 1;
 var LEFT = 0;
@@ -60,15 +65,17 @@ var colorPalette = [{
 
 
 Script.setInterval(function() {
-	Entities.editEntity(emitter, {color: colorPalette[currentColorIndex++]});
-    if(currentColorIndex === colorPalette.length) {
-    	currentColorIndex = 0;
-    }
+	Entities.editEntity(wandEmitter, {
+		color: colorPalette[currentColorIndex++]
+	});
+	if (currentColorIndex === colorPalette.length) {
+		currentColorIndex = 0;
+	}
 }, 1400);
 
 var currentColorIndex = 0;
-var emitter;
-createEmitter();
+var wandEmitter;
+createEmitters();
 
 var UP_AXIS = {
 	x: 0,
@@ -87,16 +94,19 @@ var startSetting = JSON.stringify({
 function update() {
 	updateControllerState();
 
-	// Entities.editEntity(emitter, {
+	// Entities.editEntity(wandEmitter, {
 	// 	particleRadius: audioStats.loudness / LOUDNESS_DAMPING
 	// });
-	if (triggerHeld) {
+	if (rightTriggerHeld) {
 		var forward = Controller.getSpatialControlNormal(rightTip);
-		Entities.editEntity(emitter, {
+		Entities.editEntity(wandEmitter, {
 			emitAcceleration: Vec3.multiply(forward, -.1),
 			position: Controller.getSpatialControlPosition(rightTip),
-			emitVelocity: Vec3.multiply(forward	, EMITTER_SPEED)
+			emitVelocity: Vec3.multiply(forward, EMITTER_SPEED)
 		});
+	}
+	if (leftTriggerHeld) {
+
 	}
 
 
@@ -106,34 +116,44 @@ function update() {
 
 function updateControllerState() {
 	rightTriggerValue = Controller.getTriggerValue(RIGHT_TRIGGER);
-	if (rightTriggerValue > TRIGGER_THRESHOLD && !triggerHeld) {
-		triggerHeld = true;
-		startEmitter()
-	} else if (rightTriggerValue < TRIGGER_THRESHOLD && prevRightTriggerValue > TRIGGER_THRESHOLD && triggerHeld) {
-		triggerHeld = false;
-		stopEmitter();
+	if (rightTriggerValue > TRIGGER_THRESHOLD && !rightTriggerHeld) {
+		rightTriggerHeld = true;
+		startWandEmitter()
+	} else if (rightTriggerValue < TRIGGER_THRESHOLD && prevRightTriggerValue > TRIGGER_THRESHOLD && rightTriggerHeld) {
+		rightTriggerHeld = false;
+		stopWandEmitter();
 	}
 
 	prevRightTriggerValue = rightTriggerValue;
+
+	leftTriggerValue = Controller.getTriggerValue(LEFT_TRIGGER);
+	if (leftTriggerValue > TRIGGER_THRESHOLD && !leftTriggerHeld) {
+		leftTriggerHeld = true;
+		set
+	} else if (rightTriggerValue < TRIGGER_THRESHOLD && prevLeftTriggerValue > TRIGGER_THRESHOLD && leftTriggerHeld) {
+		leftTriggerHeld = false;
+	}
+
+	prevLeftTriggerValue = leftTriggerValue;
 }
 
-function startEmitter() {
-	Entities.editEntity(emitter, {
+function startWandEmitter() {
+	Entities.editEntity(wandEmitter, {
 		animationSettings: startSetting
 	});
 }
 
-function stopEmitter() {
-	Entities.editEntity(emitter, {
+function stopWandEmitter() {
+	Entities.editEntity(wandEmitter, {
 		animationSettings: stopSetting
 	});
 }
 
 function cleanup() {
-	Entities.deleteEntity(emitter);
+	Entities.deleteEntity(wandEmitter);
 }
 
-function createEmitter(position) {
+function createEmitters(position) {
 
 	var animationSettings = JSON.stringify({
 		fps: 30,
@@ -142,7 +162,7 @@ function createEmitter(position) {
 		firstFrame: 1,
 		lastFrame: 10
 	});
-	emitter = Entities.addEntity({
+	wandEmitter = Entities.addEntity({
 		type: "ParticleEffect",
 		animationSettings: animationSettings,
 		position: HIDDEN_POSITION,
