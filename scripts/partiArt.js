@@ -1,3 +1,5 @@
+var song = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/songs/Made%20In%20Heights%20-%20Forgiveness.wav")
+
 var baseRadius = .04;
 var isHolding = false;
 
@@ -68,7 +70,7 @@ function updateControllerState() {
 		triggerHeld = true;
 	} else if (rightTriggerValue < TRIGGER_THRESHOLD && prevRightTriggerValue > TRIGGER_THRESHOLD && triggerHeld) {
 		triggerHeld = false;
-		Entities.editEntity(emitter, {position: HIDDEN_POSITION});
+		// Entities.editEntity(emitter, {position: HIDDEN_POSITION});
 	}
 
 	prevRightTriggerValue = rightTriggerValue;
@@ -96,10 +98,11 @@ function createEmitter(position) {
 		position: HIDDEN_POSITION,
 		textures: "https://raw.githubusercontent.com/ericrius1/SantasLair/santa/assets/smokeparticle.png",
 		emitRate: 100,
-		velocitySpread: {x: .1, y: .1, z: .1},
-		accelerationSpread: {x: .1, y: .1, z: .1},
-		color: colorPalette[0],
-		lifespan: 40,
+		velocitySpread: {x: .2, y: .1, z: .2},
+		accelerationSpread: {x: .1, y: .2, z: .1},
+		//color: colorPalette[0],
+		color: {red: 250, green: 250, blue: 250},
+		lifespan: 10,
 	});
 
 	emitters.push(emitter);
