@@ -6,7 +6,7 @@ var size = 20
 avatarRot = Quat.fromPitchYawRollDegrees(0, MyAvatar.bodyYaw, 0.0);
 basePosition = Vec3.sum(MyAvatar.position, Vec3.multiply(SPAWN_RANGE * 3, Quat.getFront(avatarRot)));
 
-basePosition.y -= SPAWN_RANGE;
+basePosition.y -= 1.5;
 
 var ground = Entities.addEntity({
   type: "Model",
@@ -23,7 +23,7 @@ var ground = Entities.addEntity({
 
 
 function cleanup() {
-  // Entities.deleteEntity(ground);
+  Entities.deleteEntity(ground);
 }
 
 Script.scriptEnding.connect(cleanup);
