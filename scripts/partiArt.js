@@ -25,15 +25,20 @@ var rightTip = 2 * RIGHT + 1;
 var leftPalm = 2 * LEFT;
 var leftTip = 2 * LEFT + 1;
 
-var EMITTER_SPEED = 0.5;
+var EMITTER_SPEED = 2;
 
 var particleRadius = 0.01;
 
-var HIDDEN_POSITION = {x: 7000, y: 7000, z: 7000};
+var HIDDEN_POSITION = {
+	x: 7000,
+	y: 7000,
+	z: 7000
+};
+
 
 var audioOptions = {
-  volume: 0.9,
-  position: MyAvatar.position
+	volume: 0.9,
+	position: MyAvatar.position
 };
 var audioStats = Audio.playSound(song, audioOptions);
 var LOUDNESS_DAMPING = 5;
@@ -52,47 +57,80 @@ var colorPalette = [{
 	blue: 192
 }];
 
-var emitters = [];
-var currentEmitter;
 
-var emitterCreated = false;
+
+Script.setInterval(function() {
+	Entities.editEntity(emitter, {color: colorPalette[currentColorIndex++]});
+    if(currentColorIndex === colorPalette.length) {
+    	currentColorIndex = 0;
+    }
+}, 1400);
+
+var currentColorIndex = 0;
 var emitter;
 createEmitter();
 
-var stopSetting = JSON.stringify({running: false});
-var startSetting = JSON.stringify({running: true});
+var UP_AXIS = {
+	x: 0,
+	y: 1,
+	z: 0
+};
+
+var stopSetting = JSON.stringify({
+	running: false
+});
+var startSetting = JSON.stringify({
+	running: true
+});
 
 
 function update() {
 	updateControllerState();
-	Entities.editEntity(emitter, {particleRadius: audioStats.loudness/LOUDNESS_DAMPING});
+
+	// Entities.editEntity(emitter, {
+	// 	particleRadius: audioStats.loudness / LOUDNESS_DAMPING
+	// });
 	if (triggerHeld) {
+		var forward = Controller.getSpatialControlNormal(rightTip);
 		Entities.editEntity(emitter, {
+			emitAcceleration: Vec3.multiply(forward, -.1),
 			position: Controller.getSpatialControlPosition(rightTip),
-			emitVelocity: Vec3.multiply(Controller.getSpatialControlNormal(rightTip), EMITTER_SPEED)
+			emitVelocity: Vec3.multiply(forward	, EMITTER_SPEED)
 		});
 	}
+
+
 }
+
+
 
 function updateControllerState() {
 	rightTriggerValue = Controller.getTriggerValue(RIGHT_TRIGGER);
 	if (rightTriggerValue > TRIGGER_THRESHOLD && !triggerHeld) {
 		triggerHeld = true;
-		Entities.editEntity(emitter, {animationSettings: startSetting});
-		
+		startEmitter()
 	} else if (rightTriggerValue < TRIGGER_THRESHOLD && prevRightTriggerValue > TRIGGER_THRESHOLD && triggerHeld) {
 		triggerHeld = false;
-		// Entities.editEntity(emitter, {position: Vec3.sum(MyAvatar.position, {x: 1000, y: 0, z: 0})});
-		Entities.editEntity(emitter, {animationSettings: stopSetting});
+		stopEmitter();
 	}
 
 	prevRightTriggerValue = rightTriggerValue;
 }
 
+function startEmitter() {
+	Entities.editEntity(emitter, {
+		animationSettings: startSetting
+	});
+}
+
+function stopEmitter() {
+	Entities.editEntity(emitter, {
+		animationSettings: stopSetting
+	});
+}
+
 function cleanup() {
-	emitters.forEach(function(emitter) {
-		Entities.deleteEntity(emitter);
-	})
+	Entities.deleteEntity(emitter);
 }
 
 function createEmitter(position) {
@@ -102,8 +140,7 @@ function createEmitter(position) {
 		running: true,
 		loop: true,
 		firstFrame: 1,
-		lastFrame: 1000
-
+		lastFrame: 10
 	});
 	emitter = Entities.addEntity({
 		type: "ParticleEffect",
@@ -111,14 +148,20 @@ function createEmitter(position) {
 		position: HIDDEN_POSITION,
 		textures: "https://raw.githubusercontent.com/ericrius1/SantasLair/santa/assets/smokeparticle.png",
 		emitRate: 100,
-		velocitySpread: {x: .2, y: .1, z: .2},
-		accelerationSpread: {x: .1, y: .2, z: .1},
-		//color: colorPalette[0],
-		color: {red: 250, green: 250, blue: 250},
+		velocitySpread: {
+			x: .1,
+			y: .1,
+			z: .1
+		},
+		accelerationSpread: {
+			x: 1,
+			y: 1,
+			z: 1
+		},
+		color: colorPalette[currentColorIndex],
 		lifespan: 10,
 	});
 
-	emitters.push(emitter);
 }
 
 
