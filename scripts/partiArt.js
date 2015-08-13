@@ -29,7 +29,14 @@ var EMITTER_SPEED = 0.5;
 
 var particleRadius = 0.01;
 
-var HIDDEN_POSITION = {x: -100, y: -100, z: -100};
+var HIDDEN_POSITION = {x: 7000, y: 7000, z: 7000};
+
+var audioOptions = {
+  volume: 0.9,
+  position: MyAvatar.position
+};
+var audioStats = Audio.playSound(song, audioOptions);
+var LOUDNESS_DAMPING = 5;
 
 var colorPalette = [{
 	red: 0,
@@ -52,14 +59,17 @@ var emitterCreated = false;
 var emitter;
 createEmitter();
 
+var stopSetting = JSON.stringify({running: false});
+var startSetting = JSON.stringify({running: true});
+
 
 function update() {
 	updateControllerState();
+	Entities.editEntity(emitter, {particleRadius: audioStats.loudness/LOUDNESS_DAMPING});
 	if (triggerHeld) {
 		Entities.editEntity(emitter, {
 			position: Controller.getSpatialControlPosition(rightTip),
-			emitVelocity: Vec3.multiply(Controller.getSpatialControlNormal(rightTip), EMITTER_SPEED),
-			particleRadius: particleRadius
+			emitVelocity: Vec3.multiply(Controller.getSpatialControlNormal(rightTip), EMITTER_SPEED)
 		});
 	}
 }
@@ -68,9 +78,12 @@ function updateControllerState() {
 	rightTriggerValue = Controller.getTriggerValue(RIGHT_TRIGGER);
 	if (rightTriggerValue > TRIGGER_THRESHOLD && !triggerHeld) {
 		triggerHeld = true;
+		Entities.editEntity(emitter, {animationSettings: startSetting});
+		
 	} else if (rightTriggerValue < TRIGGER_THRESHOLD && prevRightTriggerValue > TRIGGER_THRESHOLD && triggerHeld) {
 		triggerHeld = false;
-		// Entities.editEntity(emitter, {position: HIDDEN_POSITION});
+		// Entities.editEntity(emitter, {position: Vec3.sum(MyAvatar.position, {x: 1000, y: 0, z: 0})});
+		Entities.editEntity(emitter, {animationSettings: stopSetting});
 	}
 
 	prevRightTriggerValue = rightTriggerValue;
