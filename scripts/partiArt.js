@@ -15,6 +15,14 @@ var prevLeftTriggerValue = 0;
 var TRIGGER_THRESHOLD = 0.2;
 var leftTriggerHeld = false;
 
+var animationSettings = JSON.stringify({
+	fps: 30,
+	running: true,
+	loop: true,
+	firstFrame: 1,
+	lastFrame: 10000
+});
+
 var RIGHT = 1;
 var LEFT = 0;
 var RIGHT_BUTTON_1 = 7
@@ -106,9 +114,11 @@ function update() {
 	Entities.editEntity(stickEmitter, {
 		particleRadius: audioStats.loudness / LEFT_LOUDNESS_DAMPING + .01
 	});
-	Entities.editEntity(staticEmitters[0], {
-		particleRadius: audioStats.loudness/LEFT_LOUDNESS_DAMPING + 0.01,
-	})
+	for (var i = 0; i < staticEmitters.length; i++) {
+		Entities.editEntity(staticEmitters[i], {
+			particleRadius: audioStats.loudness / LEFT_LOUDNESS_DAMPING + 0.01,
+		});
+	}
 	if (rightTriggerHeld) {
 		var forward = Controller.getSpatialControlNormal(rightTip);
 		Entities.editEntity(wandEmitter, {
@@ -123,7 +133,6 @@ function update() {
 	}
 
 }
-
 
 
 
@@ -163,11 +172,11 @@ function stopWandEmitter() {
 }
 
 function setStickEmitter() {
-	
-		Entities.editEntity(stickEmitter, {
-			animationSettings: startSetting,
-			position: Controller.getSpatialControlPosition(leftTip)
-		});
+
+	Entities.editEntity(stickEmitter, {
+		animationSettings: startSetting,
+		position: Controller.getSpatialControlPosition(leftTip)
+	});
 }
 
 function cleanup() {
@@ -180,13 +189,6 @@ function cleanup() {
 
 function createEmitters() {
 
-	var animationSettings = JSON.stringify({
-		fps: 30,
-		running: true,
-		loop: true,
-		firstFrame: 1,
-		lastFrame: 10000
-	});
 	wandEmitter = Entities.addEntity({
 		type: "ParticleEffect",
 		animationSettings: animationSettings,
@@ -218,42 +220,61 @@ function createEmitters() {
 			y: .02,
 			z: .02
 		},
-		color: {red: 19, green: 224, blue: 232},
+		color: {
+			red: 19,
+			green: 224,
+			blue: 232
+		},
 		lifespan: 50000,
 	});
 	var bodyYaw = Quat.safeEulerAngles(MyAvatar.orientation).y
 	var forward = Quat.getFront(Quat.fromPitchYawRollDegrees(0, bodyYaw, 0));
 	print("forward " + JSON.stringify(forward))
-	var right = Vec3.cross(UP_AXIS, forward);
+	var right = Vec3.cross(forward, UP_AXIS);
 	print("RIGHT " + JSON.stringify(right))
-	var staticBasePosition = Vec3.sum(MyAvatar.position, Vec3.multiply(Quat.getFront( MyAvatar.orientation), 2));
-	staticBasePosition.y -= 1;
-	for(var i =0; i < 3; i++){
-		print(JSON.stringify(staticBasePosition));
-		var emitter= Entities.addEntity({
-			type: "ParticleEffect",
-			animationSettings: animationSettings,
-			position: staticBasePosition,
-			textures: "https://raw.githubusercontent.com/ericrius1/PlatosCave/gh-pages/assets/star.png",
-			emitRate: 200,
-			emitVelocity: {x: 0, y: 2, z: 0 },
-			velocitySpread: {
-				x: .1,
-				y: .1,
-				z: .1
-			},
-			emitAcceleration: {x: 0, y: -1, z: 0},
-			color: {red: 19, green: 224, blue: 232},
-			lifespan: 50000,
-		});
-		staticBasePosition = Vec3.sum(staticBasePosition, right);
-
-		staticEmitters.push(emitter);
-		
-	}
+	var position = Vec3.sum(MyAvatar.position, Vec3.multiply(Quat.getFront(MyAvatar.orientation), 2));
+	createStaticEmitter(position, UP_AXIS)
+	position = Vec3.sum(position, right);
+	createStaticEmitter(position, right)
 
 }
+
+function createStaticEmitter(position, velocity) {
+	var emitter = Entities.addEntity({
+		type: "ParticleEffect",
+		animationSettings: animationSettings,
+		position: position,
+		textures: "https://raw.githubusercontent.com/ericrius1/SantasLair/santa/assets/smokeparticle.png",
+		emitRate: 200,
+		// emitVelocity: velocity,
+		// velocitySpread: {
+		// 	x: .05,
+		// 	y: .05,
+		// 	z: .05
+		// },
+		accelerationSpread: {
+			x: .1, y: .1, z: .1
+		},
+		color: {
+			red: randInt(190, 250),
+			green: randInt(100, 130),
+			blue: randInt(40, 80)
+		},
+		lifespan: 2,
+	});
+
+	staticEmitters.push(emitter);
+}
+
 
 
 Script.update.connect(update);
 Script.scriptEnding.connect(cleanup);
+
+function randFloat(min, max) {
+	return Math.random() * (max - min) + min;
+}
+
+function randInt(min, max) {
+	return Math.floor(Math.random() * (max - min)) + min;
+}
