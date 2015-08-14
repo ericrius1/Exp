@@ -39,11 +39,13 @@
         this.entity = Entities.addEntity({ type: "ParticleEffect",
                                            animationSettings: animationSettings,
                                            position: spawnPoint,
-                                           // textures: "http://www.hyperlogic.org/images/particle.png",
-                                           emitRate: emitRate,
-                                           emitStrength: emitStrength,
-                                           emitDirection: emitDirection,
+                                           dimensions: {x: 2, y: 2, z: 2},
+                                           emitVelocity: {x: 0, y: 5, z: 0},
+                                           velocitySpread: {x: 2, y: 0, z: 2},
+                                           emitAcceleration: {x: 0, y: -9.8, z: 0},
+                                           textures: "https://raw.githubusercontent.com/ericrius1/SantasLair/santa/assets/smokeparticle.png",
                                            color: color,
+                                           lifespan: 1.0,
                                            visible: true,
                                            locked: false });
 
@@ -67,13 +69,13 @@
     var objs = [];
     function Init() {
         objs.push(new TestBox());
-        objs.push(new TestFx({ red: 255, blue: 0, green: 0 },
+        objs.push(new TestFx({ red: 255, green: 0, blue: 0 },
                              { x: 0.5, y: 1.0, z: 0.0 },
                              100, 3, 1));
-        objs.push(new TestFx({ red: 0, blue: 255, green: 0 },
+        objs.push(new TestFx({ red: 0, green: 255, blue: 0 },
                              { x: 0, y: 1, z: 0 },
                              1000, 5, 0.5));
-        objs.push(new TestFx({ red: 0, blue: 0, green: 255 },
+        objs.push(new TestFx({ red: 0, green: 0, blue: 255 },
                              { x: -0.5, y: 1, z: 0 },
                              100, 3, 1));
     }

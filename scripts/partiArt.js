@@ -5,14 +5,18 @@ var isHolding = false;
 
 var EMITTER_DISTANCE = 3;
 
-var RIGHT_TRIGGER = 1;
-var prevRightTriggerValue = 0;
-var TRIGGER_THRESHOLD = 0.2;
-var rightTriggerHeld = false;
+var LEFT_HAND_CLICK = Controller.findAction("LEFT_HAND_CLICK");
+var RIGHT_HAND_CLICK = Controller.findAction("RIGHT_HAND_CLICK");
+var rightHandGrabValue = 0;
+var leftHandGrabValue = 0;
 
-var LEFT_TRIGGER = 0;
-var prevLeftTriggerValue = 0;
+
 var TRIGGER_THRESHOLD = 0.2;
+
+var rightHandGrabAction = RIGHT_HAND_CLICK;
+var leftHandGrabAction = LEFT_HAND_CLICK;
+
+var rightTriggerHeld = false;
 var leftTriggerHeld = false;
 
 var animationSettings = JSON.stringify({
@@ -23,20 +27,23 @@ var animationSettings = JSON.stringify({
 	lastFrame: 10000
 });
 
+var ZERO_VEC = {
+	x: 0,
+	y: 0,
+	z: 0
+};
+
 var RIGHT = 1;
 var LEFT = 0;
-var RIGHT_BUTTON_1 = 7
-var RIGHT_BUTTON_2 = 8
-var RIGHT_BUTTON_3 = 9;
-var RIGHT_BUTTON_4 = 10
-var LEFT_BUTTON_1 = 1;
-var LEFT_BUTTON_2 = 2;
-var LEFT_BUTTON_3 = 3;
-var LEFT_BUTTON_4 = 4;
+
 var rightPalm = 2 * RIGHT;
 var rightTip = 2 * RIGHT + 1;
 var leftPalm = 2 * LEFT;
 var leftTip = 2 * LEFT + 1;
+
+
+var RIGHT_CAST_BUTTON = 15
+var LEFT_CAST_BUTTON = 14;
 
 var EMITTER_SPEED = 0.5;
 
@@ -108,6 +115,7 @@ var startSetting = JSON.stringify({
 function update() {
 	updateControllerState();
 
+
 	Entities.editEntity(wandEmitter, {
 		particleRadius: audioStats.loudness / RIGHT_LOUDNESS_DAMPING
 	});
@@ -119,17 +127,19 @@ function update() {
 			particleRadius: audioStats.loudness / LEFT_LOUDNESS_DAMPING + 0.01,
 		});
 	}
-	if (rightTriggerHeld) {
-		var forward = Controller.getSpatialControlNormal(rightTip);
+	if (leftTriggerHeld) {
+		var forward = Vec3.multiply(3, Controller.getSpatialControlNormal(leftTip));
 		Entities.editEntity(wandEmitter, {
 			emitAcceleration: Vec3.multiply(forward, -.1),
-			position: Controller.getSpatialControlPosition(rightTip),
+			position: Controller.getSpatialControlPosition(leftTip),
 			emitVelocity: Vec3.multiply(forward, EMITTER_SPEED)
 		});
 	}
-	if (leftTriggerHeld) {
-
-
+	if (rightTriggerHeld) {
+		var forward = Quat.getFront(MyAvatar.orientation, 2)
+		Entities.editEntity(stickEmitter, {
+			position: Vec3.sum(Controller.getSpatialControlPosition(rightTip), forward)
+		})
 	}
 
 }
@@ -137,26 +147,31 @@ function update() {
 
 
 function updateControllerState() {
-	rightTriggerValue = Controller.getTriggerValue(RIGHT_TRIGGER);
-	if (rightTriggerValue > TRIGGER_THRESHOLD && !rightTriggerHeld) {
-		rightTriggerHeld = true;
-		startWandEmitter()
-	} else if (rightTriggerValue < TRIGGER_THRESHOLD && prevRightTriggerValue > TRIGGER_THRESHOLD && rightTriggerHeld) {
-		rightTriggerHeld = false;
-		stopWandEmitter();
-	}
+	rightHandGrabValue = Controller.getActionValue(rightHandGrabAction);
+	leftHandGrabValue = Controller.getActionValue(leftHandGrabAction);
 
-	prevRightTriggerValue = rightTriggerValue;
-
-	leftTriggerValue = Controller.getTriggerValue(LEFT_TRIGGER);
-	if (leftTriggerValue > TRIGGER_THRESHOLD && !leftTriggerHeld) {
-		leftTriggerHeld = true;
+	// RIGHT HAND
+	if (rightHandGrabValue > TRIGGER_THRESHOLD && !rightTriggerHeld) {
+		rightTriggerHeld = true
 		setStickEmitter();
-	} else if (rightTriggerValue < TRIGGER_THRESHOLD && prevLeftTriggerValue > TRIGGER_THRESHOLD && leftTriggerHeld) {
-		leftTriggerHeld = false;
+	} 
+	else if (rightHandGrabValue < TRIGGER_THRESHOLD && rightTriggerHeld) {
+		rightTriggerHeld = false;
+		stopStickEmitter();
 	}
 
-	prevLeftTriggerValue = leftTriggerValue;
+	// LEFT HAND
+	if (leftHandGrabValue > TRIGGER_THRESHOLD && !leftTriggerHeld) {
+		startWandEmitter();
+		leftTriggerHeld = true;
+
+	} 
+	else if (leftHandGrabValue < TRIGGER_THRESHOLD && leftTriggerHeld) {
+		stopWandEmitter();
+		leftTriggerHeld = false;
+
+	}
+
 }
 
 function startWandEmitter() {
@@ -175,8 +190,14 @@ function setStickEmitter() {
 
 	Entities.editEntity(stickEmitter, {
 		animationSettings: startSetting,
-		position: Controller.getSpatialControlPosition(leftTip)
+		position: Controller.getSpatialControlPosition(rightTip)
 	});
+}
+
+function stopStickEmitter() {
+	Entities.editEntity(stickEmitter, {
+		animationSettings: stopSetting
+	})
 }
 
 function cleanup() {
@@ -195,6 +216,8 @@ function createEmitters() {
 		position: HIDDEN_POSITION,
 		textures: "https://raw.githubusercontent.com/ericrius1/SantasLair/santa/assets/smokeparticle.png",
 		emitRate: 100,
+		emitVelocity: ZERO_VEC,
+		emitAcceleration: ZERO_VEC,
 		velocitySpread: {
 			x: .1,
 			y: .1,
@@ -215,6 +238,8 @@ function createEmitters() {
 		position: HIDDEN_POSITION,
 		textures: "https://raw.githubusercontent.com/ericrius1/SantasLair/santa/assets/smokeparticle.png",
 		emitRate: 200,
+		emitVelocity: ZERO_VEC,
+		emitAcceleration: ZERO_VEC,
 		velocitySpread: {
 			x: .02,
 			y: .02,
@@ -229,31 +254,27 @@ function createEmitters() {
 	});
 	var bodyYaw = Quat.safeEulerAngles(MyAvatar.orientation).y
 	var forward = Quat.getFront(Quat.fromPitchYawRollDegrees(0, bodyYaw, 0));
-	print("forward " + JSON.stringify(forward))
 	var right = Vec3.cross(forward, UP_AXIS);
-	print("RIGHT " + JSON.stringify(right))
 	var position = Vec3.sum(MyAvatar.position, Vec3.multiply(Quat.getFront(MyAvatar.orientation), 2));
-	createStaticEmitter(position, UP_AXIS)
+	// createStaticEmitter(position)
 	position = Vec3.sum(position, right);
-	createStaticEmitter(position, right)
+	// createStaticEmitter(position)
 
 }
 
-function createStaticEmitter(position, velocity) {
+function createStaticEmitter(position) {
 	var emitter = Entities.addEntity({
 		type: "ParticleEffect",
 		animationSettings: animationSettings,
 		position: position,
 		textures: "https://raw.githubusercontent.com/ericrius1/SantasLair/santa/assets/smokeparticle.png",
 		emitRate: 200,
-		// emitVelocity: velocity,
-		// velocitySpread: {
-		// 	x: .05,
-		// 	y: .05,
-		// 	z: .05
-		// },
+		emitVelocity: ZERO_VEC,
+		emitAcceleration: ZERO_VEC,
 		accelerationSpread: {
-			x: .1, y: .1, z: .1
+			x: .1,
+			y: .1,
+			z: .1
 		},
 		color: {
 			red: randInt(190, 250),
@@ -270,6 +291,7 @@ function createStaticEmitter(position, velocity) {
 
 Script.update.connect(update);
 Script.scriptEnding.connect(cleanup);
+
 
 function randFloat(min, max) {
 	return Math.random() * (max - min) + min;
