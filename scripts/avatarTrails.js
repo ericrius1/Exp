@@ -24,7 +24,7 @@ var emitter = Entities.addEntity({
 	animationSettings: animationSettings,
 	emitAcceleration: ZERO_VEC,
 	velocitySpread: {x: .05, y: .05, z: .05},
-	acceelerationSpread: {x: 0.05, y: 0.05, y: 0.05},
+	accelerationSpread: {x: 0.05, y: 0.05, z: 0.05},
 	emitVelocity: ZERO_VEC,
 	emitRate: 100,
 	particleRadius: .07,
