@@ -121,12 +121,12 @@ function onClick(event) {
     }
 }
 
-a = function(low, high) {
+randFloat = function(low, high) {
     return low + Math.random() * (high - low);
 }
 
 randInt = function(low, high) {
-    return Math.floor(a(low, high));
+    return Math.floor(randFloat(low, high));
 }
 
 function createTable() {
@@ -143,9 +143,9 @@ function createTable() {
                         });
 
     for (var i = 1; i < NUM_OBJECTS + 1; i++) {
-        var objectOffset = { x: TABLE_DIMENSIONS.x/2.0 * a(-1, 1),
+        var objectOffset = { x: TABLE_DIMENSIONS.x/2.0 * randFloat(-1, 1),
                                y: OBJECT_HEIGHT_OFFSET,
-                               z: TABLE_DIMENSIONS.z/2.0 * a(-1, 1) };
+                               z: TABLE_DIMENSIONS.z/2.0 * randFloat(-1, 1) };
         var objectPosition = Vec3.sum(tablePosition, Vec3.multiplyQbyV(MyAvatar.orientation, objectOffset));
         var type;
         var randType = randInt(0, 3);
@@ -163,12 +163,12 @@ function createTable() {
         tableEntities[i] = Entities.addEntity( {
                                 type: type,
                                 position: objectPosition,
-                                velocity: { x: a(-VELOCITY_MAG, VELOCITY_MAG),
-                                            y: a(-VELOCITY_MAG, VELOCITY_MAG),
-                                            z: a(-VELOCITY_MAG, VELOCITY_MAG) },
-                                dimensions: { x: a(MIN_OBJECT_SIZE, MAX_OBJECT_SIZE),
-                                              y: a(MIN_OBJECT_SIZE, MAX_OBJECT_SIZE),
-                                              z: a(MIN_OBJECT_SIZE, MAX_OBJECT_SIZE) },
+                                velocity: { x: randFloat(-VELOCITY_MAG, VELOCITY_MAG),
+                                            y: randFloat(-VELOCITY_MAG, VELOCITY_MAG),
+                                            z: randFloat(-VELOCITY_MAG, VELOCITY_MAG) },
+                                dimensions: { x: randFloat(MIN_OBJECT_SIZE, MAX_OBJECT_SIZE),
+                                              y: randFloat(MIN_OBJECT_SIZE, MAX_OBJECT_SIZE),
+                                              z: randFloat(MIN_OBJECT_SIZE, MAX_OBJECT_SIZE) },
                                 rotation: MyAvatar.orientation,
                                 gravity: GRAVITY,
                                 damping: 0.1,
