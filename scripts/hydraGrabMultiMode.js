@@ -47,22 +47,6 @@ var toolBar = new ToolBar(0, 0, ToolBar.vertical, "highfidelity.toybox.toolbar",
     };
 });
 
-var BUTTON_SIZE = 32;
-var SWORD_IMAGE = "https://hifi-public.s3.amazonaws.com/images/sword/sword.svg"; // TODO: replace this with a table icon
-var CLEANUP_IMAGE = "http://s3.amazonaws.com/hifi-public/images/delete.png";
-var tableButton = toolBar.addOverlay("image", {
-    width: BUTTON_SIZE,
-    height: BUTTON_SIZE,
-    imageURL: SWORD_IMAGE,
-    alpha: 1
-});
-var cleanupButton = toolBar.addOverlay("image", {
-    width: BUTTON_SIZE,
-    height: BUTTON_SIZE,
-    imageURL: CLEANUP_IMAGE,
-    alpha: 1
-});
-
 var overlays = true;
 var leftHandOverlay;
 var rightHandOverlay;
@@ -83,79 +67,8 @@ if (overlays) {
                         });
 }
 
-var OBJECT_HEIGHT_OFFSET = 0.5;
-var MIN_OBJECT_SIZE = 0.05;
-var MAX_OBJECT_SIZE = 0.3;
-var TABLE_DIMENSIONS = {
-    x: 10.0,
-    y: 0.2,
-    z: 5.0
-};
-
-var GRAVITY = {
-    x: 0.0,
-    y: -2.0,
-    z: 0.0
-}
-
 var LEFT = 0;
 var RIGHT = 1;
-
-var tableCreated = false;
-
-var NUM_OBJECTS = 100;
-var tableEntities = Array(NUM_OBJECTS + 1); // Also includes table
-
-var VELOCITY_MAG = 0.3;
-
-var entitiesToResize = [];
-
-var MODELS = Array(
-    { modelURL: "https://hifi-public.s3.amazonaws.com/ozan/props/sword/sword.fbx" },
-    { modelURL: "https://s3.amazonaws.com/hifi-public/marketplace/hificontent/Vehicles/clara/spaceshuttle.fbx" },
-    { modelURL: "https://s3.amazonaws.com/hifi-public/cozza13/apartment/Stargate.fbx" },
-    { modelURL: "https://dl.dropboxusercontent.com/u/17344741/kelectricguitar10/kelectricguitar10.fbx" },
-    { modelURL: "https://dl.dropboxusercontent.com/u/17344741/ktoilet10/ktoilet10.fbx" },
-    { modelURL: "https://hifi-public.s3.amazonaws.com/models/props/MidCenturyModernLivingRoom/Interior/BilliardsTable.fbx" },
-    { modelURL: "https://hifi-public.s3.amazonaws.com/ozan/avatars/robotMedic/robotMedicRed/robotMedicRed.fst" },
-    { modelURL: "https://hifi-public.s3.amazonaws.com/ozan/avatars/robotMedic/robotMedicFaceRig/robotMedic.fst" },
-    { modelURL: "https://hifi-public.s3.amazonaws.com/marketplace/contents/029db3d4-da2c-4cb2-9c08-b9612ba576f5/02949063e7c4aed42ad9d1a58461f56d.fst?1427169842" },
-    { modelURL: "https://hifi-public.s3.amazonaws.com/models/props/MidCenturyModernLivingRoom/Interior/Bar.fbx" },
-    { modelURL: "https://hifi-public.s3.amazonaws.com/marketplace/contents/96124d04-d603-4707-a5b3-e03bf47a53b2/1431770eba362c1c25c524126f2970fb.fst?1436924721" }
-    // Complex models:
-    // { modelURL: "https://s3.amazonaws.com/hifi-public/marketplace/hificontent/Architecture/sketchfab/cudillero.fbx" },
-    // { modelURL: "https://hifi-public.s3.amazonaws.com/ozan/sets/musicality/musicality.fbx" },
-    // { modelURL: "https://hifi-public.s3.amazonaws.com/ozan/sets/statelyHome/statelyHome.fbx" }
-    );
-
-var COLLISION_SOUNDS = Array(
-    "http://public.highfidelity.io/sounds/Collisions-ballhitsandcatches/pingpong_TableBounceMono.wav",
-    "http://public.highfidelity.io/sounds/Collisions-ballhitsandcatches/billiards/collision1.wav"
-    );
-
-var RESIZE_TIMER = 0.0;
-var RESIZE_WAIT = 0.05; // 50 milliseconds
-
-var leftFist = Entities.addEntity( {
-                    type: "Sphere",
-                    shapeType: 'sphere',
-                    position: MyAvatar.getLeftPalmPosition(),
-                    dimensions: { x: GRAB_RADIUS, y: GRAB_RADIUS, z: GRAB_RADIUS },
-                    rotation: MyAvatar.getLeftPalmRotation(),
-                    visible: false,
-                    collisionsWillMove: false,
-                    ignoreForCollisions: true
-                });
-var rightFist = Entities.addEntity( {
-                    type: "Sphere",
-                    shapeType: 'sphere',
-                    position: MyAvatar.getRightPalmPosition(),
-                    dimensions: { x: GRAB_RADIUS, y: GRAB_RADIUS, z: GRAB_RADIUS },
-                    rotation: MyAvatar.getRightPalmRotation(),
-                    visible: false,
-                    collisionsWillMove: true,
-                    ignoreForCollisions: true
-                });
 
 function letGo(hand) {
     var actionIDToRemove = (hand == LEFT) ? leftHandActionID : rightHandActionID;
@@ -182,11 +95,9 @@ function setGrabbedObject(hand) {
     var objectID = null;
     var minDistance = GRAB_RADIUS;
     for (var i = 0; i < entities.length; i++) {
-        // Don't grab the object in your other hands, your fists, or the table
+        // Don't grab the object in your other hands, or the table
         if ((hand == LEFT && entities[i] == rightHandObjectID) ||
-            (hand == RIGHT && entities[i] == leftHandObjectID) ||
-            entities[i] == leftFist || entities[i] == rightFist ||
-            (tableCreated && entities[i] == tableEntities[0])) {
+            (hand == RIGHT && entities[i] == leftHandObjectID)) {
             continue;
         } else {
             var distance = Vec3.distance(Entities.getEntityProperties(entities[i]).position, handPosition);
@@ -209,10 +120,9 @@ function setGrabbedObject(hand) {
 
 function grab(hand) {
     if (!setGrabbedObject(hand)) {
-        // If you don't grab an object, make a fist
-        Entities.editEntity((hand == LEFT) ? leftFist : rightFist, { ignoreForCollisions: false } );
         return;
     }
+    print("OBJECTID " + objectID);
     var objectID = (hand == LEFT) ? leftHandObjectID : rightHandObjectID;
     var handRotation = (hand == LEFT) ? MyAvatar.getLeftPalmRotation() : MyAvatar.getRightPalmRotation();
     var handPosition = (hand == LEFT) ? MyAvatar.getLeftPalmPosition() : MyAvatar.getRightPalmPosition();
@@ -246,24 +156,6 @@ function grab(hand) {
     }
 }
 
-function resizeModels() {
-    var newEntitiesToResize = [];
-    for (var i = 0; i < entitiesToResize.length; i++) {
-        var naturalDimensions = Entities.getEntityProperties(entitiesToResize[i]).naturalDimensions;
-        if (naturalDimensions.x != 1.0 || naturalDimensions.y != 1.0 || naturalDimensions.z != 1.0) {
-            // bigger range of sizes for models
-            var dimensions = Vec3.multiply(randFloat(MIN_OBJECT_SIZE, 3.0*MAX_OBJECT_SIZE), Vec3.normalize(naturalDimensions));
-            Entities.editEntity(entitiesToResize[i], {
-                dimensions: dimensions,
-                shapeType: "box"
-            });
-        } else {
-            newEntitiesToResize.push(entitiesToResize[i]);
-        }
-
-    }
-    entitiesToResize = newEntitiesToResize;
-}
 
 function update(deltaTime) {
     if (overlays) {
@@ -275,9 +167,6 @@ function update(deltaTime) {
     rightHandGrabValue = Controller.getActionValue(rightHandGrabAction);
     leftHandGrabValue = Controller.getActionValue(leftHandGrabAction);
 
-    Entities.editEntity(leftFist, { position: MyAvatar.getLeftPalmPosition() });
-    Entities.editEntity(rightFist, { position: MyAvatar.getRightPalmPosition() });
-
     if (rightHandGrabValue > TRIGGER_THRESHOLD &&
         prevRightHandGrabValue < TRIGGER_THRESHOLD) {
         if (overlays) {
@@ -286,7 +175,6 @@ function update(deltaTime) {
         grab(RIGHT);
     } else if (rightHandGrabValue < TRIGGER_THRESHOLD &&
                prevRightHandGrabValue > TRIGGER_THRESHOLD) {
-        Entities.editEntity(rightFist, { ignoreForCollisions: true } );
         if (overlays) {
             Overlays.editOverlay(rightHandOverlay, { color: releaseColor });
         }
@@ -301,7 +189,6 @@ function update(deltaTime) {
         grab(LEFT);
     } else if (leftHandGrabValue < TRIGGER_THRESHOLD &&
                prevLeftHandGrabValue > TRIGGER_THRESHOLD) {
-        Entities.editEntity(leftFist, { ignoreForCollisions: true } );
         if (overlays) {
             Overlays.editOverlay(leftHandOverlay, { color: releaseColor });
         }
@@ -319,31 +206,10 @@ function cleanUp() {
         Overlays.deleteOverlay(leftHandOverlay);
         Overlays.deleteOverlay(rightHandOverlay);
     }
-    Entities.deleteEntity(leftFist);
-    Entities.deleteEntity(rightFist);
     removeTable();
     toolBar.cleanup();
 }
 
-function onClick(event) {
-    if (event.deviceID != 0) {
-        return;
-    }
-    switch (Overlays.getOverlayAtPoint(event)) {
-        case tableButton:
-            if (!tableCreated) {
-                createTable();
-                tableCreated = true;
-            }
-            break;
-        case cleanupButton:
-            if (tableCreated) {
-                removeTable();
-                tableCreated = false;
-            }
-            break;
-    }
-}
 
 randFloat = function(low, high) {
     return low + Math.random() * (high - low);
@@ -353,73 +219,8 @@ randInt = function(low, high) {
     return Math.floor(randFloat(low, high));
 }
 
-function createTable() {
-    var tablePosition = Vec3.sum(MyAvatar.position, Vec3.multiply(3, Quat.getFront(MyAvatar.orientation)));
-    tableEntities[0] = Entities.addEntity( {
-                            type: "Model",
-                            shapeType: 'box',
-                            position: tablePosition,
-                            dimensions: TABLE_DIMENSIONS,
-                            rotation: MyAvatar.orientation,
-                            // color: { red: 102, green: 51, blue: 0 },
-                            modelURL: HIFI_PUBLIC_BUCKET + 'eric/models/woodFloor.fbx',
-                            collisionSoundURL: "http://public.highfidelity.io/sounds/dice/diceCollide.wav"
-                        });
 
-    for (var i = 1; i < NUM_OBJECTS + 1; i++) {
-        var objectOffset = { x: TABLE_DIMENSIONS.x/2.0 * randFloat(-1, 1),
-                               y: OBJECT_HEIGHT_OFFSET,
-                               z: TABLE_DIMENSIONS.z/2.0 * randFloat(-1, 1) };
-        var objectPosition = Vec3.sum(tablePosition, Vec3.multiplyQbyV(MyAvatar.orientation, objectOffset));
-        var type;
-        var randType = randInt(0, 3);
-        switch (randType) {
-            case 0:
-                type = "Box";
-                break;
-            case 1:
-                type = "Sphere";
-                // break;
-            case 2:
-                type = "Model";
-                break;
-        }
-        tableEntities[i] = Entities.addEntity( {
-                                type: type,
-                                position: objectPosition,
-                                velocity: { x: randFloat(-VELOCITY_MAG, VELOCITY_MAG),
-                                            y: randFloat(-VELOCITY_MAG, VELOCITY_MAG),
-                                            z: randFloat(-VELOCITY_MAG, VELOCITY_MAG) },
-                                dimensions: { x: randFloat(MIN_OBJECT_SIZE, MAX_OBJECT_SIZE),
-                                              y: randFloat(MIN_OBJECT_SIZE, MAX_OBJECT_SIZE),
-                                              z: randFloat(MIN_OBJECT_SIZE, MAX_OBJECT_SIZE) },
-                                rotation: MyAvatar.orientation,
-                                gravity: GRAVITY,
-                                damping: 0.1,
-                                restitution: 0.01,
-                                density: 0.5,
-                                collisionsWillMove: true,
-                                color: { red: randInt(0, 255), green: randInt(0, 255), blue: randInt(0, 255) },
-                                // collisionSoundURL: COLLISION_SOUNDS[randInt(0, COLLISION_SOUNDS.length)]
-                            });
-        if (type == "Model") {
-            var randModel = randInt(0, MODELS.length);
-            Entities.editEntity(tableEntities[i], {
-                shapeType: "box",
-                modelURL: MODELS[randModel].modelURL
-            });
-            entitiesToResize.push(tableEntities[i]);
-        }
-    }
-}
 
-function removeTable() {
-    RESIZE_TIMER = 0.0;
-    for (var i = 0; i < tableEntities.length; i++) {
-        Entities.deleteEntity(tableEntities[i]);
-    }
-}
 
 Script.scriptEnding.connect(cleanUp);
 Script.update.connect(update);
-Controller.mousePressEvent.connect(onClick);
