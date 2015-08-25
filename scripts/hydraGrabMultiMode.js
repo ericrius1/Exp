@@ -95,7 +95,7 @@ function setGrabbedObject(hand) {
     var objectID = null;
     var minDistance = GRAB_RADIUS;
     for (var i = 0; i < entities.length; i++) {
-        // Don't grab the object in your other hands, or the table
+        // Don't grab the object in your other hands
         if ((hand == LEFT && entities[i] == rightHandObjectID) ||
             (hand == RIGHT && entities[i] == leftHandObjectID)) {
             continue;
@@ -135,7 +135,7 @@ function grab(hand) {
     var offsetPosition = Vec3.multiplyQbyV(Quat.inverse(Quat.multiply(handRotation, offsetRotation)), offset);
     // print(JSON.stringify(offsetPosition));
     var actionID = Entities.addAction("hold", objectID, {
-        relativePosition: { x: 0, y: 0, z: 0 },
+        relativePosition: { x: 0, y: 0, z: -.5 },
         relativeRotation: offsetRotation,
         hand: (hand == LEFT) ? "left" : "right",
         timeScale: 0.05

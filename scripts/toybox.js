@@ -93,6 +93,7 @@ var RESIZE_WAIT = 0.05; // 50 milliseconds
 
 
 function cleanUp() {
+    print("CLEANUP!!!")
     if (overlays) {
         Overlays.deleteOverlay(leftHandOverlay);
         Overlays.deleteOverlay(rightHandOverlay);
