@@ -66,12 +66,18 @@ var whiteboard = Entities.addEntity({
 
 var animationSettings = JSON.stringify({
 	fps: 30,
-    running: true,
-	// running: false,
 	loop: true,
 	firstFrame: 1,
 	lastFrame: 10000
 });
+
+var stopSetting = JSON.stringify({
+    running: false
+});
+var startSetting = JSON.stringify({
+    running: true
+});
+
 
 var paintStream = Entities.addEntity({
 	type: "ParticleEffect",
@@ -195,9 +201,15 @@ function updateControllerState() {
 	rightHandGrabValue = Controller.getActionValue(rightHandGrabAction);
 	if (rightHandGrabValue > TRIGGER_THRESHOLD && prevRightHandGrabValue < TRIGGER_THRESHOLD) {
 		holdingTrigger = true;
+        Entities.editEntity(paintStream, {
+            animationSettings: startSetting
+        });
 	} else if (rightHandGrabValue < TRIGGER_THRESHOLD && prevRightHandGrabValue > TRIGGER_THRESHOLD) {
 		holdingTrigger = false;
 		painting = false;
+        Entities.editEntity(paintStream, {
+            animationSettings: stopSetting
+        })
 	}
 	prevRightHandGrabValue = rightHandGrabValue
 }
