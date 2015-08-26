@@ -28,6 +28,7 @@ var LEFT_HAND_CLICK = Controller.findAction("LEFT_HAND_CLICK");
 var RIGHT_HAND_CLICK = Controller.findAction("RIGHT_HAND_CLICK");
 var ACTION1 = Controller.findAction("ACTION1");
 var ACTION2 = Controller.findAction("ACTION2");
+var activeHand = null;
 
 var rightHandGrabAction = RIGHT_HAND_CLICK;
 var leftHandGrabAction = LEFT_HAND_CLICK;
@@ -36,6 +37,8 @@ var rightHandGrabValue = 0;
 var leftHandGrabValue = 0;
 var prevRightHandGrabValue = 0
 var prevLeftHandGrabValue = 0;
+
+var shouldUpdatePointer = false;
 
 var RIGHT = 1;
 var RIGHT_TIP = 2 * RIGHT + 1;
@@ -104,7 +107,6 @@ function letGo(hand) {
 
 function setGrabbedObject(hand) {
     var handPosition = (hand == LEFT) ? MyAvatar.getLeftPalmPosition() : MyAvatar.getRightPalmPosition();
-    var tipNormal = (hand == LEFT) ? Controller.getSpatialControlNormal(LEFT_TIP) : Controller.getSpatialControlNormal(RIGHT_TIP);
     var entities = Entities.findEntities(handPosition, GRAB_RADIUS);
     var objectID = null;
     var minDistance = GRAB_RADIUS;
@@ -123,7 +125,7 @@ function setGrabbedObject(hand) {
     }
     if (objectID == null) {
         //We weren't in range of any object, so show laser instead
-        showPointer(handPosition, tipNormal);
+        showPointer(handPosition);
         return false;
     }
     if (hand == LEFT) {
@@ -135,15 +137,19 @@ function setGrabbedObject(hand) {
     return true;
 }
 
-function showPointer(origin, direction) {
-    print("SHOOW POI")
+function showPointer(origin) {
+    var tipNormal = Controller.getSpatialControlNormal(2 * activeHand + 1);
+    print("SHOOW POI");
     Entities.editEntity(pointer, {
         position: origin,
         linePoints: [
             ZERO_VEC,
-            direction
-        ]
+            tipNormal
+        ],
+        visible: true
     });
+    shouldUpdatePointer = true;
+
 }
 
 function grab(hand) {
@@ -175,7 +181,6 @@ function grab(hand) {
             rightHandObjectID = null;
         }
     } else {
-        // TODO: upon successful grab, add to collision group so object doesn't collide with immovable entities
         if (hand == LEFT) {
             leftHandActionID = actionID;
         } else {
@@ -184,6 +189,25 @@ function grab(hand) {
     }
 }
 
+function updatePointer() {
+    var handPosition =  Controller.getSpatialControlPosition(2 * activeHand) 
+    var direction = Controller.getSpatialControlNormal(2 * activeHand + 1);
+    Entities.editEntity(pointer, {
+        position: handPosition,
+        linePoints: [
+            ZERO_VEC,
+            direction
+        ]
+    })
+
+}
+
+function hidePointer() {
+    Entities.editEntity(pointer, {
+        visible: false,
+        position: ZERO_VEC
+    });
+}
 
 function update(deltaTime) {
     if (overlays) {
@@ -201,12 +225,15 @@ function update(deltaTime) {
             Overlays.editOverlay(rightHandOverlay, { color: grabColor });
         }
         grab(RIGHT);
+        activeHand = RIGHT;
     } else if (rightHandGrabValue < TRIGGER_THRESHOLD &&
                prevRightHandGrabValue > TRIGGER_THRESHOLD) {
         if (overlays) {
             Overlays.editOverlay(rightHandOverlay, { color: releaseColor });
         }
         letGo(RIGHT);
+        activeHand = null;
+        hidePointer();
     }
 
     if (leftHandGrabValue > TRIGGER_THRESHOLD &&
@@ -215,12 +242,19 @@ function update(deltaTime) {
             Overlays.editOverlay(leftHandOverlay, { color: grabColor });
         }
         grab(LEFT);
+        activeHand = LEFT;
     } else if (leftHandGrabValue < TRIGGER_THRESHOLD &&
                prevLeftHandGrabValue > TRIGGER_THRESHOLD) {
         if (overlays) {
             Overlays.editOverlay(leftHandOverlay, { color: releaseColor });
         }
         letGo(LEFT);
+        activeHand = null;
+        hidePointer();
+    }
+
+    if (activeHand !== null) {
+        updatePointer();
     }
 
     prevRightHandGrabValue = rightHandGrabValue;
