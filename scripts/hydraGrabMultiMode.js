@@ -22,7 +22,7 @@ var leftHandActionID = nullActionID;
 var rightHandActionID = nullActionID;
 
 var TRIGGER_THRESHOLD = 0.2;
-var GRAB_RADIUS = 0.15;
+var GRAB_RADIUS = 0.2;
 
 var LEFT_HAND_CLICK = Controller.findAction("LEFT_HAND_CLICK");
 var RIGHT_HAND_CLICK = Controller.findAction("RIGHT_HAND_CLICK");
@@ -135,7 +135,7 @@ function grab(hand) {
     var offsetPosition = Vec3.multiplyQbyV(Quat.inverse(Quat.multiply(handRotation, offsetRotation)), offset);
     // print(JSON.stringify(offsetPosition));
     var actionID = Entities.addAction("hold", objectID, {
-        relativePosition: { x: 0, y: 0, z: -.5 },
+        relativePosition: offsetPosition,   
         relativeRotation: offsetRotation,
         hand: (hand == LEFT) ? "left" : "right",
         timeScale: 0.05
