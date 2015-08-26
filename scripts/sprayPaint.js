@@ -8,7 +8,9 @@ var strokes = [];
 var strokePoints = [];
 var strokeNormals = [];
 var strokeWidths = [];
-var STROKE_WIDTH = 0.05;
+var STROKE_WIDTH = 0.02;
+
+var DISTANCE_THRESHOLD = 2;
 
 var MIN_POINT_DISTANCE = 0.01;
 
@@ -64,7 +66,8 @@ var whiteboard = Entities.addEntity({
 
 var animationSettings = JSON.stringify({
 	fps: 30,
-	running: false,
+    running: true,
+	// running: false,
 	loop: true,
 	firstFrame: 1,
 	lastFrame: 10000
@@ -77,18 +80,18 @@ var paintStream = Entities.addEntity({
 	textures: "https://raw.githubusercontent.com/ericrius1/SantasLair/santa/assets/smokeparticle.png",
 	emitVelocity: ZERO_VEC,
 	velocitySpread: {
-		x: .05,
-		y: .05,
-		z: .05
+		x: .02,
+		y: .02,
+		z: .02
 	},
 	emitAcceleration: ZERO_VEC,
-	emitRate: 1000,
+	emitRate: 100,
 	color: {
 		red: 170,
 		green: 20,
 		blue: 150
 	},
-	lifespan: 10,
+	lifespan: 2,
 	dimensions: {
 		x: .1,
 		y: .1,
@@ -109,19 +112,27 @@ function update() {
 	var direction = Controller.getSpatialControlNormal(RIGHT_TIP);
 	Entities.editEntity(paintStream, {
 		position: origin,
-		emitVelocity: Vec3.multiply(direction, 3)
+		emitVelocity: Vec3.multiply(direction, 5)
 	});
 	//move origin of ray a bit away from hand so the ray doesnt hit emitter
 	origin = Vec3.sum(origin, direction);
 	var intersection = getEntityIntersection(origin, direction);
-	if (intersection.intersects) {
+	if (intersection.intersects && intersection.distance < DISTANCE_THRESHOLD) {
 		//get normal
 		// print("PROPS	 " + JSON.stringify(intersection))
-		paint(intersection.intersection);
+        //Add a little delay to let particles hit surface
+        (function(){
+            var position = intersection.intersection;
+            var normal =  Vec3.multiply(-1, Quat.getFront(intersection.properties.rotation));
+            Script.setTimeout(function() {
+    		  paint(position , normal);
+            }, 1000)
+        })();
 	}
 }
 
-function paint(position) {
+
+function paint(position, normal) {
 	if (!painting) {
 		newStroke(position)
 		painting = true;
@@ -132,18 +143,15 @@ function paint(position) {
 		return;
 	}
 	var localPoint = Vec3.subtract(position, strokeBasePosition);
+    //Move to stroke a bit forward along the normal so it doesnnt zfight with mesh its drawing on
+    localPoint = Vec3.sum(localPoint, Vec3.multiply(normal, .01))   ;
 	if ( strokePoints.length > 0 && Vec3.distance(localPoint, strokePoints[strokePoints.length - 1]) < MIN_POINT_DISTANCE) {
 		//Need a minimum distance to avoid binormal NANs
 		return;
 	}
-	print("LOCAL POINT: " + JSON.stringify(localPoint));
 	strokePoints.push(localPoint);
-	strokeNormals.push({
-		x: 0,
-		y: 0,
-		z: -1
-	});
-	strokeWidths.push(.1);
+	strokeNormals.push(normal);
+	strokeWidths.push(STROKE_WIDTH);
 	Entities.editEntity(currentStroke, {
 		linePoints: strokePoints,
 		normals: strokeNormals,
@@ -152,7 +160,6 @@ function paint(position) {
 }
 
 function newStroke(position) {
-	print("STROKE POSITION:  " + JSON.stringify(position))
 	strokeBasePosition = position;
 	currentStroke = Entities.addEntity({
 		position: position,
@@ -163,15 +170,17 @@ function newStroke(position) {
 			blue: randInt(1, 250)
 		},
 		dimensions: {
-			x: 2,
-			y: 2,
-			z: 2
+			x: 5,
+			y: 5,
+			z: 5
 		},
 		lifetime: 100
 	});
 	strokePoints = [];
 	strokeNormals = [];
 	strokeWidths = [];
+
+    strokes.push(currentStroke);
 
 }
 
@@ -220,6 +229,10 @@ function orientationOf(vector) {
 function cleanup() {
 	Entities.deleteEntity(whiteboard);
 	Entities.deleteEntity(paintStream);
+
+    strokes.forEach(function(stroke){
+        Entities.deleteEntity(stroke);
+    });
 }
 
 Script.scriptEnding.connect(cleanup);
