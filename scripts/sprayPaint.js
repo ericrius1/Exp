@@ -125,8 +125,11 @@ function update() {
             var position = intersection.intersection;
             var normal =  Vec3.multiply(-1, Quat.getFront(intersection.properties.rotation));
             Script.setTimeout(function() {
+                if(!holdingTrigger){
+                    return;
+                }
     		  paint(position , normal);
-            }, 1000)
+            }, 200)
         })();
 	}
 }
@@ -134,6 +137,7 @@ function update() {
 
 function paint(position, normal) {
 	if (!painting) {
+        print("NEW LINE")
 		newStroke(position)
 		painting = true;
 	}
