@@ -80,9 +80,9 @@ var paintStream = Entities.addEntity({
 	textures: "https://raw.githubusercontent.com/ericrius1/SantasLair/santa/assets/smokeparticle.png",
 	emitVelocity: ZERO_VEC,
 	velocitySpread: {
-		x: .02,
-		y: .02,
-		z: .02
+		x: .05,
+		y: .05,
+		z: .05
 	},
 	emitAcceleration: ZERO_VEC,
 	emitRate: 100,
@@ -91,12 +91,7 @@ var paintStream = Entities.addEntity({
 		green: 20,
 		blue: 150
 	},
-	lifespan: 2,
-	dimensions: {
-		x: .1,
-		y: .1,
-		z: .1
-	}
+	lifespan: 0.2,
 });
 
 
