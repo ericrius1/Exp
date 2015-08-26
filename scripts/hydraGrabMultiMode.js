@@ -21,7 +21,7 @@ var rightHandObjectID = null;
 var leftHandActionID = nullActionID;
 var rightHandActionID = nullActionID;
 
-var TRIGGER_THRESHOLD = 0.2;
+var TRIGGER_THRESHOLD = 0.5;
 var GRAB_RADIUS = 0.2;
 
 var LEFT_HAND_CLICK = Controller.findAction("LEFT_HAND_CLICK");
@@ -38,7 +38,6 @@ var leftHandGrabValue = 0;
 var prevRightHandGrabValue = 0
 var prevLeftHandGrabValue = 0;
 
-var shouldUpdatePointer = false;
 
 var RIGHT = 1;
 var RIGHT_TIP = 2 * RIGHT + 1;
@@ -79,12 +78,15 @@ if (overlays) {
 var LEFT = 0;
 var RIGHT = 1;
 
-var pointer = Entities.addEntity({
-    type: "Line",
-    color: {red: 200, green: 50, blue: 200},
-    dimensions: {x: 5, y: 5, z : 5},
-    lineWidth: 5
-});
+var pointer = Overlays.addOverlay("line3d", {
+    start: MyAvatar.position,
+    end: Vec3.sum(MyAvatar.position, {x: 1, y: 1, z: 1}),   
+    color: {red: 250, green: 10, blue: 10},
+    alpha: 1,
+    lineWidth: 1,
+    anchor: "MyAvatar",
+    visible: false
+  });
 
 function letGo(hand) {
     var actionIDToRemove = (hand == LEFT) ? leftHandActionID : rightHandActionID;
@@ -138,18 +140,10 @@ function setGrabbedObject(hand) {
 }
 
 function showPointer(origin) {
-    var tipNormal = Controller.getSpatialControlNormal(2 * activeHand + 1);
-    print("SHOOW POI");
-    Entities.editEntity(pointer, {
-        position: origin,
-        linePoints: [
-            ZERO_VEC,
-            tipNormal
-        ],
+    print("WHYY")
+    Overlays.editOverlay(pointer, {
         visible: true
-    });
-    shouldUpdatePointer = true;
-
+    })
 }
 
 function grab(hand) {
@@ -192,20 +186,30 @@ function grab(hand) {
 function updatePointer() {
     var handPosition =  Controller.getSpatialControlPosition(2 * activeHand) 
     var direction = Controller.getSpatialControlNormal(2 * activeHand + 1);
-    Entities.editEntity(pointer, {
-        position: handPosition,
-        linePoints: [
-            ZERO_VEC,
-            direction
-        ]
-    })
+       Overlays.editOverlay(pointer, {
+       start: handPosition,
+       end: Vec3.sum(handPosition, direction)
+    });
+
+    var intersection = getEntityIntersection(handPosition, direction);
+    if(intersection.intersects) {
+        print('yaaa')
+    }
 
 }
 
+function getEntityIntersection(origin, direction) {
+    var pickRay = {
+        origin: origin,
+        direction: direction
+    };
+    return Entities.findRayIntersection(pickRay, true);
+}
+
+
 function hidePointer() {
-    Entities.editEntity(pointer, {
+    Overlays.editOverlay(pointer, {
         visible: false,
-        position: ZERO_VEC
     });
 }
 
@@ -268,7 +272,7 @@ function cleanUp() {
         Overlays.deleteOverlay(leftHandOverlay);
         Overlays.deleteOverlay(rightHandOverlay);
     }
-    Entities.deleteEntity(pointer)
+    Overlays.deleteOverlay(pointer);
     removeTable();
     toolBar.cleanup();
 }
