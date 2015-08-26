@@ -12,7 +12,7 @@
 Script.include("http://s3.amazonaws.com/hifi-public/scripts/libraries/toolBars.js");
 
 HIFI_PUBLIC_BUCKET = "http://s3.amazonaws.com/hifi-public/";
-
+var ZERO_VEC = {x: 0, y: 0, z: 0}
 var nullActionID = "00000000-0000-0000-0000-000000000000";
 var controllerID;
 var controllerActive;
@@ -37,6 +37,12 @@ var leftHandGrabValue = 0;
 var prevRightHandGrabValue = 0
 var prevLeftHandGrabValue = 0;
 
+var RIGHT = 1;
+var RIGHT_TIP = 2 * RIGHT + 1;
+
+var LEFT = 1;
+var LEFT_TIP = 2 * LEFT + 1;
+
 var grabColor = { red: 0, green: 255, blue: 0};
 var releaseColor = { red: 0, green: 0, blue: 255};
 
@@ -47,7 +53,7 @@ var toolBar = new ToolBar(0, 0, ToolBar.vertical, "highfidelity.toybox.toolbar",
     };
 });
 
-var overlays = true;
+var overlays = false;
 var leftHandOverlay;
 var rightHandOverlay;
 if (overlays) {
@@ -70,6 +76,13 @@ if (overlays) {
 var LEFT = 0;
 var RIGHT = 1;
 
+var pointer = Entities.addEntity({
+    type: "Line",
+    color: {red: 200, green: 50, blue: 200},
+    dimensions: {x: 5, y: 5, z : 5},
+    lineWidth: 5
+});
+
 function letGo(hand) {
     var actionIDToRemove = (hand == LEFT) ? leftHandActionID : rightHandActionID;
     var entityIDToEdit = (hand == LEFT) ? leftHandObjectID : rightHandObjectID;
@@ -91,6 +104,7 @@ function letGo(hand) {
 
 function setGrabbedObject(hand) {
     var handPosition = (hand == LEFT) ? MyAvatar.getLeftPalmPosition() : MyAvatar.getRightPalmPosition();
+    var tipNormal = (hand == LEFT) ? Controller.getSpatialControlNormal(LEFT_TIP) : Controller.getSpatialControlNormal(RIGHT_TIP);
     var entities = Entities.findEntities(handPosition, GRAB_RADIUS);
     var objectID = null;
     var minDistance = GRAB_RADIUS;
@@ -108,6 +122,8 @@ function setGrabbedObject(hand) {
         }
     }
     if (objectID == null) {
+        //We weren't in range of any object, so show laser instead
+        showPointer(handPosition, tipNormal);
         return false;
     }
     if (hand == LEFT) {
@@ -115,17 +131,29 @@ function setGrabbedObject(hand) {
     } else {
         rightHandObjectID = objectID;
     }
+    print("OBJECT ID " + objectID)
     return true;
+}
+
+function showPointer(origin, direction) {
+    print("SHOOW POI")
+    Entities.editEntity(pointer, {
+        position: origin,
+        linePoints: [
+            ZERO_VEC,
+            direction
+        ]
+    });
 }
 
 function grab(hand) {
     if (!setGrabbedObject(hand)) {
         return;
     }
-    print("OBJECTID " + objectID);
     var objectID = (hand == LEFT) ? leftHandObjectID : rightHandObjectID;
     var handRotation = (hand == LEFT) ? MyAvatar.getLeftPalmRotation() : MyAvatar.getRightPalmRotation();
     var handPosition = (hand == LEFT) ? MyAvatar.getLeftPalmPosition() : MyAvatar.getRightPalmPosition();
+
 
     var objectRotation = Entities.getEntityProperties(objectID).rotation;
     var offsetRotation = Quat.multiply(Quat.inverse(handRotation), objectRotation);
@@ -206,6 +234,7 @@ function cleanUp() {
         Overlays.deleteOverlay(leftHandOverlay);
         Overlays.deleteOverlay(rightHandOverlay);
     }
+    Entities.deleteEntity(pointer)
     removeTable();
     toolBar.cleanup();
 }
