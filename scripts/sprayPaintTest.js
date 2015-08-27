@@ -33,32 +33,18 @@ var rightHandGrabAction = RIGHT_HAND_CLICK;
 var rightHandGrabValue = 0;
 var prevRightHandGrabValue = 0;
 
-var pointer = Overlays.addOverlay("line3d", {
-    start: MyAvatar.position,
-    end: Vec3.sum(MyAvatar.position, {
-        x: 1,
-        y: 1,
-        z: 1
-    }),
-    color: NO_INTERSECT_COLOR,
-    alpha: 1,
-    lineWidth: 1,
-    anchor: "MyAvatar",
-    // visible: false
-});
-
 
 // var paintGun = Entities.addEntity({
-// 	type: "Model",
-// 	modelURL: "https://hifi-public.s3.amazonaws.com/eric/models/sprayGun.fbx?=v2",
-// 	position: center,
-// 	dimensions: {
-// 		x: 0.15,
-// 		y: 0.34,
-// 		z: 0.03
-// 	},
-// 	collisionsWillMove: true,
-// 	shapeType: 'box'
+//  type: "Model",
+//  modelURL: "https://hifi-public.s3.amazonaws.com/eric/models/sprayGun.fbx?=v2",
+//  position: center,
+//  dimensions: {
+//      x: 0.15,
+//      y: 0.34,
+//      z: 0.03
+//  },
+//  collisionsWillMove: true,
+//  shapeType: 'box'
 // });
 
 var whiteboard = Entities.addEntity({
@@ -93,23 +79,6 @@ var startSetting = JSON.stringify({
 });
 
 
-var paintStream = Entities.addEntity({
-    type: "ParticleEffect",
-    animationSettings: animationSettings,
-    position: center,
-    textures: "https://raw.githubusercontent.com/ericrius1/SantasLair/santa/assets/smokeparticle.png",
-    emitVelocity: ZERO_VEC,
-    emitAcceleration: ZERO_VEC,
-    velocitySpread: {x: .02, y:.02, z: 0.02},
-    emitRate: 100,
-    particleRadius: 0.01,
-    color: {
-        red: 170,
-        green: 20,
-        blue: 150
-    },
-    lifespan: 5,
-});
 
 
 
@@ -122,16 +91,13 @@ function update() {
 
     var origin = MyAvatar.getRightPalmPosition();
     var direction = Controller.getSpatialControlNormal(RIGHT_TIP);
-    Entities.editEntity(paintStream, {
-        position: origin,
-        emitVelocity: Vec3.multiply(direction, 5)
-    });
+
     //move origin of ray a bit away from hand so the ray doesnt hit emitter
     origin = Vec3.sum(origin, direction);
     var intersection = getEntityIntersection(origin, direction);
     if (intersection.intersects && intersection.distance < DISTANCE_THRESHOLD) {
         //get normal
-        // print("PROPS	 " + JSON.stringify(intersection))
+        // print("PROPS  " + JSON.stringify(intersection))
         //Add a little delay to let particles hit surface
         // var position = intersection.intersection;
         // var normal = Vec3.multiply(-1, Quat.getFront(intersection.properties.rotation));
@@ -215,15 +181,11 @@ function updateControllerState() {
     rightHandGrabValue = Controller.getActionValue(rightHandGrabAction);
     if (rightHandGrabValue > TRIGGER_THRESHOLD && prevRightHandGrabValue < TRIGGER_THRESHOLD) {
         holdingTrigger = true;
-        Entities.editEntity(paintStream, {
-            animationSettings: startSetting
-        });
+  
     } else if (rightHandGrabValue < TRIGGER_THRESHOLD && prevRightHandGrabValue > TRIGGER_THRESHOLD) {
         holdingTrigger = false;
         painting = false;
-        Entities.editEntity(paintStream, {
-            animationSettings: stopSetting
-        })
+  
     }
     prevRightHandGrabValue = rightHandGrabValue
 }
@@ -253,7 +215,6 @@ function orientationOf(vector) {
 
 function cleanup() {
     Entities.deleteEntity(whiteboard);
-    Entities.deleteEntity(paintStream);
 
     strokes.forEach(function(stroke) {
         Entities.deleteEntity(stroke);
