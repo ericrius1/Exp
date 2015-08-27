@@ -33,20 +33,6 @@ var rightHandGrabAction = RIGHT_HAND_CLICK;
 var rightHandGrabValue = 0;
 var prevRightHandGrabValue = 0;
 
-var pointer = Overlays.addOverlay("line3d", {
-    start: MyAvatar.position,
-    end: Vec3.sum(MyAvatar.position, {
-        x: 1,
-        y: 1,
-        z: 1
-    }),
-    color: NO_INTERSECT_COLOR,
-    alpha: 1,
-    lineWidth: 1,
-    anchor: "MyAvatar",
-    // visible: false
-});
-
 
 // var paintGun = Entities.addEntity({
 // 	type: "Model",

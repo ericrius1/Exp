@@ -33,19 +33,31 @@ var rightHandGrabAction = RIGHT_HAND_CLICK;
 var rightHandGrabValue = 0;
 var prevRightHandGrabValue = 0;
 
+var NO_INTERSECT_COLOR = {
+    red: 10,
+    green: 10,
+    blue: 255
+};
+var INTERSECT_COLOR = {
+    red: 250,
+    green: 10,
+    blue: 10
+};
 
-// var paintGun = Entities.addEntity({
-//  type: "Model",
-//  modelURL: "https://hifi-public.s3.amazonaws.com/eric/models/sprayGun.fbx?=v2",
-//  position: center,
-//  dimensions: {
-//      x: 0.15,
-//      y: 0.34,
-//      z: 0.03
-//  },
-//  collisionsWillMove: true,
-//  shapeType: 'box'
-// });
+
+var pointer = Overlays.addOverlay("line3d", {
+    start: MyAvatar.position,
+    end: Vec3.sum(MyAvatar.position, {
+        x: 1,
+        y: 1,
+        z: 1
+    }),
+    color: NO_INTERSECT_COLOR,
+    alpha: 1,
+    lineWidth: 1,
+    anchor: "MyAvatar",
+    // visible: false
+});
 
 var whiteboard = Entities.addEntity({
     type: "Box",
