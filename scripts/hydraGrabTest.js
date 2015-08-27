@@ -20,6 +20,8 @@ var INTERSECT_COLOR = {
     blue: 10
 };
 
+var holding = true;
+
 var pointer = Overlays.addOverlay("line3d", {
     start: MyAvatar.position,
     end: Vec3.sum(MyAvatar.position, {
@@ -31,7 +33,7 @@ var pointer = Overlays.addOverlay("line3d", {
     alpha: 1,
     lineWidth: 1,
     anchor: "MyAvatar",
-    visible: false
+    // visible: false
 });
 
 var center = Vec3.sum(MyAvatar.position, Vec3.multiply(3, Quat.getFront(Camera.getOrientation())));
@@ -39,8 +41,8 @@ var testObj = Entities.addEntity({
     type: "Box",
     position: center,
     dimensions: {
-        x: 2,
-        y: 1.5,
+        x: 1,
+        y: 0.5,
         z: .01
     },
     rotation: orientationOf(Vec3.subtract(MyAvatar.position, center)),
@@ -50,6 +52,35 @@ var testObj = Entities.addEntity({
         blue: 250
     },
 });
+
+function castRay() {
+    var handPosition = MyAvatar.getRightPalmPosition();
+    //move origin a bit away from hand so nothing gets in way
+    var direction = Controller.getSpatialControlNormal(2 * RIGHT + 1);
+    var rayOrigin = Vec3.sum(handPosition, direction);
+    var pickRay = {
+        origin: rayOrigin,
+        direction: direction
+    };
+
+    var intersection = Entities.findRayIntersection(pickRay, true);
+
+    if (intersection.intersects) {
+        Overlays.editOverlay(pointer, {
+            color: INTERSECT_COLOR
+        });
+    } else {
+        Overlays.editOverlay(pointer, {
+            color: NO_INTERSECT_COLOR
+        });
+    }
+    Overlays.editOverlay(pointer, {
+        start: handPosition,
+        end: Vec3.sum(handPosition, Vec3.multiply(0.5, direction))
+    });
+
+}
+
 
 function showPointer(origin) {
     Overlays.editOverlay(pointer, {
@@ -62,9 +93,13 @@ function update() {
     rightHandGrabValue = Controller.getActionValue(rightHandGrabAction);
     if (rightHandGrabValue > TRIGGER_THRESHOLD &&
         prevRightHandGrabValue < TRIGGER_THRESHOLD) {
-        print("TRIGGER")
+        holding = true
     } else if (rightHandGrabValue < TRIGGER_THRESHOLD && prevRightHandGrabValue > TRIGGER_THRESHOLD) {
-        print("DETRIGGER")
+        holding = false;
+    }
+
+    if (holding) {
+        castRay();
     }
 
     prevRightHandGrabValue = rightHandGrabValue;
@@ -94,6 +129,11 @@ function orientationOf(vector) {
     return Quat.multiply(yaw, pitch);
 }
 
+function cleanup() {
+    Overlays.deleteOverlay(pointer);
+    Entities.deleteEntity(testObj);
+}
 
 
+Script.scriptEnding.connect(cleanup);
 Script.update.connect(update)
