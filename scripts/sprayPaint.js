@@ -10,7 +10,7 @@ var strokeNormals = [];
 var strokeWidths = [];
 var STROKE_WIDTH = 0.02;
 
-var DISTANCE_THRESHOLD = 2;
+var DISTANCE_THRESHOLD = 20;
 
 var MIN_POINT_DISTANCE = 0.01;
 

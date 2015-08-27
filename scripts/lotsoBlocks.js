@@ -28,7 +28,7 @@ var ground = Entities.addEntity({
 
 basePosition.y += SPAWN_RANGE + 2;
 for (var i = 0; i < NUM_BLOCKS; i++) {
-  size = randFloat(-.2, 0.7);
+  size = randFloat(.2, 0.7);
   boxes.push(Entities.addEntity({
     type: 'Box',
     dimensions: {
