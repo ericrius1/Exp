@@ -81,15 +81,24 @@ controller.prototype.checkForIntersections = function(origin, direction) {
     var intersection = Entities.findRayIntersection(pickRay, true);
 
     if (intersection.intersects) {
-        this.grabbedEntity = intersection.entityID;
-        return true
+        var distanceToEntity = Vec3.distance(origin, intersection.properties.position);
+        print(distanceToEntity)
+        Entities.editEntity(this.pointer, {
+            linePoints: [
+                ZERO_VEC,
+                Vec3.multiply(direction, distanceToEntity)
+            ]
+        });
+        this.intersectedEntity = intersection.entityID;
+        return true;
     }
     return false;
 }
 
 controller.prototype.attemptMove = function() {
-    if(this.grabbedEntity) {
-        print('move')
+    if(this.intersectedEntity) {
+        
+
     }
 
 }
@@ -108,8 +117,8 @@ controller.prototype.hidePointer = function() {
 }
 
 controller.prototype.letGo = function() {
-    if(this.grabbedEntity) {
-        this.grabbedEntity = null;
+    if(this.intersectedEntity) {
+        this.intersectedEntity = null;
     }
 }
 
