@@ -4,12 +4,23 @@ var ZERO_VEC = {
     y: 0,
     z: 0
 }
-
+var totalTime = 0;
 var FIRE_COLOR = {
     red: 255,
     green: 255,
     blue: 255
 };
+var minLightIntensity = 3;
+var maxLightIntensity = 11;
+
+var minTimeFactor = .1;
+var maxTimeFactor = 1;
+
+var LIGHT_COLOR = {
+    red: 255,
+    green: 100,
+    blue: 28
+}
 
 var animationSettings = JSON.stringify({
     fps: 30,
@@ -19,20 +30,6 @@ var animationSettings = JSON.stringify({
     lastFrame: 10000
 });
 
-var ground = Entities.addEntity({
-    type: "Box",
-    color: {
-        red: 50,
-        green: 0,
-        blue: 5
-    },
-    position: center,
-    dimensions: {
-        x: 1,
-        y: .01,
-        z: 1
-    }
-})
 
 var fire = Entities.addEntity({
     type: "ParticleEffect",
@@ -65,13 +62,31 @@ var fire = Entities.addEntity({
     lifespan: .5
 });
 
+var light = Entities.addEntity({
+    type: "Light",
+    position: center,
+    // isSpotlight: true,
+    dimensions: {x: 10, y: 10, z: 10},
+    color: LIGHT_COLOR
+});
 
+
+function update(deltaTime) {
+    totalTime += deltaTime
+    var intensity = (minLightIntensity + (maxLightIntensity/4 +  (Math.sin(totalTime) * maxLightIntensity/4)));
+    intensity += randFloat(-.3, 0.3);
+    print(intensity)
+    Entities.editEntity(light, {
+        intensity: intensity
+    })
+}
 
 function cleanup() {
    Entities.deleteEntity(fire);
-   Entities.deleteEntity(ground);
+   Entities.deleteEntity(light);
 }
 Script.scriptEnding.connect(cleanup);
+Script.update.connect(update);
 
 function randFloat(min, max) {
     return Math.random() * (max - min) + min;

@@ -46,6 +46,12 @@ var DAMPING_RATE = 0.8;
 var SCREEN_TO_METERS = 0.001;
 var DISTANCE_SCALE_FACTOR = 1000
 
+var LEFT_HAND_CLICK = Controller.findAction("LEFT_HAND_CLICK");
+var RIGHT_HAND_CLICK = Controller.findAction("RIGHT_HAND_CLICK");
+
+var rightHandGrabAction = RIGHT_HAND_CLICK;
+var leftHandGrabAction = LEFT_HAND_CLICK;
+
 var grabSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/CloseClamp.wav");
 var releaseSound = SoundCache.getSound("https://hifi-public.s3.amazonaws.com/eric/sounds/ReleaseClamp.wav");
 
@@ -55,13 +61,14 @@ function getRayIntersection(pickRay) {
 }
 
 
-function controller(side) {
+function controller(side, action) {
   this.triggerHeld = false;
   this.triggerThreshold = 0.9;
   this.side = side;
   this.palm = 2 * side;
   this.tip = 2 * side + 1;
   this.trigger = side;
+  this.action = action;
 
   this.laser = Overlays.addOverlay("line3d", {
     start: {
@@ -150,11 +157,12 @@ function controller(side) {
   this.updateControllerState = function() {
     this.palmPosition = Controller.getSpatialControlPosition(this.palm);
     this.tipPosition = Controller.getSpatialControlPosition(this.tip);
-    this.triggerValue = Controller.getTriggerValue(this.trigger);
+    this.triggerValue = Controller.getActionValue(this.action);
   }
 
   this.checkTrigger = function() {
     if (this.triggerValue > this.triggerThreshold && !this.triggerHeld) {
+      print("TRUE")
       this.triggerHeld = true;
     } else if (this.triggerValue < this.triggerThreshold && this.triggerHeld) {
       this.triggerHeld = false;
@@ -257,9 +265,6 @@ function controller(side) {
     // 5. interface B releases the entity and puts the original gravity back (to zero)
 
     var isZero = vectorIsZero(originalGravity);
-    // if(!vectorIsZero(originalGravity)) {
-    print("Waaaah " + JSON.stringify(originalGravity));
-    // }
   }
 
   this.moveLaser = function() {
@@ -269,7 +274,7 @@ function controller(side) {
     var direction = Vec3.multiplyQbyV(inverseRotation, Vec3.subtract(this.tipPosition, this.palmPosition));
     direction = Vec3.multiply(direction, LASER_LENGTH_FACTOR / (Vec3.length(direction) * MyAvatar.scale));
     var endPosition = Vec3.sum(startPosition, direction);
-
+    print("START " + JSON.stringify(startPosition))
     Overlays.editOverlay(this.laser, {
       start: startPosition,
       end: endPosition
@@ -295,7 +300,7 @@ function vectorIsZero(v) {
   return v.x === 0 && v.y === 0 && v.z === 0;
 }
 
-var rightController = new controller(RIGHT);
+var rightController = new controller(RIGHT, RIGHT_HAND_CLICK);
 
 
 Script.update.connect(update);

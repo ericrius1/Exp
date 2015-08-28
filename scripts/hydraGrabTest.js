@@ -1,6 +1,12 @@
 var RIGHT_HAND_CLICK = Controller.findAction("RIGHT_HAND_CLICK");
 var rightHandGrabAction = RIGHT_HAND_CLICK;
 
+var ZERO_VEC = {
+    x: 0,
+    y: 0,
+    z: 0
+}
+
 var rightHandGrabValue = 0;
 var prevRightHandGrabValue = 0
 
@@ -22,18 +28,15 @@ var INTERSECT_COLOR = {
 
 var holding = true;
 
-var pointer = Overlays.addOverlay("line3d", {
-    start: MyAvatar.position,
-    end: Vec3.sum(MyAvatar.position, {
-        x: 1,
-        y: 1,
-        z: 1
-    }),
+var pointer = Entities.addEntity({
+    type: "Line",
     color: NO_INTERSECT_COLOR,
-    alpha: 1,
-    lineWidth: 1,
-    anchor: "MyAvatar",
-    // visible: false
+    dimensions: {
+        x: .1,
+        y: .1,
+        z: .1
+    },
+    visible: false
 });
 
 var center = Vec3.sum(MyAvatar.position, Vec3.multiply(3, Quat.getFront(Camera.getOrientation())));
@@ -55,35 +58,39 @@ var testObj = Entities.addEntity({
 
 function castRay() {
     var handPosition = MyAvatar.getRightPalmPosition();
+    var direction = Vec3.normalize(Controller.getSpatialControlNormal(2 * RIGHT + 1));
     //move origin a bit away from hand so nothing gets in way
-    var direction = Controller.getSpatialControlNormal(2 * RIGHT + 1);
     var rayOrigin = Vec3.sum(handPosition, direction);
     var pickRay = {
         origin: rayOrigin,
         direction: direction
     };
 
+    Entities.editEntity(pointer, {
+        position: handPosition,
+        linePoints: [
+            ZERO_VEC,
+            Vec3.multiply(direction, .1)
+        ]
+    });
+
     var intersection = Entities.findRayIntersection(pickRay, true);
 
     if (intersection.intersects) {
-        Overlays.editOverlay(pointer, {
+        Entities.editEntity(pointer, {
             color: INTERSECT_COLOR
         });
     } else {
-        Overlays.editOverlay(pointer, {
+        Entities.editEntity(pointer, {
             color: NO_INTERSECT_COLOR
         });
     }
-    Overlays.editOverlay(pointer, {
-        start: handPosition,
-        end: Vec3.sum(handPosition, Vec3.multiply(0.5, direction))
-    });
 
 }
 
 
 function showPointer(origin) {
-    Overlays.editOverlay(pointer, {
+    Entities.editEntity(pointer, {
         visible: true
     })
 }
@@ -94,17 +101,30 @@ function update() {
     if (rightHandGrabValue > TRIGGER_THRESHOLD &&
         prevRightHandGrabValue < TRIGGER_THRESHOLD) {
         holding = true
+        showPointer();
     } else if (rightHandGrabValue < TRIGGER_THRESHOLD && prevRightHandGrabValue > TRIGGER_THRESHOLD) {
         holding = false;
+        hidePointer();
     }
 
     if (holding) {
         castRay();
     }
-
     prevRightHandGrabValue = rightHandGrabValue;
 
 
+}
+
+function showPointer() {
+    Entities.editEntity(pointer, {
+        visible: true
+    });
+}
+
+function hidePointer() {
+    Entities.editEntity(pointer, {
+        visible: false
+    });
 }
 
 function orientationOf(vector) {
@@ -130,7 +150,7 @@ function orientationOf(vector) {
 }
 
 function cleanup() {
-    Overlays.deleteOverlay(pointer);
+    Entities.editEntity(pointer);
     Entities.deleteEntity(testObj);
 }
 

@@ -55,7 +55,7 @@ var pointer = Overlays.addOverlay("line3d", {
     color: NO_INTERSECT_COLOR,
     alpha: 1,
     lineWidth: 1,
-    anchor: "MyAvatar",
+
     // visible: false
 });
 
@@ -100,20 +100,33 @@ function update() {
     if (!holdingTrigger) {
         return;
     }
+    var handPosition = Controller.getSpatialControlPosition(2 * RIGHT)
+    var tipPosition = Controller.getSpatialControlPosition(RIGHT_TIP);
+    var inverseRotation = Quat.inverse(MyAvatar.orientation);
+
+    var direction = Vec3.multiplyQbyV(inverseRotation, Vec3.subtract(tipPosition, handPosition));
+    
+    Overlays.editOverlay(pointer, {
+        start: handPosition,
+        end: Vec3.sum(handPosition, direction)
+    })
+
 
     var origin = MyAvatar.getRightPalmPosition();
     var direction = Controller.getSpatialControlNormal(RIGHT_TIP);
-
     //move origin of ray a bit away from hand so the ray doesnt hit emitter
     origin = Vec3.sum(origin, direction);
     var intersection = getEntityIntersection(origin, direction);
-    if (intersection.intersects && intersection.distance < DISTANCE_THRESHOLD) {
+    if (intersection.intersects) {
         //get normal
         // print("PROPS  " + JSON.stringify(intersection))
         //Add a little delay to let particles hit surface
         // var position = intersection.intersection;
         // var normal = Vec3.multiply(-1, Quat.getFront(intersection.properties.rotation));
         // paint(position, normal);
+        Overlays.editOverlay(pointer, {
+            color: INTERSECT_COLOR
+        });
         (function() {
             var position = intersection.intersection;
             var normal = Vec3.multiply(-1, Quat.getFront(intersection.properties.rotation));
@@ -124,6 +137,10 @@ function update() {
                 paint(position, normal);
             }, 300)
         })();
+    } else {
+        Overlays.editOverlay(pointer, {
+            color: NO_INTERSECT_COLOR
+        })
     }
 }
 
@@ -227,7 +244,7 @@ function orientationOf(vector) {
 
 function cleanup() {
     Entities.deleteEntity(whiteboard);
-
+    Overlays.deleteOverlay(pointer);
     strokes.forEach(function(stroke) {
         Entities.deleteEntity(stroke);
     });
