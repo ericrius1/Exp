@@ -12,11 +12,7 @@
 Script.include("http://s3.amazonaws.com/hifi-public/scripts/libraries/toolBars.js");
 
 HIFI_PUBLIC_BUCKET = "http://s3.amazonaws.com/hifi-public/";
-var ZERO_VEC = {
-    x: 0,
-    y: 0,
-    z: 0
-}
+
 var nullActionID = "00000000-0000-0000-0000-000000000000";
 var controllerID;
 var controllerActive;
@@ -25,13 +21,13 @@ var rightHandObjectID = null;
 var leftHandActionID = nullActionID;
 var rightHandActionID = nullActionID;
 
-var TRIGGER_THRESHOLD = 0.5;
+var TRIGGER_THRESHOLD = 5.7;
 var GRAB_RADIUS = 0.2;
 
 var LEFT_HAND_CLICK = Controller.findAction("LEFT_HAND_CLICK");
 var RIGHT_HAND_CLICK = Controller.findAction("RIGHT_HAND_CLICK");
-
-var activeHand = null;
+var ACTION1 = Controller.findAction("ACTION1");
+var ACTION2 = Controller.findAction("ACTION2");
 
 var rightHandGrabAction = RIGHT_HAND_CLICK;
 var leftHandGrabAction = LEFT_HAND_CLICK;
@@ -40,13 +36,6 @@ var rightHandGrabValue = 0;
 var leftHandGrabValue = 0;
 var prevRightHandGrabValue = 0
 var prevLeftHandGrabValue = 0;
-
-
-var RIGHT = 1;
-var RIGHT_TIP = 2 * RIGHT + 1;
-
-var LEFT = 1;
-var LEFT_TIP = 2 * LEFT + 1;
 
 var grabColor = {
     red: 0,
@@ -59,8 +48,14 @@ var releaseColor = {
     blue: 255
 };
 
+var toolBar = new ToolBar(0, 0, ToolBar.vertical, "highfidelity.toybox.toolbar", function() {
+    return {
+        x: 100,
+        y: 380
+    };
+});
 
-var overlays = false;
+var overlays = true;
 var leftHandOverlay;
 var rightHandOverlay;
 if (overlays) {
@@ -82,49 +77,6 @@ if (overlays) {
 
 var LEFT = 0;
 var RIGHT = 1;
-
-var NO_INTERSECT_COLOR = {
-    red: 10,
-    green: 10,
-    blue: 255
-};
-var INTERSECT_COLOR = {
-    red: 250,
-    green: 10,
-    blue: 10
-};
-
-var pointer = Overlays.addOverlay("line3d", {
-    start: MyAvatar.position,
-    end: Vec3.sum(MyAvatar.position, {
-        x: 1,
-        y: 1,
-        z: 1
-    }),
-    color: NO_INTERSECT_COLOR,
-    alpha: 1,
-    lineWidth: 1,
-    anchor: "MyAvatar",
-    visible: false
-});
-
-var center = Vec3.sum(MyAvatar.position, Vec3.multiply(3, Quat.getFront(Camera.getOrientation())));
-var testObj = Entities.addEntity({
-    type: "Box",
-    position: center,
-    dimensions: {
-        x: 2,
-        y: 1.5,
-        z: .01
-    },
-    rotation: orientationOf(Vec3.subtract(MyAvatar.position, center)),
-    color: {
-        red: 250,
-        green: 250,
-        blue: 250
-    },
-});
-
 
 function letGo(hand) {
     var actionIDToRemove = (hand == LEFT) ? leftHandActionID : rightHandActionID;
@@ -164,8 +116,6 @@ function setGrabbedObject(hand) {
         }
     }
     if (objectID == null) {
-        //We weren't in range of any object, so show laser instead
-        showPointer(handPosition);
         return false;
     }
     if (hand == LEFT) {
@@ -173,14 +123,7 @@ function setGrabbedObject(hand) {
     } else {
         rightHandObjectID = objectID;
     }
-    print("OBJECT ID " + objectID)
     return true;
-}
-
-function showPointer(origin) {
-    Overlays.editOverlay(pointer, {
-        visible: true
-    })
 }
 
 function grab(hand) {
@@ -190,7 +133,7 @@ function grab(hand) {
     var objectID = (hand == LEFT) ? leftHandObjectID : rightHandObjectID;
     var handRotation = (hand == LEFT) ? MyAvatar.getLeftPalmRotation() : MyAvatar.getRightPalmRotation();
     var handPosition = (hand == LEFT) ? MyAvatar.getLeftPalmPosition() : MyAvatar.getRightPalmPosition();
-
+    print("OBJECTID " + objectID);
 
     var objectRotation = Entities.getEntityProperties(objectID).rotation;
     var offsetRotation = Quat.multiply(Quat.inverse(handRotation), objectRotation);
@@ -199,8 +142,10 @@ function grab(hand) {
     var offset = Vec3.subtract(objectPosition, handPosition);
     var offsetPosition = Vec3.multiplyQbyV(Quat.inverse(Quat.multiply(handRotation, offsetRotation)), offset);
     // print(JSON.stringify(offsetPosition));
+    print("GRAB")
     var actionID = Entities.addAction("hold", objectID, {
-        relativePosition: offsetPosition,
+        // relativePosition: offsetPosition,
+        relativePosition: {x: 0, y: 0, z: 0},
         relativeRotation: offsetRotation,
         hand: (hand == LEFT) ? "left" : "right",
         timeScale: 0.05
@@ -212,6 +157,7 @@ function grab(hand) {
             rightHandObjectID = null;
         }
     } else {
+        // TODO: upon successful grab, add to collision group so object doesn't collide with immovable entities
         if (hand == LEFT) {
             leftHandActionID = actionID;
         } else {
@@ -220,38 +166,6 @@ function grab(hand) {
     }
 }
 
-function updatePointer() {
-    // var handPosition = Controller.getSpatialControlPosition(2 * activeHand)
-    var handPosition = MyAvatar.getRightPalmPosition();
-    var direction = Controller.getSpatialControlNormal(2 * activeHand + 1);
-    Overlays.editOverlay(pointer, {
-        start: handPosition,
-        end: Vec3.sum(handPosition, direction)
-    });
-
-    var pickRay = {
-        origin: handPosition,
-        direction: direction
-    };
-    var intersection = Entities.findRayIntersection(pickRay, true);
-    if (intersection.intersects) {
-        print('intersect')
-        Overlays.editOverlay(pointer, {
-            color: INTERSECT_COLOR
-        });
-    } else {
-        Overlays.editOverlay(pointer, {
-            color: NO_INTERSECT_COLOR
-        });
-    }
-
-}
-
-function hidePointer() {
-    Overlays.editOverlay(pointer, {
-        visible: false,
-    });
-}
 
 function update(deltaTime) {
     if (overlays) {
@@ -275,7 +189,6 @@ function update(deltaTime) {
             });
         }
         grab(RIGHT);
-        activeHand = RIGHT;
     } else if (rightHandGrabValue < TRIGGER_THRESHOLD &&
         prevRightHandGrabValue > TRIGGER_THRESHOLD) {
         if (overlays) {
@@ -284,8 +197,6 @@ function update(deltaTime) {
             });
         }
         letGo(RIGHT);
-        activeHand = null;
-        hidePointer();
     }
 
     if (leftHandGrabValue > TRIGGER_THRESHOLD &&
@@ -296,7 +207,6 @@ function update(deltaTime) {
             });
         }
         grab(LEFT);
-        activeHand = LEFT;
     } else if (leftHandGrabValue < TRIGGER_THRESHOLD &&
         prevLeftHandGrabValue > TRIGGER_THRESHOLD) {
         if (overlays) {
@@ -305,12 +215,6 @@ function update(deltaTime) {
             });
         }
         letGo(LEFT);
-        activeHand = null;
-        hidePointer();
-    }
-
-    if (activeHand !== null) {
-        updatePointer();
     }
 
     prevRightHandGrabValue = rightHandGrabValue;
@@ -324,8 +228,8 @@ function cleanUp() {
         Overlays.deleteOverlay(leftHandOverlay);
         Overlays.deleteOverlay(rightHandOverlay);
     }
-    Overlays.deleteOverlay(pointer);
-    Entities.deleteEntity(testObj);
+    removeTable();
+    toolBar.cleanup();
 }
 
 
@@ -337,29 +241,6 @@ randInt = function(low, high) {
     return Math.floor(randFloat(low, high));
 }
 
-
-
-function orientationOf(vector) {
-    var Y_AXIS = {
-        x: 0,
-        y: 1,
-        z: 0
-    };
-    var X_AXIS = {
-        x: 1,
-        y: 0,
-        z: 0
-    };
-
-    var theta = 0.0;
-
-    var RAD_TO_DEG = 180.0 / Math.PI;
-    var direction, yaw, pitch;
-    direction = Vec3.normalize(vector);
-    yaw = Quat.angleAxis(Math.atan2(direction.x, direction.z) * RAD_TO_DEG, Y_AXIS);
-    pitch = Quat.angleAxis(Math.asin(-direction.y) * RAD_TO_DEG, X_AXIS);
-    return Quat.multiply(yaw, pitch);
-}
 
 
 

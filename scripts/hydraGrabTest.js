@@ -1,3 +1,5 @@
+//sticking with right hand for now for simplicity
+
 var RIGHT_HAND_CLICK = Controller.findAction("RIGHT_HAND_CLICK");
 var rightHandGrabAction = RIGHT_HAND_CLICK;
 
@@ -13,7 +15,9 @@ var prevRightHandGrabValue = 0
 var RIGHT = 1;
 var RIGHT_TIP = 2 * RIGHT + 1;
 
-var TRIGGER_THRESHOLD = 0.5;
+var LINE_LENGTH = 500;
+
+var SHOW_LINE_THRESHOLD = 0.2;
 
 var NO_INTERSECT_COLOR = {
     red: 10,
@@ -32,9 +36,9 @@ var pointer = Entities.addEntity({
     type: "Line",
     color: NO_INTERSECT_COLOR,
     dimensions: {
-        x: .1,
-        y: .1,
-        z: .1
+        x: 1000,
+        y: 1000,
+        z: 1000
     },
     visible: false
 });
@@ -58,7 +62,7 @@ var testObj = Entities.addEntity({
 
 function castRay() {
     var handPosition = MyAvatar.getRightPalmPosition();
-    var direction = Vec3.normalize(Controller.getSpatialControlNormal(2 * RIGHT + 1));
+    var direction = Controller.getSpatialControlNormal(RIGHT_TIP);
     //move origin a bit away from hand so nothing gets in way
     var rayOrigin = Vec3.sum(handPosition, direction);
     var pickRay = {
@@ -70,15 +74,20 @@ function castRay() {
         position: handPosition,
         linePoints: [
             ZERO_VEC,
-            Vec3.multiply(direction, .1)
+            Vec3.multiply(direction, LINE_LENGTH)
         ]
     });
 
     var intersection = Entities.findRayIntersection(pickRay, true);
 
     if (intersection.intersects) {
+        var length = Vec3.length(Vec3.subtract(intersection.intersection, handPosition));
         Entities.editEntity(pointer, {
-            color: INTERSECT_COLOR
+            color: INTERSECT_COLOR,
+            linePoints: [
+                ZERO_VEC,
+                Vec3.multiply(direction, length)
+            ]
         });
     } else {
         Entities.editEntity(pointer, {
@@ -98,11 +107,11 @@ function showPointer(origin) {
 function update() {
 
     rightHandGrabValue = Controller.getActionValue(rightHandGrabAction);
-    if (rightHandGrabValue > TRIGGER_THRESHOLD &&
-        prevRightHandGrabValue < TRIGGER_THRESHOLD) {
+    if (rightHandGrabValue > SHOW_LINE_THRESHOLD &&
+        prevRightHandGrabValue < SHOW_LINE_THRESHOLD) {
         holding = true
         showPointer();
-    } else if (rightHandGrabValue < TRIGGER_THRESHOLD && prevRightHandGrabValue > TRIGGER_THRESHOLD) {
+    } else if (rightHandGrabValue < SHOW_LINE_THRESHOLD && prevRightHandGrabValue > SHOW_LINE_THRESHOLD) {
         holding = false;
         hidePointer();
     }
