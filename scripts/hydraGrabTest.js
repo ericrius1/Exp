@@ -1,23 +1,14 @@
 //sticking with right hand for now for simplicity
-
+print("YAAAH")
 var RIGHT_HAND_CLICK = Controller.findAction("RIGHT_HAND_CLICK");
-var rightHandGrabAction = RIGHT_HAND_CLICK;
+var rightTriggerAction = RIGHT_HAND_CLICK;
 
 var ZERO_VEC = {
     x: 0,
     y: 0,
     z: 0
 }
-
-var rightHandGrabValue = 0;
-var prevRightHandGrabValue = 0
-
-var RIGHT = 1;
-var RIGHT_TIP = 2 * RIGHT + 1;
-
 var LINE_LENGTH = 500;
-
-var SHOW_LINE_THRESHOLD = 0.2;
 
 var NO_INTERSECT_COLOR = {
     red: 10,
@@ -29,48 +20,36 @@ var INTERSECT_COLOR = {
     green: 10,
     blue: 10
 };
+var SHOW_LINE_THRESHOLD = 0.2;
+var GRAB_THRESHOLD = 0.6;
 
-var holding = true;
+var RIGHT = 1;
+var rightController = new controller(RIGHT, rightTriggerAction)
 
-var pointer = Entities.addEntity({
-    type: "Line",
-    color: NO_INTERSECT_COLOR,
-    dimensions: {
-        x: 1000,
-        y: 1000,
-        z: 1000
-    },
-    visible: false
-});
 
-var center = Vec3.sum(MyAvatar.position, Vec3.multiply(3, Quat.getFront(Camera.getOrientation())));
-var testObj = Entities.addEntity({
-    type: "Box",
-    position: center,
-    dimensions: {
-        x: 1,
-        y: 0.5,
-        z: .01
-    },
-    rotation: orientationOf(Vec3.subtract(MyAvatar.position, center)),
-    color: {
-        red: 250,
-        green: 250,
-        blue: 250
-    },
-});
+function controller(side, triggerAction) {
+    this.triggerAction = triggerAction;
+    this.triggerValue = 0;
+    this.prevTriggerValue = 0;
+    this.palm = 2 * side;
+    this.tip = 2 * side + 1;
+    this.pointer = Entities.addEntity({
+        type: "Line",
+        color: NO_INTERSECT_COLOR,
+        dimensions: {
+            x: 1000,
+            y: 1000,
+            z: 1000
+        },
+        visible: false
+    });
+}
 
-function castRay() {
-    var handPosition = MyAvatar.getRightPalmPosition();
-    var direction = Controller.getSpatialControlNormal(RIGHT_TIP);
-    //move origin a bit away from hand so nothing gets in way
-    var rayOrigin = Vec3.sum(handPosition, direction);
-    var pickRay = {
-        origin: rayOrigin,
-        direction: direction
-    };
+controller.prototype.updateLine = function() {
+    var handPosition = Controller.getSpatialControlPosition(this.palm);
+    var direction = Controller.getSpatialControlNormal(this.tip);
 
-    Entities.editEntity(pointer, {
+    Entities.editEntity(this.pointer, {
         position: handPosition,
         linePoints: [
             ZERO_VEC,
@@ -78,89 +57,95 @@ function castRay() {
         ]
     });
 
+    //move origin a bit away from hand so nothing gets in way
+    var origin = Vec3.sum(handPosition, direction);
+    if (this.checkForIntersections(origin, direction)) {
+        Entities.editEntity(this.pointer, {
+            color: INTERSECT_COLOR,
+        });
+    } else {
+        Entities.editEntity(this.pointer, {
+            color: NO_INTERSECT_COLOR,
+        });
+    }
+}
+
+
+
+controller.prototype.checkForIntersections = function(origin, direction) {
+    var pickRay = {
+        origin: origin,
+        direction: direction
+    };
+
     var intersection = Entities.findRayIntersection(pickRay, true);
 
     if (intersection.intersects) {
-        var length = Vec3.length(Vec3.subtract(intersection.intersection, handPosition));
-        Entities.editEntity(pointer, {
-            color: INTERSECT_COLOR,
-            linePoints: [
-                ZERO_VEC,
-                Vec3.multiply(direction, length)
-            ]
-        });
-    } else {
-        Entities.editEntity(pointer, {
-            color: NO_INTERSECT_COLOR
-        });
+        this.grabbedEntity = intersection.entityID;
+        return true
+    }
+    return false;
+}
+
+controller.prototype.attemptMove = function() {
+    if(this.grabbedEntity) {
+        print('move')
     }
 
 }
 
-
-function showPointer(origin) {
-    Entities.editEntity(pointer, {
-        visible: true
-    })
-}
-
-function update() {
-
-    rightHandGrabValue = Controller.getActionValue(rightHandGrabAction);
-    if (rightHandGrabValue > SHOW_LINE_THRESHOLD &&
-        prevRightHandGrabValue < SHOW_LINE_THRESHOLD) {
-        holding = true
-        showPointer();
-    } else if (rightHandGrabValue < SHOW_LINE_THRESHOLD && prevRightHandGrabValue > SHOW_LINE_THRESHOLD) {
-        holding = false;
-        hidePointer();
-    }
-
-    if (holding) {
-        castRay();
-    }
-    prevRightHandGrabValue = rightHandGrabValue;
-
-
-}
-
-function showPointer() {
-    Entities.editEntity(pointer, {
+controller.prototype.showPointer = function() {
+    Entities.editEntity(this.pointer, {
         visible: true
     });
+
 }
 
-function hidePointer() {
-    Entities.editEntity(pointer, {
+controller.prototype.hidePointer = function() {
+    Entities.editEntity(this.pointer, {
         visible: false
     });
 }
 
-function orientationOf(vector) {
-    var Y_AXIS = {
-        x: 0,
-        y: 1,
-        z: 0
-    };
-    var X_AXIS = {
-        x: 1,
-        y: 0,
-        z: 0
-    };
-
-    var theta = 0.0;
-
-    var RAD_TO_DEG = 180.0 / Math.PI;
-    var direction, yaw, pitch;
-    direction = Vec3.normalize(vector);
-    yaw = Quat.angleAxis(Math.atan2(direction.x, direction.z) * RAD_TO_DEG, Y_AXIS);
-    pitch = Quat.angleAxis(Math.asin(-direction.y) * RAD_TO_DEG, X_AXIS);
-    return Quat.multiply(yaw, pitch);
+controller.prototype.letGo = function() {
+    if(this.grabbedEntity) {
+        this.grabbedEntity = null;
+    }
 }
 
+controller.prototype.update = function() {
+    this.triggerValue = Controller.getActionValue(this.triggerAction);
+    if (this.triggerValue > SHOW_LINE_THRESHOLD && this.prevTriggerValue < SHOW_LINE_THRESHOLD) {
+        this.showPointer();
+        this.shouldDisplayLine = true;
+    } else if (this.triggerValue < SHOW_LINE_THRESHOLD && this.prevTriggerValue > SHOW_LINE_THRESHOLD) {
+        this.hidePointer();
+        this.letGo();
+        this.shouldDisplayLine = false;
+    }
+
+    if (this.triggerValue > GRAB_THRESHOLD) {
+        this.attemptMove();
+    }
+
+    if (this.shouldDisplayLine) {
+        this.updateLine();
+    }
+
+    this.prevTriggerValue = this.triggerValue;
+}
+
+controller.prototype.cleanup = function() {
+    Entities.deleteEntity(this.pointer);
+}
+
+function update() {
+    rightController.update();
+}
+
+
 function cleanup() {
-    Entities.editEntity(pointer);
-    Entities.deleteEntity(testObj);
+    rightController.cleanup();
 }
 
 

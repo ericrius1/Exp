@@ -1,4 +1,4 @@
-var NUM_BLOCKS = 200;
+var NUM_BLOCKS = 50;
 var size;
 var SPAWN_RANGE = 10;
 var boxes = [];
@@ -52,7 +52,7 @@ for (var i = 0; i < NUM_BLOCKS; i++) {
 function cleanup() {
   Entities.deleteEntity(ground);
   boxes.forEach(function(box){
-    Entities.deleteEntity(box);
+    // Entities.deleteEntity(box);
   });
   print('yaaaa')
 }
