@@ -30,15 +30,20 @@ var GRAB_COLOR = {
 var SHOW_LINE_THRESHOLD = 0.2;
 var DISTANCE_HOLD_THRESHOLD = 0.8;
 
+var right4Action= 18;
+var left4Action = 17;
+
 var RIGHT = 1;
-var rightController = new controller(RIGHT, rightTriggerAction)
+var rightController = new controller(RIGHT, rightTriggerAction, right4Action)
 
 
 
-function controller(side, triggerAction) {
-    this.actionID = null;
-    this.distanceHolding = false;
+function controller(side, triggerAction, pullAction) {
     this.triggerAction = triggerAction;
+    this.pullAction = pullAction;
+    this.actionID = null;
+    this.tractorBeamActive = false;
+    this.distanceHolding = false;
     this.triggerValue = 0;
     this.prevTriggerValue = 0;
     this.palm = 2 * side;
@@ -111,6 +116,9 @@ controller.prototype.checkForIntersections = function(origin, direction) {
 }
 
 controller.prototype.attemptMove = function() {
+    if(this.tractorBeamActive) {
+        return;
+    }
     if (this.intersectedEntity || this.distanceHolding) {
         if (this.actionID === null) {
             this.inititialDistanceToHeldEntity = this.distanceToEntity
@@ -179,6 +187,29 @@ controller.prototype.update = function() {
     this.prevTriggerValue = this.triggerValue;
 }
 
+
+controller.prototype.onActionEvent = function(action, state) {
+    if(this.pullAction === action && state === 1) {
+        if (this.actionID !== null) {
+            var handPosition = Controller.getSpatialControlPosition(this.palm);
+            this.tractorBeamActive = true;
+            Entities.updateAction(this.intersectedEntity, this.actionID, {
+                targetPosition: handPosition
+                // linearTimeScale: 0.0001
+            });
+            var self = this;
+            this.inter
+            //hack for lack of onComplete callback
+            Script.setTimeout(function() {
+                self.letGo();
+                print("NOW YOU CAN GRAB AAGAIN")
+                self.tractorBeamActive = false;
+            }, 3000);
+        }
+    }
+
+}
+
 controller.prototype.cleanup = function() {
     Entities.deleteEntity(this.pointer);
     Entities.deleteAction(this.intersectedEntity, this.actionID);
@@ -186,6 +217,11 @@ controller.prototype.cleanup = function() {
 
 function update() {
     rightController.update();
+}
+
+function onActionEvent(action, state) {
+    rightController.onActionEvent(action, state);
+
 }
 
 
@@ -196,3 +232,4 @@ function cleanup() {
 
 Script.scriptEnding.connect(cleanup);
 Script.update.connect(update)
+Controller.actionEvent.connect(onActionEvent);
