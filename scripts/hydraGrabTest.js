@@ -152,6 +152,13 @@ controller.prototype.attemptMove = function() {
                 targetPosition: newPosition,
                 linearTimeScale: 0.1
             });
+
+            // this.actionID = Entities.addAction("hold", this.grabbedEntity, {
+            //     relativePosition: offsetPosition,
+            //     relativeRotation: offsetRotation,
+            //     hand: this.hand,
+            //     timeScale: 0.05
+            // });
         } else {
             Entities.updateAction(this.grabbedEntity, this.actionID, {
                 targetPosition: newPosition
@@ -221,8 +228,8 @@ controller.prototype.update = function() {
 
 controller.prototype.grabEntity = function() {
     print("GRAB ENTITY")
-    var handRotation = MyAvatar.getRightPalmRotation();
-    var handPosition = MyAvatar.getRightPalmPosition();
+    var handRotation = this.getHandRotation();
+    var handPosition = this.getHandPosition();
 
     var objectRotation = Entities.getEntityProperties(this.grabbedEntity).rotation;
     var offsetRotation = Quat.multiply(Quat.inverse(handRotation), objectRotation);
@@ -237,6 +244,7 @@ controller.prototype.grabEntity = function() {
         timeScale: 0.05
     });
 }
+
 
 controller.prototype.checkForInRangeObject = function() {
     var handPosition = Controller.getSpatialControlPosition(this.palm);
