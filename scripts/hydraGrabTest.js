@@ -126,7 +126,6 @@ controller.prototype.attemptMove = function() {
                 linearTimeScale: 0.1
             });
         } else {
-            print("UPDATE")
             Entities.updateAction(this.intersectedEntity, this.actionID, {
                 targetPosition: newPosition
             });
@@ -151,6 +150,8 @@ controller.prototype.hidePointer = function() {
 
 controller.prototype.letGo = function() {
     this.intersectedEntity = null;
+    this.actionID = null;
+    Entities.deleteAction(this.intersectedEntity, this.actionID);
     this.distanceHolding = false;
 }
 
@@ -161,7 +162,9 @@ controller.prototype.update = function() {
         this.shouldDisplayLine = true;
     } else if (this.triggerValue < SHOW_LINE_THRESHOLD && this.prevTriggerValue > SHOW_LINE_THRESHOLD) {
         this.hidePointer();
-        this.letGo();
+        if(this.distanceHolding){
+          this.letGo();  
+        }
         this.shouldDisplayLine = false;
     }
 
@@ -178,7 +181,7 @@ controller.prototype.update = function() {
 
 controller.prototype.cleanup = function() {
     Entities.deleteEntity(this.pointer);
-    Entities.deleteAction(this.intersectedEntity, actionID);
+    Entities.deleteAction(this.intersectedEntity, this.actionID);
 }
 
 function update() {
