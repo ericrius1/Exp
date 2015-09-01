@@ -97,7 +97,11 @@ controller.prototype.checkForIntersections = function(origin, direction) {
 
 controller.prototype.attemptMove = function() {
     if(this.intersectedEntity) {
-        
+        //TO DO : USE SPRING ACTION UPDATE FOR MOVING
+        Entities.addAction("spring", this.intersectedEntity, {
+            targetPosition: MyAvatar.position,
+            linearTimeScale: 0.1
+        });
 
     }
 
