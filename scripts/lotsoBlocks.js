@@ -1,4 +1,4 @@
-var NUM_BLOCKS = 50;
+var NUM_BLOCKS = 100;
 var size;
 var SPAWN_RANGE = 10;
 var boxes = [];
@@ -28,7 +28,7 @@ var ground = Entities.addEntity({
 
 basePosition.y += SPAWN_RANGE + 2;
 for (var i = 0; i < NUM_BLOCKS; i++) {
-  size = randFloat(.2, 0.7);
+  size = randFloat(.1, 0.3);
   boxes.push(Entities.addEntity({
     type: 'Box',
     dimensions: {
@@ -43,7 +43,6 @@ for (var i = 0; i < NUM_BLOCKS; i++) {
     },
     color: {red: Math.random() * 255, green: Math.random() * 255, blue: Math.random() * 255},
     collisionsWillMove: true,
-    gravity: {x: 0, y: -10, z: 0}
   }));
 }
 

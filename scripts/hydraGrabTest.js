@@ -55,6 +55,7 @@ function controller(side, triggerAction, pullAction, hand) {
     this.tip = 2 * side + 1;
     this.pointer = Entities.addEntity({
         type: "Line",
+        name: "pointer",
         color: NO_INTERSECT_COLOR,
         dimensions: {
             x: 1000,
@@ -114,7 +115,7 @@ controller.prototype.checkForIntersections = function(origin, direction) {
                 Vec3.multiply(direction, this.distanceToEntity)
             ]
         });
-        this.intersectedEntity = intersection.entityID;
+        this.grabbedEntity = intersection.entityID;
         return true;
     }
     return false;
@@ -124,7 +125,7 @@ controller.prototype.attemptMove = function() {
     if (this.tractorBeamActive) {
         return;
     }
-    if (this.intersectedEntity || this.distanceHolding) {
+    if (this.grabbedEntity || this.distanceHolding) {
         if (this.actionID === null) {
             this.inititialDistanceToHeldEntity = this.distanceToEntity
         }
@@ -134,12 +135,12 @@ controller.prototype.attemptMove = function() {
         this.distanceHolding = true;
         //TO DO : USE SPRING ACTION UPDATE FOR MOVING
         if (this.actionID === null) {
-            this.actionID = Entities.addAction("spring", this.intersectedEntity, {
+            this.actionID = Entities.addAction("spring", this.grabbedEntity, {
                 targetPosition: newPosition,
                 linearTimeScale: 0.1
             });
         } else {
-            Entities.updateAction(this.intersectedEntity, this.actionID, {
+            Entities.updateAction(this.grabbedEntity, this.actionID, {
                 targetPosition: newPosition
             });
         }
@@ -162,10 +163,10 @@ controller.prototype.hidePointer = function() {
 
 
 controller.prototype.letGo = function() {
-    print("LET GO")
-    this.intersectedEntity = null;
+    print("action Id " + this.actionID);
+    Entities.deleteAction(this.grabbedEntity, this.actionID);
+    this.grabbedEntity = null;
     this.actionID = null;
-    Entities.deleteAction(this.intersectedEntity, this.actionID);
     this.distanceHolding = false;
     this.tractorBeamActive = false;
     this.checkForEntityArrival = false;
@@ -173,7 +174,7 @@ controller.prototype.letGo = function() {
 
 controller.prototype.update = function() {
     if (this.tractorBeamActive && this.checkForEntityArrival) {
-        var entityVelocity = Entities.getEntityProperties(this.intersectedEntity).velocity
+        var entityVelocity = Entities.getEntityProperties(this.grabbedEntity).velocity
         if (Vec3.length(entityVelocity) < TRACTOR_BEAM_VELOCITY_THRESHOLD) {
             this.letGo();
         }
@@ -190,9 +191,7 @@ controller.prototype.update = function() {
         }
     } else if (this.triggerValue < SHOW_LINE_THRESHOLD && this.prevTriggerValue > SHOW_LINE_THRESHOLD) {
         this.hidePointer();
-        if (this.distanceHolding) {
-            this.letGo();
-        }
+        this.letGo();
         this.shouldDisplayLine = false;
     }
 
@@ -210,16 +209,17 @@ controller.prototype.update = function() {
 controller.prototype.grabEntity = function() {
     print("GRAB ENTITY")
     var handRotation = Controller.getSpatialControlRawRotation(this.palm);
+    var handPosition = Controller.getSpatialControlPosition(this.palm);
 
-    var objectRotation = Entities.getEntityProperties(this.grabbedObject).rotation;
+    var objectRotation = Entities.getEntityProperties(this.grabbedEntity).rotation;
     var offsetRotation = Quat.multiply(Quat.inverse(handRotation), objectRotation);
 
-    var objectPosition = Entities.getEntityProperties(this.grabbedObject).position;
+    var objectPosition = Entities.getEntityProperties(this.grabbedEntity).position;
     var offset = Vec3.subtract(objectPosition, handPosition);
     var offsetPosition = Vec3.multiplyQbyV(Quat.inverse(Quat.multiply(handRotation, offsetRotation)), offset);
-    Entities.addAction("hold", this.grabbedObject, {
+    this.actionID = Entities.addAction("hold", this.grabbedEntity, {
         relativePosition: offsetPosition,
-        relativeRotation: relativeRotation,
+        relativeRotation: offsetRotation,
         hand: this.hand,
         timeScale: 0.05
     });
@@ -229,19 +229,21 @@ controller.prototype.checkForInRangeObject = function() {
     var handPosition = Controller.getSpatialControlPosition(this.palm);
     var entities = Entities.findEntities(handPosition, GRAB_RADIUS);
     var minDistance = GRAB_RADIUS;
-    var grabbedObject = null;
+    var grabbedEntity = null;
     //Get nearby entities and assign nearest
     for (var i = 0; i < entities.length; i++) {
-        var distance = Vec3.distance(Entities.getEntityProperties(entities[i]), handPosition);
-        if (distance < minDistance) {
-            grabbedObject = entities[i];
+        var props = Entities.getEntityProperties(entities[i]);
+        var distance = Vec3.distance(props.position, handPosition);
+        if (distance < minDistance && props.name !== "pointer") {
+            print("YAAA")
+            grabbedEntity = entities[i];
             minDistance = distance;
         }
     }
-    if (grabbedObject === null) {
+    if (grabbedEntity === null) {
         return false;
     } else {
-        this.grabbedObject = grabbedObject;
+        this.grabbedEntity = grabbedEntity;
         return true;
     }
 }
@@ -260,7 +262,7 @@ controller.prototype.onActionEvent = function(action, state) {
             var handPosition = Controller.getSpatialControlPosition(this.palm);
             var direction = Controller.getSpatialControlNormal(this.tip);
             //move final destination along line a bit, so it doesnt hit avatar hand
-            Entities.updateAction(this.intersectedEntity, this.actionID, {
+            Entities.updateAction(this.grabbedEntity, this.actionID, {
                 targetPosition: Vec3.sum(handPosition, Vec3.multiply(2, direction))
                     // linearTimeScale: 0.0001
             });
@@ -271,7 +273,7 @@ controller.prototype.onActionEvent = function(action, state) {
 
 controller.prototype.cleanup = function() {
     Entities.deleteEntity(this.pointer);
-    Entities.deleteAction(this.intersectedEntity, this.actionID);
+    Entities.deleteAction(this.grabbedEntity, this.actionID);
 }
 
 function update() {
