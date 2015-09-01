@@ -1,5 +1,4 @@
 //sticking with right hand for now for simplicity
-print("YAAAH")
 var RIGHT_HAND_CLICK = Controller.findAction("RIGHT_HAND_CLICK");
 var rightTriggerAction = RIGHT_HAND_CLICK;
 
@@ -9,6 +8,8 @@ var ZERO_VEC = {
     z: 0
 }
 var LINE_LENGTH = 500;
+var THICK_LINE_WIDTH = 7;
+var THIN_LINE_WIDTH = 2;
 
 var NO_INTERSECT_COLOR = {
     red: 10,
@@ -20,14 +21,23 @@ var INTERSECT_COLOR = {
     green: 10,
     blue: 10
 };
+
+var GRAB_COLOR = {
+    red: 250,
+    green: 10,
+    blue: 250
+};
 var SHOW_LINE_THRESHOLD = 0.2;
-var GRAB_THRESHOLD = 0.6;
+var DISTANCE_HOLD_THRESHOLD = 0.8;
 
 var RIGHT = 1;
 var rightController = new controller(RIGHT, rightTriggerAction)
 
 
+
 function controller(side, triggerAction) {
+    this.actionID = null;
+    this.distanceHolding = false;
     this.triggerAction = triggerAction;
     this.triggerValue = 0;
     this.prevTriggerValue = 0;
@@ -41,9 +51,10 @@ function controller(side, triggerAction) {
             y: 1000,
             z: 1000
         },
-        visible: false
+        visible: false,
     });
 }
+
 
 controller.prototype.updateLine = function() {
     var handPosition = Controller.getSpatialControlPosition(this.palm);
@@ -56,6 +67,11 @@ controller.prototype.updateLine = function() {
             Vec3.multiply(direction, LINE_LENGTH)
         ]
     });
+
+    //only check if we havent already grabbed an object
+    if (this.distanceHolding) {
+        return;
+    }
 
     //move origin a bit away from hand so nothing gets in way
     var origin = Vec3.sum(handPosition, direction);
@@ -81,12 +97,11 @@ controller.prototype.checkForIntersections = function(origin, direction) {
     var intersection = Entities.findRayIntersection(pickRay, true);
 
     if (intersection.intersects) {
-        var distanceToEntity = Vec3.distance(origin, intersection.properties.position);
-        print(distanceToEntity)
+        this.distanceToEntity = Vec3.distance(origin, intersection.properties.position);
         Entities.editEntity(this.pointer, {
             linePoints: [
                 ZERO_VEC,
-                Vec3.multiply(direction, distanceToEntity)
+                Vec3.multiply(direction, this.distanceToEntity)
             ]
         });
         this.intersectedEntity = intersection.entityID;
@@ -96,13 +111,26 @@ controller.prototype.checkForIntersections = function(origin, direction) {
 }
 
 controller.prototype.attemptMove = function() {
-    if(this.intersectedEntity) {
+    if (this.intersectedEntity || this.distanceHolding) {
+        if (this.actionID === null) {
+            this.inititialDistanceToHeldEntity = this.distanceToEntity
+        }
+        var handPosition = Controller.getSpatialControlPosition(this.palm);
+        var direction = Controller.getSpatialControlNormal(this.tip);
+        var newPosition = Vec3.sum(handPosition, Vec3.multiply(direction, this.inititialDistanceToHeldEntity))
+        this.distanceHolding = true;
         //TO DO : USE SPRING ACTION UPDATE FOR MOVING
-        Entities.addAction("spring", this.intersectedEntity, {
-            targetPosition: MyAvatar.position,
-            linearTimeScale: 0.1
-        });
-
+        if (this.actionID === null) {
+            this.actionID = Entities.addAction("spring", this.intersectedEntity, {
+                targetPosition: newPosition,
+                linearTimeScale: 0.1
+            });
+        } else {
+            print("UPDATE")
+            Entities.updateAction(this.intersectedEntity, this.actionID, {
+                targetPosition: newPosition
+            });
+        }
     }
 
 }
@@ -120,10 +148,10 @@ controller.prototype.hidePointer = function() {
     });
 }
 
+
 controller.prototype.letGo = function() {
-    if(this.intersectedEntity) {
-        this.intersectedEntity = null;
-    }
+    this.intersectedEntity = null;
+    this.distanceHolding = false;
 }
 
 controller.prototype.update = function() {
@@ -137,19 +165,20 @@ controller.prototype.update = function() {
         this.shouldDisplayLine = false;
     }
 
-    if (this.triggerValue > GRAB_THRESHOLD) {
-        this.attemptMove();
-    }
-
     if (this.shouldDisplayLine) {
         this.updateLine();
     }
+    if (this.triggerValue > DISTANCE_HOLD_THRESHOLD) {
+        this.attemptMove();
+    }
+
 
     this.prevTriggerValue = this.triggerValue;
 }
 
 controller.prototype.cleanup = function() {
     Entities.deleteEntity(this.pointer);
+    Entities.deleteAction(this.intersectedEntity, actionID);
 }
 
 function update() {
