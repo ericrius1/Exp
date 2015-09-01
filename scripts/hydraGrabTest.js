@@ -33,6 +33,8 @@ var DISTANCE_HOLD_THRESHOLD = 0.8;
 var right4Action= 18;
 var left4Action = 17;
 
+var TRACTOR_BEAM_VELOCITY_THRESHOLD = 0.5;
+
 var RIGHT = 1;
 var rightController = new controller(RIGHT, rightTriggerAction, right4Action)
 
@@ -157,15 +159,28 @@ controller.prototype.hidePointer = function() {
 
 
 controller.prototype.letGo = function() {
+    print("LET GO")
     this.intersectedEntity = null;
     this.actionID = null;
     Entities.deleteAction(this.intersectedEntity, this.actionID);
     this.distanceHolding = false;
+    this.tractorBeamActive = false;
+    this.checkForEntityArrival = false;
 }
 
 controller.prototype.update = function() {
+    if (this.tractorBeamActive && this.checkForEntityArrival) {
+      var entityVelocity = Entities.getEntityProperties(this.intersectedEntity).velocity
+      print(JSON.stringify(entityVelocity))
+      if( Vec3.length(entityVelocity) < TRACTOR_BEAM_VELOCITY_THRESHOLD) {
+        this.letGo();
+      }
+        //check 
+    }
     this.triggerValue = Controller.getActionValue(this.triggerAction);
     if (this.triggerValue > SHOW_LINE_THRESHOLD && this.prevTriggerValue < SHOW_LINE_THRESHOLD) {
+        //First check if an object is within close range and then run the close grabbing logic
+
         this.showPointer();
         this.shouldDisplayLine = true;
     } else if (this.triggerValue < SHOW_LINE_THRESHOLD && this.prevTriggerValue > SHOW_LINE_THRESHOLD) {
@@ -191,20 +206,20 @@ controller.prototype.update = function() {
 controller.prototype.onActionEvent = function(action, state) {
     if(this.pullAction === action && state === 1) {
         if (this.actionID !== null) {
+            var self = this;
+            this.tractorBeamActive = true; 
+            //We need to wait a bit before checking for entity arrival at target destination (meaning checking for velocity being close to some 
+            //low threshold) because otherwise we'll think the entity has arrived before its even really gotten moving! 
+            Script.setTimeout(function() {
+                self.checkForEntityArrival = true;
+            }, 500);
             var handPosition = Controller.getSpatialControlPosition(this.palm);
-            this.tractorBeamActive = true;
+            var direction = Controller.getSpatialControlNormal(this.tip);
+            //move final destination along line a bit, so it doesnt hit avatar hand
             Entities.updateAction(this.intersectedEntity, this.actionID, {
-                targetPosition: handPosition
+                targetPosition: Vec3.sum(handPosition, Vec3.multiply(2, direction))
                 // linearTimeScale: 0.0001
             });
-            var self = this;
-            this.inter
-            //hack for lack of onComplete callback
-            Script.setTimeout(function() {
-                self.letGo();
-                print("NOW YOU CAN GRAB AAGAIN")
-                self.tractorBeamActive = false;
-            }, 3000);
         }
     }
 
