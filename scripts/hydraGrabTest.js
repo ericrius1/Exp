@@ -2,6 +2,9 @@
 var RIGHT_HAND_CLICK = Controller.findAction("RIGHT_HAND_CLICK");
 var rightTriggerAction = RIGHT_HAND_CLICK;
 
+var LEFT_HAND_CLICK = Controller.findAction("LEFT_HAND_CLICK");
+var leftTriggerAction = LEFT_HAND_CLICK;
+
 var ZERO_VEC = {
     x: 0,
     y: 0,
@@ -38,12 +41,22 @@ var left4Action = 17;
 var TRACTOR_BEAM_VELOCITY_THRESHOLD = 0.5;
 
 var RIGHT = 1;
+var LEFT = 0;
 var rightController = new controller(RIGHT, rightTriggerAction, right4Action, "right")
+var leftController = new controller(LEFT, leftTriggerAction, left4Action, "left")
 
 
 
 function controller(side, triggerAction, pullAction, hand) {
     this.hand = hand;
+    if (hand === "right") {
+        this.getHandPosition = MyAvatar.getRightPalmPosition;
+        this.getHandRotation = MyAvatar.getRightPalmRotation;
+    } else {
+
+        this.getHandPosition = MyAvatar.getLeftPalmPosition;
+        this.getHandRotation = MyAvatar.getLeftPalmRotation;
+    }
     this.triggerAction = triggerAction;
     this.pullAction = pullAction;
     this.actionID = null;
@@ -208,8 +221,8 @@ controller.prototype.update = function() {
 
 controller.prototype.grabEntity = function() {
     print("GRAB ENTITY")
-    var handRotation = Controller.getSpatialControlRawRotation(this.palm);
-    var handPosition = Controller.getSpatialControlPosition(this.palm);
+    var handRotation = MyAvatar.getRightPalmRotation();
+    var handPosition = MyAvatar.getRightPalmPosition();
 
     var objectRotation = Entities.getEntityProperties(this.grabbedEntity).rotation;
     var offsetRotation = Quat.multiply(Quat.inverse(handRotation), objectRotation);
@@ -278,16 +291,19 @@ controller.prototype.cleanup = function() {
 
 function update() {
     rightController.update();
+    leftController.update();
 }
 
 function onActionEvent(action, state) {
     rightController.onActionEvent(action, state);
+    leftController.onActionEvent(action, state);
 
 }
 
 
 function cleanup() {
     rightController.cleanup();
+    leftController.cleanup();
 }
 
 
