@@ -70,6 +70,7 @@ function controller(side, triggerAction, pullAction, hand) {
     this.actionID = null;
     this.tractorBeamActive = false;
     this.distanceHolding = false;
+    this.closeGrabbing = false;
     this.triggerValue = 0;
     this.prevTriggerValue = 0;
     this.palm = 2 * side;
@@ -156,7 +157,7 @@ controller.prototype.attemptMove = function() {
         if (this.actionID === null) {
             this.actionID = Entities.addAction("spring", this.grabbedEntity, {
                 targetPosition: newPosition,
-                linearTimeScale: 0.1
+                linearTimeScale: .1
             });
         } else {
             Entities.updateAction(this.grabbedEntity, this.actionID, {
@@ -188,6 +189,7 @@ controller.prototype.letGo = function() {
     this.distanceHolding = false;
     this.tractorBeamActive = false;
     this.checkForEntityArrival = false;
+    this.closeGrabbing = false;
 }
 
 controller.prototype.update = function() {
@@ -216,7 +218,7 @@ controller.prototype.update = function() {
     if (this.shouldDisplayLine) {
         this.updateLine();
     }
-    if (this.triggerValue > DISTANCE_HOLD_THRESHOLD) {
+    if (this.triggerValue > DISTANCE_HOLD_THRESHOLD && !this.closeGrabbing) {
         this.attemptMove();
     }
 
@@ -234,6 +236,7 @@ controller.prototype.grabEntity = function() {
     var objectPosition = Entities.getEntityProperties(this.grabbedEntity).position;
     var offset = Vec3.subtract(objectPosition, handPosition);
     var offsetPosition = Vec3.multiplyQbyV(Quat.inverse(Quat.multiply(handRotation, offsetRotation)), offset);
+    this.closeGrabbing = true;
     this.actionID = Entities.addAction("hold", this.grabbedEntity, {
         relativePosition: offsetPosition,
         relativeRotation: offsetRotation,
