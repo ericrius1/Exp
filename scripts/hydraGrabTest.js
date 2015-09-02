@@ -9,6 +9,8 @@
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 //
+
+
 var RIGHT_HAND_CLICK = Controller.findAction("RIGHT_HAND_CLICK");
 var rightTriggerAction = RIGHT_HAND_CLICK;
 
@@ -128,8 +130,7 @@ controller.prototype.checkForIntersections = function(origin, direction) {
     };
 
     var intersection = Entities.findRayIntersection(pickRay, true);
-
-    if (intersection.intersects) {
+    if (intersection.intersects && intersection.properties.collisionsWillMove === 1) {
         this.distanceToEntity = Vec3.distance(origin, intersection.properties.position);
         Entities.editEntity(this.pointer, {
             linePoints: [
@@ -255,7 +256,7 @@ controller.prototype.checkForInRangeObject = function() {
     for (var i = 0; i < entities.length; i++) {
         var props = Entities.getEntityProperties(entities[i]);
         var distance = Vec3.distance(props.position, handPosition);
-        if (distance < minDistance && props.name !== "pointer") {
+        if (distance < minDistance && props.name !== "pointer" && props.collisionsWillMove === 1) {
             grabbedEntity = entities[i];
             minDistance = distance;
         }
