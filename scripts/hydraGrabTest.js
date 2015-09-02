@@ -1,4 +1,14 @@
-//sticking with right hand for now for simplicity
+//  hydraGrab.js
+//  examples
+//
+//  Created by Eric Levin on  9/2/15
+//  Copyright 2015 High Fidelity, Inc.
+//
+//  Grab's physically moveable entities with the hydra- works for either near or far objects. User can also grab a far away object and drag it towards them by pressing the "4" button on either the left or ride controller.
+//
+//  Distributed under the Apache License, Version 2.0.
+//  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
+//
 var RIGHT_HAND_CLICK = Controller.findAction("RIGHT_HAND_CLICK");
 var rightTriggerAction = RIGHT_HAND_CLICK;
 
@@ -44,8 +54,6 @@ var RIGHT = 1;
 var LEFT = 0;
 var rightController = new controller(RIGHT, rightTriggerAction, right4Action, "right")
 var leftController = new controller(LEFT, leftTriggerAction, left4Action, "left")
-
-
 
 function controller(side, triggerAction, pullAction, hand) {
     this.hand = hand;
@@ -139,12 +147,10 @@ controller.prototype.attemptMove = function() {
         return;
     }
     if (this.grabbedEntity || this.distanceHolding) {
-        if (this.actionID === null) {
-            this.inititialDistanceToHeldEntity = this.distanceToEntity
-        }
         var handPosition = Controller.getSpatialControlPosition(this.palm);
         var direction = Controller.getSpatialControlNormal(this.tip);
-        var newPosition = Vec3.sum(handPosition, Vec3.multiply(direction, this.inititialDistanceToHeldEntity))
+
+        var newPosition = Vec3.sum(handPosition, Vec3.multiply(direction, this.distanceToEntity))
         this.distanceHolding = true;
         //TO DO : USE SPRING ACTION UPDATE FOR MOVING
         if (this.actionID === null) {
@@ -152,13 +158,6 @@ controller.prototype.attemptMove = function() {
                 targetPosition: newPosition,
                 linearTimeScale: 0.1
             });
-
-            // this.actionID = Entities.addAction("hold", this.grabbedEntity, {
-            //     relativePosition: offsetPosition,
-            //     relativeRotation: offsetRotation,
-            //     hand: this.hand,
-            //     timeScale: 0.05
-            // });
         } else {
             Entities.updateAction(this.grabbedEntity, this.actionID, {
                 targetPosition: newPosition
@@ -183,7 +182,6 @@ controller.prototype.hidePointer = function() {
 
 
 controller.prototype.letGo = function() {
-    print("action Id " + this.actionID);
     Entities.deleteAction(this.grabbedEntity, this.actionID);
     this.grabbedEntity = null;
     this.actionID = null;
@@ -227,7 +225,6 @@ controller.prototype.update = function() {
 }
 
 controller.prototype.grabEntity = function() {
-    print("GRAB ENTITY")
     var handRotation = this.getHandRotation();
     var handPosition = this.getHandPosition();
 
@@ -256,7 +253,6 @@ controller.prototype.checkForInRangeObject = function() {
         var props = Entities.getEntityProperties(entities[i]);
         var distance = Vec3.distance(props.position, handPosition);
         if (distance < minDistance && props.name !== "pointer") {
-            print("YAAA")
             grabbedEntity = entities[i];
             minDistance = distance;
         }
@@ -285,7 +281,6 @@ controller.prototype.onActionEvent = function(action, state) {
             //move final destination along line a bit, so it doesnt hit avatar hand
             Entities.updateAction(this.grabbedEntity, this.actionID, {
                 targetPosition: Vec3.sum(handPosition, Vec3.multiply(2, direction))
-                    // linearTimeScale: 0.0001
             });
         }
     }
