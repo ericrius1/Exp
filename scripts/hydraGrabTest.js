@@ -41,7 +41,7 @@ var INTERSECT_COLOR = {
     blue: 10
 };
 
-var GRAB_RADIUS = 0.5;
+var GRAB_RADIUS = 0.7;
 
 var GRAB_COLOR = {
     red: 250,

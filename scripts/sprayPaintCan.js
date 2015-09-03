@@ -36,25 +36,24 @@
         self.properties = Entities.getEntityProperties(self.entityId);
         self.getUserData();
         if (self.userData.grabKey && self.userData.grabKey.activated === true) {
-            if (!this.activated) {
+            if ( self.activated !== true) {
                 Entities.editEntity(self.paintStream, {
                     animationSettings: startSetting
                 });
-                this.activated = true;
+                self.activated = true;
             }
             //Move emitter to where entity is always when its activated
             self.paint();
-        } else if (self.userData.activated === false && this.activated) {
+        } else if ( self.userData.grabKey && self.userData.grabKey.activated === false && self.activated) {
             Entities.editEntity(self.paintStream, {
                 animationSettings: stopSetting
             });
-            this.activated = false;
+            self.activated = false;
         }
     }
 
     this.paint = function() {
         var forwardVec = Quat.getFront(self.properties.rotation);
-        print("forward vec "+ JSON.stringify(forwardVec))
         Entities.editEntity(self.paintStream, {
             position: self.properties.position,
             emitVelocity: forwardVec
@@ -63,11 +62,13 @@
     }
 
     this.preload = function(entityId) {
+        this.activated = false;
         this.entityId = entityId;
         this.properties = Entities.getEntityProperties(self.entityId);
         this.getUserData();
-        if (!this.userData.activated) {
-            this.activated = false;
+        print("USER DATA " + JSON.stringify(this.userData))
+        if (this.userData.activated) {
+            this.activated = true;
         }
         this.initialize();
     }
@@ -107,8 +108,8 @@
     }
 
     this.unload = function() {
-        print("GOODBYE")
         Script.update.disconnect(this.update);
+        Entities.deleteEntity(this.paintStream);
     }
     Script.update.connect(this.update);
 });
