@@ -1,6 +1,6 @@
 var scriptURL = "file:///Users/ericlevin/myhifistuff/scripts/sprayPaintCan.js?=v10" + Math.random()
 // var scriptURL = "https://hifi-public.s3.amazonaws.com/eric/scripts/sprayPaintCan.js?=v1"
-var center = Vec3.sum(MyAvatar.position, Vec3.multiply(3, Quat.getFront(Camera.getOrientation())));
+var center = Vec3.sum(MyAvatar.position, Vec3.multiply(1, Quat.getFront(Camera.getOrientation())));
 
 var paintGun = Entities.addEntity({
  type: "Model",

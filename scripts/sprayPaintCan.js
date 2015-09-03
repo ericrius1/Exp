@@ -3,6 +3,9 @@
 
     this.userData = {};
 
+    var TIP_OFFSET_Z = 0.14;
+    var TIP_OFFSET_Y = 0.04;
+
     var ZERO_VEC = {
         x: 0,
         y: 0,
@@ -54,10 +57,19 @@
 
     this.paint = function() {
         var forwardVec = Quat.getFront(self.properties.rotation);
+        var upVec = Quat.getUp(self.properties.rotation);
+        var position = Vec3.sum(self.properties.position, Vec3.multiply(forwardVec, TIP_OFFSET_Z));
+        position = Vec3.sum(position, Vec3.multiply(upVec, TIP_OFFSET_Y))
         Entities.editEntity(self.paintStream, {
-            position: self.properties.position,
+            position: position,
             emitVelocity: forwardVec
         });
+
+        //Now check for an intersection with an entity
+
+        var pickRay = {
+            origin: self.properties.position
+        }
 
     }
 
