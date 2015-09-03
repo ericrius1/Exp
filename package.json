@@ -1,0 +1,35 @@
+{
+  "name": "hifi-scripts",
+  "version": "0.0.1",
+  "description": "scripts for high fidelity",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^4.13.3",
+    "morgan": "^1.6.1",
+    "serve-index": "^1.7.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ericrius1/Hifi-Scripts.git"
+  },
+  "keywords": [
+    "high",
+    "fidelity",
+    "virtual",
+    "reality",
+    "vr",
+    "games",
+    "experiences"
+  ],
+  "author": "",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/ericrius1/Hifi-Scripts/issues"
+  },
+  "homepage": "https://github.com/ericrius1/Hifi-Scripts#readme"
+}
