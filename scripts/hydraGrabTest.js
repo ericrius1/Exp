@@ -11,8 +11,12 @@
 //
 
 
+Script.include("https://hifi-public.s3.amazonaws.com/scripts/libraries/utils.js");
+
 var RIGHT_HAND_CLICK = Controller.findAction("RIGHT_HAND_CLICK");
 var rightTriggerAction = RIGHT_HAND_CLICK;
+
+var GRAB_USER_DATA_KEY = "grabKey";
 
 var LEFT_HAND_CLICK = Controller.findAction("LEFT_HAND_CLICK");
 var leftTriggerAction = LEFT_HAND_CLICK;
@@ -275,16 +279,19 @@ controller.prototype.checkForInRangeObject = function() {
 }
 
 controller.prototype.activateEntity = function(entity) {
-        Entities.editEntity(this.grabbedEntity, {
-            userData: JSON.stringify({activated: true, avatarId: MyAvatar.sessionUUID}),
-        });
+    var data = {
+        activated: true,
+        avatarId: MyAvatar.sessionUUID
+    };
+    setEntityCustomData(GRAB_USER_DATA_KEY, this.grabbedEntity, data);
 }
 
 controller.prototype.deactivateEntity = function(entity) {
-    
-        Entities.editEntity(this.grabbedEntity, {
-            userData: JSON.stringify({activated: false, avatarId: null}),
-        });
+    var data = {
+        activated: false,
+        avatarId: null
+    };
+    setEntityCustomData(GRAB_USER_DATA_KEY, this.grabbedEntity, data);
 }
 
 controller.prototype.onActionEvent = function(action, state) {

@@ -3,7 +3,11 @@
 
     this.userData = {};
 
-    var ZERO_VEC = {x: 0, y: 0, z: 0}
+    var ZERO_VEC = {
+        x: 0,
+        y: 0,
+        z: 0
+    }
 
     var self = this;
 
@@ -31,25 +35,38 @@
     this.update = function(deltaTime) {
         self.properties = Entities.getEntityProperties(self.entityId);
         self.getUserData();
-        if (self.userData.activated === true) {
-            if(!this.activated){
-              Entities.editEntity(self.paintStream, {animationSettings: startSetting});
-              this.activated = true;  
+        if (self.userData.grabKey && self.userData.grabKey.activated === true) {
+            if (!this.activated) {
+                Entities.editEntity(self.paintStream, {
+                    animationSettings: startSetting
+                });
+                this.activated = true;
             }
             //Move emitter to where entity is always when its activated
-            Entities.editEntity(self.paintStream, {position: self.properties.position});
-        } else if(self.userData.activated === false && this.activated) {
-            Entities.editEntity(self.paintStream, {animationSettings: stopSetting});
+            self.paint();
+        } else if (self.userData.activated === false && this.activated) {
+            Entities.editEntity(self.paintStream, {
+                animationSettings: stopSetting
+            });
             this.activated = false;
         }
     }
 
+    this.paint = function() {
+        var forwardVec = Quat.getFront(self.properties.rotation);
+        print("forward vec "+ JSON.stringify(forwardVec))
+        Entities.editEntity(self.paintStream, {
+            position: self.properties.position,
+            emitVelocity: forwardVec
+        });
+
+    }
 
     this.preload = function(entityId) {
         this.entityId = entityId;
         this.properties = Entities.getEntityProperties(self.entityId);
         this.getUserData();
-        if(!this.userData.activated) {
+        if (!this.userData.activated) {
             this.activated = false;
         }
         this.initialize();

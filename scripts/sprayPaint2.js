@@ -31,6 +31,7 @@ var whiteboard = Entities.addEntity({
         green: 250,
         blue: 250
     },
+    // visible: false
 });
 
 function cleanup() {
