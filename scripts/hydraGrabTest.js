@@ -37,7 +37,7 @@ var INTERSECT_COLOR = {
     blue: 10
 };
 
-var GRAB_RADIUS = 2;
+var GRAB_RADIUS = 0.5;
 
 var GRAB_COLOR = {
     red: 250,
@@ -154,7 +154,6 @@ controller.prototype.attemptMove = function() {
 
         var newPosition = Vec3.sum(handPosition, Vec3.multiply(direction, this.distanceToEntity))
         this.distanceHolding = true;
-        //TO DO : USE SPRING ACTION UPDATE FOR MOVING
         if (this.actionID === null) {
             this.actionID = Entities.addAction("spring", this.grabbedEntity, {
                 targetPosition: newPosition,
@@ -184,7 +183,11 @@ controller.prototype.hidePointer = function() {
 
 
 controller.prototype.letGo = function() {
-    Entities.deleteAction(this.grabbedEntity, this.actionID);
+    if (this.grabbedEntity && this.actionID) {
+        print("DELETE ACTION");
+        this.deactivateEntity(this.grabbedEntity);
+        Entities.deleteAction(this.grabbedEntity, this.actionID);
+    }
     this.grabbedEntity = null;
     this.actionID = null;
     this.distanceHolding = false;
@@ -264,11 +267,27 @@ controller.prototype.checkForInRangeObject = function() {
     if (grabbedEntity === null) {
         return false;
     } else {
+        //We are grabbing an entity, so let it know we've grabbed it
         this.grabbedEntity = grabbedEntity;
+        this.activateEntity(this.grabbedEntity);
+
         return true;
     }
 }
 
+controller.prototype.activateEntity = function(entity) {
+    
+        Entities.editEntity(this.grabbedEntity, {
+            userData: JSON.stringify({activated: true}),
+        });
+}
+
+controller.prototype.deactivateEntity = function(entity) {
+    
+        Entities.editEntity(this.grabbedEntity, {
+            userData: JSON.stringify({activated: false}),
+        });
+}
 
 controller.prototype.onActionEvent = function(action, state) {
     if (this.pullAction === action && state === 1) {
@@ -293,7 +312,9 @@ controller.prototype.onActionEvent = function(action, state) {
 
 controller.prototype.cleanup = function() {
     Entities.deleteEntity(this.pointer);
-    Entities.deleteAction(this.grabbedEntity, this.actionID);
+    if (this.grabbedEntity) {
+        Entities.deleteAction(this.grabbedEntity, this.actionID);
+    }
 }
 
 function update() {
@@ -312,6 +333,7 @@ function cleanup() {
     rightController.cleanup();
     leftController.cleanup();
 }
+
 
 
 Script.scriptEnding.connect(cleanup);

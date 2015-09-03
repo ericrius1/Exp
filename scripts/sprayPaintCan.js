@@ -4,8 +4,7 @@
 
     var pollInterval;
 
-    var RED_COLOR = {red: 200, green: 10, blue: 10};
-    var GREEN_COLOR = {red: 10, green: 200, blue: 10};
+ 
     var self = this;
 
     this.getUserData = function() {
@@ -22,31 +21,16 @@
         });
     }
 
-
-
-    this.mousePressOnEntity= function(entityId, mouseEvent) {
-        print("click");
-        this.userData.color = Math.random() < 0.5 ? "red" : "green";
-        this.updateUserData();
-    }
-
     this.update = function(deltaTime) {
+        self.properties = Entities.getEntityProperties(self.entityId);
         self.getUserData();
-        if(self.userData.color === "red") {
-            Entities.editEntity(self.entityId, {
-                color: RED_COLOR
-            });
-        } else if(self.userData.color === "green") {
-            Entities.editEntity(self.entityId, {
-                color: GREEN_COLOR
-            });
+        if(self.userData.activated === true) {
+            print("YAAAA");
         }
-
     }
 
 
     this.preload = function(entityId) {
-        this.properties = Entities.getEntityProperties(entityId);
         this.entityId = entityId;
     }
 
@@ -54,5 +38,5 @@
         print("GOODBYE")
         Script.update.disconnect(this.update);
     }
-        Script.update.connect(this.update);
+    Script.update.connect(this.update);
 });

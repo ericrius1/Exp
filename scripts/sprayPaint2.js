@@ -5,7 +5,7 @@ var center = Vec3.sum(MyAvatar.position, Vec3.multiply(3, Quat.getFront(Camera.g
 var paintGun = Entities.addEntity({
  type: "Model",
  // modelURL: "https://hifi-public.s3.amazonaws.com/eric/models/sprayGun.fbx?=v3",
- modelURL: "file:///Users/ericlevin/Desktop/sprayGun.fbx?v5",
+ modelURL: "file:///Users/ericlevin/Desktop/sprayGun.fbx?v6",
  position: center,
  dimensions: {
      x: 0.03,
