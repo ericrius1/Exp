@@ -46,7 +46,7 @@
                 self.activated = true;
             }
             //Move emitter to where entity is always when its activated
-            self.paint();
+            self.sprayStream();
         } else if ( self.userData.grabKey && self.userData.grabKey.activated === false && self.activated) {
             Entities.editEntity(self.paintStream, {
                 animationSettings: stopSetting
@@ -55,7 +55,7 @@
         }
     }
 
-    this.paint = function() {
+    this.sprayStream = function() {
         var forwardVec = Quat.getFront(self.properties.rotation);
         var upVec = Quat.getUp(self.properties.rotation);
         var position = Vec3.sum(self.properties.position, Vec3.multiply(forwardVec, TIP_OFFSET_Z));
@@ -68,8 +68,18 @@
         //Now check for an intersection with an entity
 
         var pickRay = {
-            origin: self.properties.position
+            origin: self.properties.position,
+            direction: forwardVec
         }
+
+        var intersection = Entities.findRayIntersection(pickRay, true);
+        if(intersection.intersects) {
+
+            if(!this.painting) {
+                this.newStroke(intersection.intersection)
+            }
+        }
+
 
     }
 
