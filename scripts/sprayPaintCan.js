@@ -1,11 +1,18 @@
 (function() {
 
+
     this.userData = {};
 
-    var pollInterval;
+    var ZERO_VEC = {x: 0, y: 0, z: 0}
 
- 
     var self = this;
+
+    var stopSetting = JSON.stringify({
+        running: false
+    });
+    var startSetting = JSON.stringify({
+        running: true
+    });
 
     this.getUserData = function() {
 
@@ -24,14 +31,62 @@
     this.update = function(deltaTime) {
         self.properties = Entities.getEntityProperties(self.entityId);
         self.getUserData();
-        if(self.userData.activated === true) {
-            print("YAAAA");
+        if (self.userData.activated === true) {
+            if(!this.activated){
+              Entities.editEntity(self.paintStream, {animationSettings: startSetting});
+              this.activated = true;  
+            }
+            //Move emitter to where entity is always when its activated
+            Entities.editEntity(self.paintStream, {position: self.properties.position});
+        } else if(self.userData.activated === false && this.activated) {
+            Entities.editEntity(self.paintStream, {animationSettings: stopSetting});
+            this.activated = false;
         }
     }
 
 
     this.preload = function(entityId) {
         this.entityId = entityId;
+        this.properties = Entities.getEntityProperties(self.entityId);
+        this.getUserData();
+        if(!this.userData.activated) {
+            this.activated = false;
+        }
+        this.initialize();
+    }
+
+    this.initialize = function() {
+        var animationSettings = JSON.stringify({
+            fps: 30,
+            loop: true,
+            firstFrame: 1,
+            lastFrame: 10000,
+            running: false
+        });
+
+
+        this.paintStream = Entities.addEntity({
+            type: "ParticleEffect",
+            animationSettings: animationSettings,
+            position: this.properties.position,
+            textures: "https://raw.githubusercontent.com/ericrius1/SantasLair/santa/assets/smokeparticle.png",
+            emitVelocity: ZERO_VEC,
+            emitAcceleration: ZERO_VEC,
+            velocitySpread: {
+                x: .02,
+                y: .02,
+                z: 0.02
+            },
+            emitRate: 100,
+            particleRadius: 0.01,
+            color: {
+                red: 170,
+                green: 20,
+                blue: 150
+            },
+            lifespan: 5,
+        });
+
     }
 
     this.unload = function() {

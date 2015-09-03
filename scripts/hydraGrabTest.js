@@ -184,7 +184,6 @@ controller.prototype.hidePointer = function() {
 
 controller.prototype.letGo = function() {
     if (this.grabbedEntity && this.actionID) {
-        print("DELETE ACTION");
         this.deactivateEntity(this.grabbedEntity);
         Entities.deleteAction(this.grabbedEntity, this.actionID);
     }
@@ -276,16 +275,15 @@ controller.prototype.checkForInRangeObject = function() {
 }
 
 controller.prototype.activateEntity = function(entity) {
-    
         Entities.editEntity(this.grabbedEntity, {
-            userData: JSON.stringify({activated: true}),
+            userData: JSON.stringify({activated: true, avatarId: MyAvatar.sessionUUID}),
         });
 }
 
 controller.prototype.deactivateEntity = function(entity) {
     
         Entities.editEntity(this.grabbedEntity, {
-            userData: JSON.stringify({activated: false}),
+            userData: JSON.stringify({activated: false, avatarId: null}),
         });
 }
 
