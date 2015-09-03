@@ -256,35 +256,8 @@ function createEmitters() {
 	var forward = Quat.getFront(Quat.fromPitchYawRollDegrees(0, bodyYaw, 0));
 	var right = Vec3.cross(forward, UP_AXIS);
 	var position = Vec3.sum(MyAvatar.position, Vec3.multiply(Quat.getFront(MyAvatar.orientation), 2));
-	// createStaticEmitter(position)
 	position = Vec3.sum(position, right);
-	// createStaticEmitter(position)
 
-}
-
-function createStaticEmitter(position) {
-	var emitter = Entities.addEntity({
-		type: "ParticleEffect",
-		animationSettings: animationSettings,
-		position: position,
-		textures: "https://raw.githubusercontent.com/ericrius1/SantasLair/santa/assets/smokeparticle.png",
-		emitRate: 200,
-		emitVelocity: ZERO_VEC,
-		emitAcceleration: ZERO_VEC,
-		accelerationSpread: {
-			x: .1,
-			y: .1,
-			z: .1
-		},
-		color: {
-			red: randInt(190, 250),
-			green: randInt(100, 130),
-			blue: randInt(40, 80)
-		},
-		lifespan: 2,
-	});
-
-	staticEmitters.push(emitter);
 }
 
 

@@ -12,6 +12,10 @@
         z: 0
     }
 
+    var MAX_POINTS_PER_LINE = 40;
+    var MIN_POINT_DISTANCE = 0.01;
+    var STROKE_WIDTH = 0.02;
+
     var self = this;
 
     var stopSetting = JSON.stringify({
@@ -39,7 +43,7 @@
         self.properties = Entities.getEntityProperties(self.entityId);
         self.getUserData();
         if (self.userData.grabKey && self.userData.grabKey.activated === true) {
-            if ( self.activated !== true) {
+            if (self.activated !== true) {
                 Entities.editEntity(self.paintStream, {
                     animationSettings: startSetting
                 });
@@ -47,7 +51,7 @@
             }
             //Move emitter to where entity is always when its activated
             self.sprayStream();
-        } else if ( self.userData.grabKey && self.userData.grabKey.activated === false && self.activated) {
+        } else if (self.userData.grabKey && self.userData.grabKey.activated === false && self.activated) {
             Entities.editEntity(self.paintStream, {
                 animationSettings: stopSetting
             });
@@ -67,23 +71,77 @@
 
         //Now check for an intersection with an entity
 
+        //move forward so ray doesnt intersect with gun
+        var origin = Vec3.sum(position, forwardVec);
         var pickRay = {
-            origin: self.properties.position,
+            origin: origin,
             direction: forwardVec
         }
 
         var intersection = Entities.findRayIntersection(pickRay, true);
-        if(intersection.intersects) {
-
-            if(!this.painting) {
-                this.newStroke(intersection.intersection)
-            }
+        if (intersection.intersects) {
+            var normal = Vec3.multiply(-1, Quat.getFront(intersection.properties.rotation));
+            this.paint(intersection.intersects, normal);
         }
 
 
     }
 
+    this.paint = function(position, normal) {
+        if (!this.painting) {
+            this.newStroke(position);
+            this.painting = true;
+        }
+
+        if (this.strokePoints.length > MAX_POINTS_PER_LINE) {
+            this.painting = false;
+            return;
+        }
+
+        var localPoint = Vec3.subtract(position, this.strokeBasePosition);
+        if (this.strokePoints.length > 0 && Vec3.distance(localPoint, this.strokePoints[this.strokePoints.length - 1]) < MIN_POINT_DISTANCE) {
+            //need a minimum distance to avoid binormal NANs
+            return;
+        }
+
+        this.strokePoints.push(localPoint);
+        this.strokeNormals.push(normal);
+        this.strokeWidths.push(STROKE_WIDTH);
+        Entities.editEntity(this.currentStroke, {
+            linePoints: this.strokePoints,
+            normals: this.strokeNormals,
+            strokeWidths: this.strokeWidths
+        });
+
+
+    }
+
+    this.newStroke = function(position) {
+        this.strokeBasePosition = position;
+        this.currentStroke = Entities.addEntity({
+            position: position,
+            type: "PolyLine",
+            color: {
+                red: randInt(160, 250),
+                green: randInt(10, 20),
+                blue: randInt(190, 250)
+            },
+            dimensions: {
+                x: 5,
+                y: 5,
+                z: 5
+            },
+            lifetime: 100
+        });
+        this.strokePoints = [];
+        this.strokeNormals = [];
+        this.strokeWidths = [];
+
+        this.strokes.push(this.currentStroke);
+    }
+
     this.preload = function(entityId) {
+        this.strokes = [];
         this.activated = false;
         this.entityId = entityId;
         this.properties = Entities.getEntityProperties(self.entityId);
@@ -135,3 +193,12 @@
     }
     Script.update.connect(this.update);
 });
+
+
+function randFloat(min, max) {
+    return Math.random() * (max - min) + min;
+}
+
+function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min)) + min;
+}
