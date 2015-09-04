@@ -81,7 +81,7 @@
         var intersection = Entities.findRayIntersection(pickRay, true);
         if (intersection.intersects) {
             var normal = Vec3.multiply(-1, Quat.getFront(intersection.properties.rotation));
-            this.paint(intersection.intersects, normal);
+            this.paint(intersection.intersection, normal);
         }
 
 
@@ -89,6 +89,8 @@
 
     this.paint = function(position, normal) {
         if (!this.painting) {
+           print("position " + JSON.stringify(position))
+
             this.newStroke(position);
             this.painting = true;
         }
@@ -99,6 +101,9 @@
         }
 
         var localPoint = Vec3.subtract(position, this.strokeBasePosition);
+        //Move stroke a bit forward along normal so it doesnt zfight with mesh its drawing on 
+        localPoint = Vec3.sum(localPoint, Vec3.multiply(normal, .1));
+
         if (this.strokePoints.length > 0 && Vec3.distance(localPoint, this.strokePoints[this.strokePoints.length - 1]) < MIN_POINT_DISTANCE) {
             //need a minimum distance to avoid binormal NANs
             return;
@@ -190,6 +195,9 @@
     this.unload = function() {
         Script.update.disconnect(this.update);
         Entities.deleteEntity(this.paintStream);
+        this.strokes.forEach(function(stroke) {
+            Entities.deleteEntity(stroke);
+        });
     }
     Script.update.connect(this.update);
 });
