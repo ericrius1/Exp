@@ -1,0 +1,5 @@
+{
+    "ProceduralEntity": {
+        "shaderUrl": "file"
+    }
+}

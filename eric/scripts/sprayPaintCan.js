@@ -61,6 +61,9 @@
 
     this.sprayStream = function() {
         var forwardVec = Quat.getFront(self.properties.rotation);
+        forwardVec = Vec3.multiplyQbyV(Quat.fromPitchYawRollDegrees(0, 90, 0), forwardVec);
+        print('forward vec ' + JSON.stringify(self.properties.rotation))
+
         var upVec = Quat.getUp(self.properties.rotation);
         var position = Vec3.sum(self.properties.position, Vec3.multiply(forwardVec, TIP_OFFSET_Z));
         position = Vec3.sum(position, Vec3.multiply(upVec, TIP_OFFSET_Y))
@@ -75,7 +78,7 @@
         var origin = Vec3.sum(position, forwardVec);
         var pickRay = {
             origin: origin,
-            direction: forwardVec
+            direction: Vec3.multiply(forwardVec, 2)
         }
 
         var intersection = Entities.findRayIntersection(pickRay, true);
@@ -89,7 +92,7 @@
 
     this.paint = function(position, normal) {
         if (!this.painting) {
-           print("position " + JSON.stringify(position))
+            print("position " + JSON.stringify(position))
 
             this.newStroke(position);
             this.painting = true;

@@ -41,7 +41,7 @@ var INTERSECT_COLOR = {
     blue: 10
 };
 
-var GRAB_RADIUS = 0.7;
+var GRAB_RADIUS = 2.7;
 
 var GRAB_COLOR = {
     red: 250,
@@ -135,7 +135,9 @@ controller.prototype.checkForIntersections = function(origin, direction) {
 
     var intersection = Entities.findRayIntersection(pickRay, true);
     if (intersection.intersects && intersection.properties.collisionsWillMove === 1) {
-        this.distanceToEntity = Vec3.distance(origin, intersection.properties.position);
+        var handPosition = Controller.getSpatialControlPosition(this.palm);
+        this.distanceToEntity = Vec3.distance(handPosition, intersection.properties.position);
+        print("distance to entity " + JSON.stringify(this.distanceToEntity));
         Entities.editEntity(this.pointer, {
             linePoints: [
                 ZERO_VEC,
@@ -188,6 +190,7 @@ controller.prototype.hidePointer = function() {
 
 controller.prototype.letGo = function() {
     if (this.grabbedEntity && this.actionID) {
+        print("DELETE ACTION")
         this.deactivateEntity(this.grabbedEntity);
         Entities.deleteAction(this.grabbedEntity, this.actionID);
     }
@@ -236,7 +239,9 @@ controller.prototype.update = function() {
 controller.prototype.grabEntity = function() {
     var handRotation = this.getHandRotation();
     var handPosition = this.getHandPosition();
-
+    // Entities.editEntity(this.grabbedEntity, {
+    //     rotation: Quat.fromPitchYawRollDegrees(0, 0, 0)
+    // });
     var objectRotation = Entities.getEntityProperties(this.grabbedEntity).rotation;
     var offsetRotation = Quat.multiply(Quat.inverse(handRotation), objectRotation);
 
@@ -244,9 +249,8 @@ controller.prototype.grabEntity = function() {
     var offset = Vec3.subtract(objectPosition, handPosition);
     var offsetPosition = Vec3.multiplyQbyV(Quat.inverse(Quat.multiply(handRotation, offsetRotation)), offset);
     this.closeGrabbing = true;
+    print("YAAAA")
     this.actionID = Entities.addAction("hold", this.grabbedEntity, {
-        relativePosition: offsetPosition,
-        relativeRotation: offsetRotation,
         hand: this.hand,
         timeScale: 0.05
     });
@@ -305,10 +309,10 @@ controller.prototype.onActionEvent = function(action, state) {
                 self.checkForEntityArrival = true;
             }, 500);
             var handPosition = Controller.getSpatialControlPosition(this.palm);
-            var direction = Controller.getSpatialControlNormal(this.tip);
+            var direction = Vec3.normalize(Controller.getSpatialControlNormal(this.tip));
             //move final destination along line a bit, so it doesnt hit avatar hand
             Entities.updateAction(this.grabbedEntity, this.actionID, {
-                targetPosition: Vec3.sum(handPosition, Vec3.multiply(2, direction))
+                targetPosition: Vec3.sum(handPosition, Vec3.multiply(3, direction))
             });
         }
     }
@@ -338,8 +342,6 @@ function cleanup() {
     rightController.cleanup();
     leftController.cleanup();
 }
-
-
 
 Script.scriptEnding.connect(cleanup);
 Script.update.connect(update)

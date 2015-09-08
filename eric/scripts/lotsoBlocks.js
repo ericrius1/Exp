@@ -1,4 +1,4 @@
-var NUM_BLOCKS = 100;
+var NUM_BLOCKS = 1000;
 var size;
 var SPAWN_RANGE = 10;
 var boxes = [];
@@ -30,7 +30,7 @@ basePosition.y += SPAWN_RANGE + 2;
 for (var i = 0; i < NUM_BLOCKS; i++) {
   size = randFloat(.1, 0.3);
   boxes.push(Entities.addEntity({
-    type: 'Box',
+    type: 'Sphere',
     dimensions: {
       x: size,
       y: size,
