@@ -158,6 +158,11 @@
         if (this.userData.grabKey && this.userData.grabKey.activated) {
             this.activated = true;
         }
+        if(!this.userData.spatialKey) {
+            this.userData.spatialKey = {};
+            this.userData.spatialKey.relativePosition = ZERO_VEC;
+            this.userData.spatialKey.relativeRotation = Quat.fromPitchYawRollDegrees(0, 0, 0);
+        }
         this.initialize();
     }
 

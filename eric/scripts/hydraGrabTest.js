@@ -249,7 +249,6 @@ controller.prototype.grabEntity = function() {
     var offset = Vec3.subtract(objectPosition, handPosition);
     var offsetPosition = Vec3.multiplyQbyV(Quat.inverse(Quat.multiply(handRotation, offsetRotation)), offset);
     this.closeGrabbing = true;
-    print("YAAAA")
     this.actionID = Entities.addAction("hold", this.grabbedEntity, {
         hand: this.hand,
         timeScale: 0.05
