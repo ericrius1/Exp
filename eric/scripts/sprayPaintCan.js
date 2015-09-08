@@ -1,6 +1,6 @@
 (function() {
-
-
+    Script.include("https://hifi-public.s3.amazonaws.com/scripts/libraries/utils.js");
+    SPATIAL_USER_DATA_KEY = "spatialKey";
     this.userData = {};
 
     var TIP_OFFSET_Z = 0.14;
@@ -62,7 +62,6 @@
     this.sprayStream = function() {
         var forwardVec = Quat.getFront(self.properties.rotation);
         forwardVec = Vec3.multiplyQbyV(Quat.fromPitchYawRollDegrees(0, 90, 0), forwardVec);
-        print('forward vec ' + JSON.stringify(self.properties.rotation))
 
         var upVec = Quat.getUp(self.properties.rotation);
         var position = Vec3.sum(self.properties.position, Vec3.multiply(forwardVec, TIP_OFFSET_Z));
@@ -92,7 +91,6 @@
 
     this.paint = function(position, normal) {
         if (!this.painting) {
-            print("position " + JSON.stringify(position))
 
             this.newStroke(position);
             this.painting = true;
@@ -154,14 +152,16 @@
         this.entityId = entityId;
         this.properties = Entities.getEntityProperties(self.entityId);
         this.getUserData();
-        print("USER DATA " + JSON.stringify(this.userData))
         if (this.userData.grabKey && this.userData.grabKey.activated) {
             this.activated = true;
         }
         if(!this.userData.spatialKey) {
-            this.userData.spatialKey = {};
-            this.userData.spatialKey.relativePosition = ZERO_VEC;
-            this.userData.spatialKey.relativeRotation = Quat.fromPitchYawRollDegrees(0, 0, 0);
+            var data = {
+                relativePosition: {x: 0, y: 0, z: 0},
+                relativeRotation: Quat.fromPitchYawRollDegrees(0, 180,0)
+            }
+            print("SHNUUR")
+            setEntityCustomData(SPATIAL_USER_DATA_KEY, this.entityId, data);
         }
         this.initialize();
     }

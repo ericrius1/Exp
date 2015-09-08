@@ -239,19 +239,24 @@ controller.prototype.update = function() {
 controller.prototype.grabEntity = function() {
     var handRotation = this.getHandRotation();
     var handPosition = this.getHandPosition();
-    // Entities.editEntity(this.grabbedEntity, {
-    //     rotation: Quat.fromPitchYawRollDegrees(0, 0, 0)
-    // });
-    var objectRotation = Entities.getEntityProperties(this.grabbedEntity).rotation;
-    var offsetRotation = Quat.multiply(Quat.inverse(handRotation), objectRotation);
-
-    var objectPosition = Entities.getEntityProperties(this.grabbedEntity).position;
-    var offset = Vec3.subtract(objectPosition, handPosition);
-    var offsetPosition = Vec3.multiplyQbyV(Quat.inverse(Quat.multiply(handRotation, offsetRotation)), offset);
     this.closeGrabbing = true;
+    //check if our entity has instructions on how to be grabbed, otherwise, just use default relative position and rotation
+    var userData = getEntityUserData(this.grabbedEntity);
+    var relativePosition = ZERO_VEC;
+    var relativeRotation = Quat.fromPitchYawRollDegrees(0, 0, 0);
+    if(userData.spatialKey) {
+        if(userData.spatialKey.relativePosition) {
+            relativePosition = userData.spatialKey.relativePosition;
+        }
+        if(userData.spatialKey.relativeRotation) {
+            relativeRotation = userData.spatialKey.relativeRotation;
+        }
+    }
     this.actionID = Entities.addAction("hold", this.grabbedEntity, {
         hand: this.hand,
-        timeScale: 0.05
+        timeScale: 0.05,
+        relativePosition: relativePosition,
+        relativeRotation: relativeRotation
     });
 }
 
