@@ -155,7 +155,7 @@
         this.properties = Entities.getEntityProperties(self.entityId);
         this.getUserData();
         print("USER DATA " + JSON.stringify(this.userData))
-        if (this.userData.activated) {
+        if (this.userData.grabKey && this.userData.grabKey.activated) {
             this.activated = true;
         }
         this.initialize();
