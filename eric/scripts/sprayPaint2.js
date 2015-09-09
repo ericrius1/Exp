@@ -18,26 +18,26 @@ var paintGun = Entities.addEntity({
  script: scriptURL
 });
 
-// var whiteboard = Entities.addEntity({
-//     type: "Box",
-//     position: center,
-//     dimensions: {
-//         x: 2,
-//         y: 1.5,
-//         z: .01
-//     },
-//     rotation: orientationOf(Vec3.subtract(MyAvatar.position, center)),
-//     color: {
-//         red: 250,
-//         green: 250,
-//         blue: 250
-//     },
-//     // visible: false
-// });
+var whiteboard = Entities.addEntity({
+    type: "Box",
+    position: center,
+    dimensions: {
+        x: 2,
+        y: 1.5,
+        z: .01
+    },
+    rotation: orientationOf(Vec3.subtract(MyAvatar.position, center)),
+    color: {
+        red: 250,
+        green: 250,
+        blue: 250
+    },
+    // visible: false
+});
 
 function cleanup() {
     Entities.deleteEntity(paintGun);
-    // Entities.deleteEntity(whiteboard);
+    Entities.deleteEntity(whiteboard);
 }
 
 

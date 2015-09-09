@@ -34,41 +34,44 @@ var animationSettings = JSON.stringify({
 var fire = Entities.addEntity({
     type: "ParticleEffect",
     animationSettings: animationSettings,
-    textures: "https://hifi-public.s3.amazonaws.com/ryan/fire2.png",
+    textures: "https://hifi-public.s3.amazonaws.com/alan/Particles/Particle-Sprite-Smoke-1.png",
     position: center,
-    emitRate: 5,
-    color: FIRE_COLOR,
+    emitRate: 100,
+    colorStart: {red: 46, green: 39, blue: 137},
+    color: {red: 200, green: 99, blue: 42},
+    colorFinish: {red: 255, green: 99, blue: 32},
     emitVelocity: {
         x: .0,
-        y: .0,
+        y: 0.1,
         z: 0
     },
-    particleRadius: .50,
+
     velocitySpread: {
         x: .1,
-        y: .1,
+        y: .01,
         z: .1
     },
+    radiusSpread: .1,
+    radiusStart: .1,
+    particleRadius: .05,
+    radiusFinish: 0.01,
+
+    alphaStart: 0.5,
+    alpha: 1,
+    alphaFinish: 0.0,
     emitAcceleration: {
         x: 0.1,
-        y: -.0,
+        y: 1,
         z: .0
     },
     accelerationSpread: {
-        x: .1,
+        x: .01,
         y: .1,
-        z: .1
+        z: .01
     },
-    lifespan: .5
+    lifespan: 2
 });
 
-var light = Entities.addEntity({
-    type: "Light",
-    position: center,
-    // isSpotlight: true,
-    dimensions: {x: 10, y: 10, z: 10},
-    color: LIGHT_COLOR
-});
 
 
 function update(deltaTime) {
@@ -83,10 +86,9 @@ function update(deltaTime) {
 
 function cleanup() {
    Entities.deleteEntity(fire);
-   Entities.deleteEntity(light);
 }
 Script.scriptEnding.connect(cleanup);
-Script.update.connect(update);
+// Script.update.connect(update);
 
 function randFloat(min, max) {
     return Math.random() * (max - min) + min;

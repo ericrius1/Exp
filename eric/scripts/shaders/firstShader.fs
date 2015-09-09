@@ -4,10 +4,11 @@ const vec3 YELLOW = vec3(1.0, 1.0, 0.0);
 uniform float iSpeed = 1.0;
 uniform vec3 iSize = vec3(1.0, 1.0, 1.0);
 
+
 vec3 getNoiseColor() {
     float intensity = 0.0;
     vec3 position = _position.xyz;
-    //position = normalize(position);
+    float posIntensity = position.x + 0.5;
     float time = iGlobalTime * iSpeed;
     for (int i = 0; i < 4; ++i) {
         float modifier = pow(2, i);
@@ -17,7 +18,7 @@ vec3 getNoiseColor() {
         intensity += noise;
     }
     intensity /= 2.0; intensity += 0.5;
-    return (intensity * BLUE) + (1.0 - intensity) * YELLOW;
+    return (posIntensity * BLUE) + (1.0 - intensity) * YELLOW;
 }
 
 // Produce a lit procedural surface

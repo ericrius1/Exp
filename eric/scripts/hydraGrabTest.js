@@ -21,6 +21,10 @@ var GRAB_USER_DATA_KEY = "grabKey";
 var LEFT_HAND_CLICK = Controller.findAction("LEFT_HAND_CLICK");
 var leftTriggerAction = LEFT_HAND_CLICK;
 
+var LIFETIME = 10;
+var currentLife = 0;
+var POINTER_CHECK_TIME = 5000;
+
 var ZERO_VEC = {
     x: 0,
     y: 0,
@@ -58,8 +62,15 @@ var TRACTOR_BEAM_VELOCITY_THRESHOLD = 0.5;
 
 var RIGHT = 1;
 var LEFT = 0;
-var rightController = new controller(RIGHT, rightTriggerAction, right4Action, "right")
-var leftController = new controller(LEFT, leftTriggerAction, left4Action, "left")
+var rightController = new controller(RIGHT, rightTriggerAction, right4Action, "right");
+var leftController = new controller(LEFT, leftTriggerAction, left4Action, "left");
+
+
+//Need to wait before calling these methods for some reason...
+Script.setTimeout(function() {
+  rightController.checkPointer();
+  leftController.checkPointer();   
+}, 100)
 
 function controller(side, triggerAction, pullAction, hand) {
     this.hand = hand;
@@ -91,7 +102,9 @@ function controller(side, triggerAction, pullAction, hand) {
             z: 1000
         },
         visible: false,
+        lifetime: LIFETIME
     });
+
 }
 
 
@@ -126,6 +139,18 @@ controller.prototype.updateLine = function() {
 }
 
 
+controller.prototype.checkPointer = function() {
+    var self = this;
+    Script.setTimeout(function() {
+        var props = Entities.getEntityProperties(self.pointer);
+        var currentLife = LIFETIME + POINTER_CHECK_TIME + currentLife;
+        //dimensions are set to .1, .1, .1 when lifetime expires
+        Entities.editEntity(self.pointer, {
+            lifetime: currentLife
+        });
+        self.checkPointer();
+    }, POINTER_CHECK_TIME);
+}
 
 controller.prototype.checkForIntersections = function(origin, direction) {
     var pickRay = {
