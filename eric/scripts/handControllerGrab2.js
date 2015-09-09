@@ -154,7 +154,9 @@ controller.prototype.checkForIntersections = function(origin, direction) {
                 Vec3.multiply(direction, this.distanceToEntity)
             ]
         });
-        this.grabbedEntity = intersection.entityID;
+        if (!this.grabbedEntity) {
+            this.grabbedEntity = intersection.entityID;
+        }
         return true;
     }
     return false;
@@ -196,7 +198,6 @@ controller.prototype.hidePointer = function() {
 
 controller.prototype.letGo = function() {
     if (this.grabbedEntity && this.actionID) {
-        this.deactivateEntity(this.grabbedEntity);
         Entities.deleteAction(this.grabbedEntity, this.actionID);
     }
     this.grabbedEntity = null;
@@ -207,12 +208,10 @@ controller.prototype.update = function() {
     this.triggerValue = Controller.getActionValue(this.triggerAction);
     if (this.triggerValue > SHOW_LINE_THRESHOLD && this.prevTriggerValue < SHOW_LINE_THRESHOLD) {
         //First check if an object is within close range and then run the close grabbing logic
-        if (this.checkForInRangeObject()) {
-            this.grabEntity();
-        } else {
-            this.showPointer();
-            this.shouldDisplayLine = true;
-        }
+
+        this.showPointer();
+        this.shouldDisplayLine = true;
+
     } else if (this.triggerValue < SHOW_LINE_THRESHOLD && this.prevTriggerValue > SHOW_LINE_THRESHOLD) {
         this.hidePointer();
         this.letGo();
@@ -228,80 +227,6 @@ controller.prototype.update = function() {
 
 
     this.prevTriggerValue = this.triggerValue;
-}
-
-controller.prototype.grabEntity = function() {
-    var handRotation = this.getHandRotation();
-    var handPosition = this.getHandPosition();
-    this.closeGrabbing = true;
-    //check if our entity has instructions on how to be grabbed, otherwise, just use default relative position and rotation
-    var userData = getEntityUserData(this.grabbedEntity);
-
-    var objectRotation = Entities.getEntityProperties(this.grabbedEntity).rotation;
-    var offsetRotation = Quat.multiply(Quat.inverse(handRotation), objectRotation);
-
-    var objectPosition = Entities.getEntityProperties(this.grabbedEntity).position;
-    var offset = Vec3.subtract(objectPosition, handPosition);
-    var offsetPosition = Vec3.multiplyQbyV(Quat.inverse(Quat.multiply(handRotation, offsetRotation)), offset);
-
-    var relativePosition = offsetPosition;
-    var relativeRotation = offsetRotation;
-    if (userData.grabFrame) {
-        if (userData.grabFrame.relativePosition) {
-            relativePosition = userData.grabFrame.relativePosition;
-        }
-        if (userData.grabFrame.relativeRotation) {
-            relativeRotation = userData.grabFrame.relativeRotation;
-        }
-    }
-    this.actionID = Entities.addAction("hold", this.grabbedEntity, {
-        hand: this.hand,
-        timeScale: 0.05,
-        relativePosition: relativePosition,
-        relativeRotation: relativeRotation
-    });
-}
-
-
-controller.prototype.checkForInRangeObject = function() {
-    var handPosition = Controller.getSpatialControlPosition(this.palm);
-    var entities = Entities.findEntities(handPosition, GRAB_RADIUS);
-    var minDistance = GRAB_RADIUS;
-    var grabbedEntity = null;
-    //Get nearby entities and assign nearest
-    for (var i = 0; i < entities.length; i++) {
-        var props = Entities.getEntityProperties(entities[i]);
-        var distance = Vec3.distance(props.position, handPosition);
-        if (distance < minDistance && props.name !== "pointer" && props.collisionsWillMove === 1) {
-            grabbedEntity = entities[i];
-            minDistance = distance;
-        }
-    }
-    if (grabbedEntity === null) {
-        return false;
-    } else {
-        //We are grabbing an entity, so let it know we've grabbed it
-        this.grabbedEntity = grabbedEntity;
-        this.activateEntity(this.grabbedEntity);
-
-        return true;
-    }
-}
-
-controller.prototype.activateEntity = function(entity) {
-    var data = {
-        activated: true,
-        avatarId: MyAvatar.sessionUUID
-    };
-    setEntityCustomData(GRAB_USER_DATA_KEY, this.grabbedEntity, data);
-}
-
-controller.prototype.deactivateEntity = function(entity) {
-    var data = {
-        activated: false,
-        avatarId: null
-    };
-    setEntityCustomData(GRAB_USER_DATA_KEY, this.grabbedEntity, data);
 }
 
 
