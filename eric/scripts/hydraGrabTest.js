@@ -68,8 +68,8 @@ var leftController = new controller(LEFT, leftTriggerAction, left4Action, "left"
 
 //Need to wait before calling these methods for some reason...
 Script.setTimeout(function() {
-  rightController.checkPointer();
-  leftController.checkPointer();   
+    rightController.checkPointer();
+    leftController.checkPointer();
 }, 100)
 
 function controller(side, triggerAction, pullAction, hand) {
@@ -267,13 +267,22 @@ controller.prototype.grabEntity = function() {
     this.closeGrabbing = true;
     //check if our entity has instructions on how to be grabbed, otherwise, just use default relative position and rotation
     var userData = getEntityUserData(this.grabbedEntity);
-    var relativePosition = ZERO_VEC;
-    var relativeRotation = Quat.fromPitchYawRollDegrees(0, 0, 0);
-    if(userData.spatialKey) {
-        if(userData.spatialKey.relativePosition) {
+
+    var objectRotation = Entities.getEntityProperties(this.grabbedEntity).rotation;
+    var offsetRotation = Quat.multiply(Quat.inverse(handRotation), objectRotation);
+
+    var objectPosition = Entities.getEntityProperties(this.grabbedEntity).position;
+    var offset = Vec3.subtract(objectPosition, handPosition);
+    var offsetPosition = Vec3.multiplyQbyV(Quat.inverse(Quat.multiply(handRotation, offsetRotation)), offset);
+
+    var relativePosition = offsetPosition;
+    var relativeRotation = offsetRotation;
+    
+    if (userData.spatialKey) {
+        if (userData.spatialKey.relativePosition) {
             relativePosition = userData.spatialKey.relativePosition;
         }
-        if(userData.spatialKey.relativeRotation) {
+        if (userData.spatialKey.relativeRotation) {
             relativeRotation = userData.spatialKey.relativeRotation;
         }
     }
