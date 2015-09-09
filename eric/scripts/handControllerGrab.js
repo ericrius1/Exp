@@ -1,4 +1,4 @@
-//  handControllerGrab.js
+//  hydraGrab.js
 //  examples
 //
 //  Created by Eric Levin on  9/2/15
