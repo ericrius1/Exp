@@ -45,7 +45,7 @@ var INTERSECT_COLOR = {
     blue: 10
 };
 
-var GRAB_RADIUS = 2.7;
+var GRAB_RADIUS = 1.5;
 
 var GRAB_COLOR = {
     red: 250,
@@ -277,13 +277,12 @@ controller.prototype.grabEntity = function() {
 
     var relativePosition = offsetPosition;
     var relativeRotation = offsetRotation;
-    
-    if (userData.spatialKey) {
-        if (userData.spatialKey.relativePosition) {
-            relativePosition = userData.spatialKey.relativePosition;
+    if (userData.grabFrame) {
+        if (userData.grabFrame.relativePosition) {
+            relativePosition = userData.grabFrame.relativePosition;
         }
-        if (userData.spatialKey.relativeRotation) {
-            relativeRotation = userData.spatialKey.relativeRotation;
+        if (userData.grabFrame.relativeRotation) {
+            relativeRotation = userData.grabFrame.relativeRotation;
         }
     }
     this.actionID = Entities.addAction("hold", this.grabbedEntity, {

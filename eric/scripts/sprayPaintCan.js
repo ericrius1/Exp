@@ -1,6 +1,6 @@
 (function() {
     Script.include("https://hifi-public.s3.amazonaws.com/scripts/libraries/utils.js");
-    GRAB_USER_DATA_KEY = "grabKey";
+    GRAB_FRAME_USER_DATA_KEY = "grabFrame";
     this.userData = {};
 
     var TIP_OFFSET_Z = 0.14;
@@ -156,12 +156,12 @@
         if (this.userData.grabKey && this.userData.grabKey.activated) {
             this.activated = true;
         }
-        if(!this.userData.spatialKey) {
+        if(!this.userData.grabFrame) {
             var data = {
                 relativePosition: {x: 0, y: 0, z: 0},
-                relativeRotation: Quat.fromPitchYawRollDegrees(0, 0,0)
+                relativeRotation: Quat.fromPitchYawRollDegrees(0, 0, 0)
             }
-            setEntityCustomData(GRAB_USER_DATA_KEY, this.entityId, data);
+            setEntityCustomData(GRAB_FRAME_USER_DATA_KEY, this.entityId, data);
         }
         this.initialize();
     }
@@ -174,7 +174,6 @@
             lastFrame: 10000,
             running: false
         });
-
 
         this.paintStream = Entities.addEntity({
             type: "ParticleEffect",
