@@ -163,24 +163,15 @@ controller.prototype.checkForIntersections = function(origin, direction) {
 }
 
 controller.prototype.attemptMove = function() {
-    if (this.grabbedEntity) {
-        var handPosition = Controller.getSpatialControlPosition(this.palm);
-        var direction = Controller.getSpatialControlNormal(this.tip);
-
-        var newPosition = Vec3.sum(handPosition, Vec3.multiply(direction, this.distanceToEntity))
-        if (this.actionID === null) {
-            this.actionID = Entities.addAction("spring", this.grabbedEntity, {
-                targetPosition: newPosition,
-                linearTimeScale: .1
-            });
-        } else {
-            Entities.updateAction(this.grabbedEntity, this.actionID, {
-                targetPosition: newPosition
-            });
-        }
+    if (!this.grabbedEntity) {
+        return;
     }
-
+    var handRotation = this.getHandRotation();
+    var handPosition = this.getHandPosition();
+    
 }
+
+
 
 controller.prototype.showPointer = function() {
     Entities.editEntity(this.pointer, {
