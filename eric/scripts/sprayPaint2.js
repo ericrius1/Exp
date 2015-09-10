@@ -1,11 +1,13 @@
-var scriptURL = "file:///Users/ericlevin/myhifistuff/eric/scripts/sprayPaintCan.js?=v10" + Math.random()
+var scriptURL = "https://hifi-public.s3.amazonaws.com/scripts/entityScripts/sprayPaintCan.js";
 // var scriptURL = "https://hifi-public.s3.amazonaws.com/eric/scripts/sprayPaintCan.js?=v2" + Math.random()
+// var scriptURL = "file:///Users/ericlevin/myhifistuff/eric/scripts/sprayPaintCan.js?=v2" + Math.random()
 // var modelURL = "http://hifi-public.s3.amazonaws.com/ryan/paintcan2.fbx";
-var modelURL = "file:///Users/ericlevin/Desktop/paintcan.fbx?=v1";
+var modelURL = "https://hifi-public.s3.amazonaws.com/eric/models/paintcan.fbx";
 var center = Vec3.sum(MyAvatar.position, Vec3.multiply(1, Quat.getFront(Camera.getOrientation())));
 
-var paintGun = Entities.addEntity({
+var sprayCan = Entities.addEntity({
  type: "Model",
+ name: "spraycan"
  modelURL: modelURL,
  position: center,
  dimensions: {
@@ -15,29 +17,30 @@ var paintGun = Entities.addEntity({
  },
  collisionsWillMove: true,
  shapeType: 'box',
- script: scriptURL
+ script: scriptURL,
+ gravity: {x: 0, y: -1, z: 0}
 });
 
-var whiteboard = Entities.addEntity({
-    type: "Box",
-    position: center,
-    dimensions: {
-        x: 2,
-        y: 1.5,
-        z: .01
-    },
-    rotation: orientationOf(Vec3.subtract(MyAvatar.position, center)),
-    color: {
-        red: 250,
-        green: 250,
-        blue: 250
-    },
-    // visible: false
-});
+// var whiteboard = Entities.addEntity({
+//     type: "Box",
+//     position: center,
+//     dimensions: {
+//         x: 2,
+//         y: 1.5,
+//         z: .01
+//     },
+//     rotation: orientationOf(Vec3.subtract(MyAvatar.position, center)),
+//     color: {
+//         red: 250,
+//         green: 250,
+//         blue: 250
+//     },
+//     // visible: false
+// });
 
 function cleanup() {
-    Entities.deleteEntity(paintGun);
-    Entities.deleteEntity(whiteboard);
+    // Entities.deleteEntity(sprayCan);
+    // Entities.deleteEntity(whiteboard);
 }
 
 

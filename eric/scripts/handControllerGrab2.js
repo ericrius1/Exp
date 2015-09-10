@@ -25,13 +25,14 @@ var LIFETIME = 10;
 var currentLife = 0;
 var POINTER_CHECK_TIME = 5000;
 
+var DISTANCE_SCALE_FACTOR = 5;
+
 var ZERO_VEC = {
     x: 0,
     y: 0,
     z: 0
 }
 
-var D_HAND_POSITION_THRESHOLD = 0.00;
 var SPRING_TIMESCALE = 0.1;
 
 var LINE_LENGTH = 500;
@@ -107,25 +108,24 @@ controller.prototype.updateLine = function() {
     var handPosition = Controller.getSpatialControlPosition(this.palm);
     var direction = Controller.getSpatialControlNormal(this.tip);
 
+
+    //move origin a bit away from hand so nothing gets in way
+    var origin = Vec3.sum(handPosition, direction);
+    var color;
+    if (this.checkForIntersections(origin, direction)) {
+        color = INTERSECT_COLOR;
+    } else if(!this.grabbedEntity) {
+        color = NO_INTERSECT_COLOR
+    
+    }
     Entities.editEntity(this.pointer, {
         position: handPosition,
         linePoints: [
             ZERO_VEC,
             Vec3.multiply(direction, LINE_LENGTH)
-        ]
+        ],
+        color: color
     });
-
-    //move origin a bit away from hand so nothing gets in way
-    var origin = Vec3.sum(handPosition, direction);
-    if (this.checkForIntersections(origin, direction)) {
-        Entities.editEntity(this.pointer, {
-            color: INTERSECT_COLOR,
-        });
-    } else {
-        Entities.editEntity(this.pointer, {
-            color: NO_INTERSECT_COLOR,
-        });
-    }
 }
 
 
@@ -150,7 +150,6 @@ controller.prototype.checkForIntersections = function(origin, direction) {
 
     var intersection = Entities.findRayIntersection(pickRay, true);
     if (intersection.intersects && intersection.properties.collisionsWillMove === 1) {
-        var handPosition = Controller.getSpatialControlPosition(this.palm);
         if (!this.grabbedEntity) {
             this.grab(intersection.entityID);
         }
@@ -160,6 +159,7 @@ controller.prototype.checkForIntersections = function(origin, direction) {
 }
 
 controller.prototype.grab = function(entityID) {
+    print("GRAB")
     this.grabbedEntity = entityID;
     this.initialPosition = Entities.getEntityProperties(this.grabbedEntity).position;
     this.previousHandPosition = this.getHandPosition();
@@ -175,16 +175,12 @@ controller.prototype.move = function() {
     var handRotation = this.getHandRotation();
     var handPosition = this.getHandPosition();
     var dHandPosition = Vec3.subtract(handPosition, this.previousHandPosition);
-    if(Vec3.length(dHandPosition) < D_HAND_POSITION_THRESHOLD) {
-        return;
-    } else {
-        print(JSON.stringify("Delta hand position " + Vec3.length(dHandPosition)))
-    }
+    var entityPosition = Entities.getEntityProperties(this.grabbedEntity).position;
+    var avatarToEntityDistance = Vec3.distance(MyAvatar.position, entityPosition);
+    var scaleFactor = avatarToEntityDistance * DISTANCE_SCALE_FACTOR;
+    var dPosition =  Vec3.multiply(dHandPosition, scaleFactor);
 
-    var dPosition =  Vec3.multiply(dHandPosition, 10.0);
-
-    var position = Entities.getEntityProperties(this.grabbedEntity).position;
-    var newPosition = Vec3.sum(position, dPosition);
+    var newPosition = Vec3.sum(entityPosition, dPosition);
 
     Entities.updateAction(this.grabbedEntity, this.actionID, {
         targetPosition: newPosition

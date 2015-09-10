@@ -161,12 +161,14 @@
                 relativePosition: {x: 0, y: 0, z: 0},
                 relativeRotation: Quat.fromPitchYawRollDegrees(0, 0, 0)
             }
+            print("YAAAAA")
             setEntityCustomData(GRAB_FRAME_USER_DATA_KEY, this.entityId, data);
         }
         this.initialize();
     }
 
     this.initialize = function() {
+        print("INIT")
         var animationSettings = JSON.stringify({
             fps: 30,
             loop: true,

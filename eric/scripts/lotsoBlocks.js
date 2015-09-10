@@ -30,7 +30,7 @@ basePosition.y += SPAWN_RANGE + 2;
 for (var i = 0; i < NUM_BLOCKS; i++) {
   size = randFloat(.1, 0.3);
   boxes.push(Entities.addEntity({
-    type: 'Sphere',
+    type: 'Box',
     dimensions: {
       x: size,
       y: size,
@@ -51,9 +51,8 @@ for (var i = 0; i < NUM_BLOCKS; i++) {
 function cleanup() {
   Entities.deleteEntity(ground);
   boxes.forEach(function(box){
-    // Entities.deleteEntity(box);
+    Entities.deleteEntity(box);
   });
-  print('yaaaa')
 }
 
 Script.scriptEnding.connect(cleanup);

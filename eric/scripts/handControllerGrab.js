@@ -22,7 +22,7 @@ var LEFT_HAND_CLICK = Controller.findAction("LEFT_HAND_CLICK");
 var leftTriggerAction = LEFT_HAND_CLICK;
 
 var LIFETIME = 10;
-var currentLife = 0;
+var EXTRA_TIME = 5;
 var POINTER_CHECK_TIME = 5000;
 
 var ZERO_VEC = {
@@ -143,8 +143,7 @@ controller.prototype.checkPointer = function() {
     var self = this;
     Script.setTimeout(function() {
         var props = Entities.getEntityProperties(self.pointer);
-        var currentLife = LIFETIME + POINTER_CHECK_TIME + currentLife;
-        //dimensions are set to .1, .1, .1 when lifetime expires
+        var currentLife = props.age + EXTRA_TIME
         Entities.editEntity(self.pointer, {
             lifetime: currentLife
         });
@@ -162,7 +161,6 @@ controller.prototype.checkForIntersections = function(origin, direction) {
     if (intersection.intersects && intersection.properties.collisionsWillMove === 1) {
         var handPosition = Controller.getSpatialControlPosition(this.palm);
         this.distanceToEntity = Vec3.distance(handPosition, intersection.properties.position);
-        print("distance to entity " + JSON.stringify(this.distanceToEntity));
         Entities.editEntity(this.pointer, {
             linePoints: [
                 ZERO_VEC,
@@ -215,7 +213,6 @@ controller.prototype.hidePointer = function() {
 
 controller.prototype.letGo = function() {
     if (this.grabbedEntity && this.actionID) {
-        print("DELETE ACTION")
         this.deactivateEntity(this.grabbedEntity);
         Entities.deleteAction(this.grabbedEntity, this.actionID);
     }
