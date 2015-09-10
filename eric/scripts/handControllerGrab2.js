@@ -161,32 +161,45 @@ controller.prototype.checkForIntersections = function(origin, direction) {
 controller.prototype.grab = function(entityID) {
     print("GRAB")
     this.grabbedEntity = entityID;
-    this.initialPosition = Entities.getEntityProperties(this.grabbedEntity).position;
+    var props = Entities.getEntityProperties(this.grabbedEntity);
+    this.initialPosition = props.position;
+    this.initialRotation = props.rotation;
     this.previousHandPosition = this.getHandPosition();
+    this.previousHandRotation = this.getHandRotation();
 
     this.actionID = Entities.addAction("spring", this.grabbedEntity, {
         targetPosition: this.initialPosition,
-        linearTimeScale: SPRING_TIMESCALE   
+        linearTimeScale: SPRING_TIMESCALE,
+        angularTimeScale: SPRING_TIMESCALE
     });
 
 }
 
 controller.prototype.move = function() {
+    var entityProps = Entities.getEntityProperties(this.grabbedEntity);
+
     var handRotation = this.getHandRotation();
     var handPosition = this.getHandPosition();
     var dHandPosition = Vec3.subtract(handPosition, this.previousHandPosition);
-    var entityPosition = Entities.getEntityProperties(this.grabbedEntity).position;
+    var entityPosition = entityProps.position;
     var avatarToEntityDistance = Vec3.distance(MyAvatar.position, entityPosition);
     var scaleFactor = avatarToEntityDistance * DISTANCE_SCALE_FACTOR;
-    var dPosition =  Vec3.multiply(dHandPosition, scaleFactor);
+    var dHandPosition =  Vec3.multiply(dHandPosition, scaleFactor);
+    var newEntityPosition = Vec3.sum(entityPosition, dHandPosition);
 
-    var newPosition = Vec3.sum(entityPosition, dPosition);
+    var entityRotation = entityProps.rotation;
+    var dHandRotation = Quat.multiply(handRotation, Quat.inverse(this.previousHandRotation));
+    var newEntityRotation = Quat.multiply(dHandRotation, entityRotation);
+
+    print("rotation " + JSON.stringify(newEntityRotation))
 
     Entities.updateAction(this.grabbedEntity, this.actionID, {
-        targetPosition: newPosition
+        targetPosition: newEntityPosition,
+        targetRotation: newEntityRotation
     });
 
     this.previousHandPosition = handPosition;
+    this.previousHandRotation = handRotation;
 
 }
 
