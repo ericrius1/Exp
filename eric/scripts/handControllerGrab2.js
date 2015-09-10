@@ -30,6 +30,10 @@ var ZERO_VEC = {
     y: 0,
     z: 0
 }
+
+var D_HAND_POSITION_THRESHOLD = 0.00;
+var SPRING_TIMESCALE = 0.1;
+
 var LINE_LENGTH = 500;
 var THICK_LINE_WIDTH = 7;
 var THIN_LINE_WIDTH = 2;
@@ -147,31 +151,48 @@ controller.prototype.checkForIntersections = function(origin, direction) {
     var intersection = Entities.findRayIntersection(pickRay, true);
     if (intersection.intersects && intersection.properties.collisionsWillMove === 1) {
         var handPosition = Controller.getSpatialControlPosition(this.palm);
-        this.distanceToEntity = Vec3.distance(handPosition, intersection.properties.position);
-        Entities.editEntity(this.pointer, {
-            linePoints: [
-                ZERO_VEC,
-                Vec3.multiply(direction, this.distanceToEntity)
-            ]
-        });
         if (!this.grabbedEntity) {
-            this.grabbedEntity = intersection.entityID;
+            this.grab(intersection.entityID);
         }
         return true;
     }
     return false;
 }
 
-controller.prototype.attemptMove = function() {
-    if (!this.grabbedEntity) {
-        return;
-    }
-    var handRotation = this.getHandRotation();
-    var handPosition = this.getHandPosition();
-    
+controller.prototype.grab = function(entityID) {
+    this.grabbedEntity = entityID;
+    this.initialPosition = Entities.getEntityProperties(this.grabbedEntity).position;
+    this.previousHandPosition = this.getHandPosition();
+
+    this.actionID = Entities.addAction("spring", this.grabbedEntity, {
+        targetPosition: this.initialPosition,
+        linearTimeScale: SPRING_TIMESCALE   
+    });
+
 }
 
+controller.prototype.move = function() {
+    var handRotation = this.getHandRotation();
+    var handPosition = this.getHandPosition();
+    var dHandPosition = Vec3.subtract(handPosition, this.previousHandPosition);
+    if(Vec3.length(dHandPosition) < D_HAND_POSITION_THRESHOLD) {
+        return;
+    } else {
+        print(JSON.stringify("Delta hand position " + Vec3.length(dHandPosition)))
+    }
 
+    var dPosition =  Vec3.multiply(dHandPosition, 10.0);
+
+    var position = Entities.getEntityProperties(this.grabbedEntity).position;
+    var newPosition = Vec3.sum(position, dPosition);
+
+    Entities.updateAction(this.grabbedEntity, this.actionID, {
+        targetPosition: newPosition
+    });
+
+    this.previousHandPosition = handPosition;
+
+}
 
 controller.prototype.showPointer = function() {
     Entities.editEntity(this.pointer, {
@@ -212,8 +233,8 @@ controller.prototype.update = function() {
     if (this.shouldDisplayLine) {
         this.updateLine();
     }
-    if (this.triggerValue > DISTANCE_HOLD_THRESHOLD && !this.closeGrabbing) {
-        this.attemptMove();
+    if (this.triggerValue > DISTANCE_HOLD_THRESHOLD && this.grabbedEntity) {
+        this.move();
     }
 
 
