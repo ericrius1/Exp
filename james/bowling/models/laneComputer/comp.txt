@@ -1,0 +1,51 @@
+Summary Info for comp.max (at Frame 0)
+
+Objects:
+  				Cast	Receive	Motion			Generate	Receive	Generate	Receive	
+  Name	Type	Verts	Faces	Shadows	Shadows	Blur	Hidden	Frozen	Caustics	Caustics	GlobIllum	GlobIllum	Material (Type)
+  ------------------------	------------	------------	------------	------------	------------	------------	------------	------------	------------	------------	------------	------------	------------------------
+  Box01	Editable	8	12	Yes	Yes	No	No	No	No	Yes	Yes	Yes	01 - Default (Standard)
+  Mesh01	Editable	33	51	Yes	Yes	No	No	No	No	Yes	Yes	Yes	Material #36 (Multi/Sub-Object)
+  Mesh02	Editable	8	4	Yes	Yes	No	No	No	No	Yes	Yes	Yes	03 - Default (Standard)
+
+
+Lights:
+  		
+  Name	Type	Hidden	Frozen
+  ------------------------	------------	------------	------------
+  Omni01	Omni Lig	No	No
+
+
+Scene Totals:
+  Objects: 3
+  Shapes: 0
+  Cameras: 0
+  Lights: 1
+  Helpers: 0
+  Space Warps: 0
+  Total: 4
+
+Mesh Totals:
+
+  Verts: 49
+  Faces: 67
+Materials:
+
+  01 - Default  ( Standard )
+         F:\VARIOUS_BACKUPS!\Run3v0.72\run3\mats\electronic\Buttons0144_L.jpg
+
+  Material #36  ( Multi/Sub-Object )
+      03 - Default  ( Standard )
+             F:\VARIOUS_BACKUPS!\SDK\monitor01.jpg
+      DATASERV  ( Standard )
+             F:\VARIOUS_BACKUPS!\Run3v0.72\run3\mats\metal\MetalBare0086_1_S.jpg
+
+  03 - Default  ( Standard )
+         F:\VARIOUS_BACKUPS!\SDK\monitor01.jpg
+
+
+Other Maps:
+F:\VARIOUS_BACKUPS!\Run3v0.72\run3\mats\electronic\Buttons0144_L.jpg
+F:\VARIOUS_BACKUPS!\SDK\monitor01.jpg
+F:\VARIOUS_BACKUPS!\Run3v0.72\run3\mats\metal\MetalBare0086_1_S.jpg
+
