@@ -6,7 +6,7 @@
 //  Created by James B. Pollack @imgntn -- 09/11/2015
 //  Copyright 2015 High Fidelity, Inc.
 //
-//  Loads a wand model and attaches the bubble wand behavior.
+//  The lane computer handles the objects, scripts, and scoring for a single-player game of bowling.
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 
@@ -14,25 +14,33 @@
 (function() {
         //bowling game scoring in JS by @hontas
         Script.include('https://raw.githubusercontent.com/hontas/bowling-game-kata/master/js/bowlingGame.js');
+        var _t; 
 
         var BOWLING_BALL_URL = '';
         var BOWLING_PIN_URL = '';
         var BALL_RACK_URL = '';
         var LANE_URL = '';
 
-        BALL_START_POSITION = {
+        var BALL_START_POSITION = {
             x: 0,
             y: 0,
             x: 0
         };
 
-        HEAD_PIN_POSITION = {
+        var HEAD_PIN_POSITION = {
             x: 0,
             y: 0,
             x: 0
         };
 
-        var laneMeasurements = {
+        var ROLL_DETECTOR_SCRIPT = ''
+        var ROLL_DETECTOR_LOCATION = {
+                x: 0,
+                y: 0,
+                x: 0
+            } //back of lane 
+
+        var LANE_MEASUREMENTS = {
             foulLineToFirstApproachDots: 3.6576,
             foulLineToSecondApproachDots: 4.572,
             betweenApproachDots: foulLineToSecondApproachDots - foulLineToFirstApproachDots,
@@ -44,12 +52,12 @@
 
         }
 
-        var ballMeasurements = {
+        var BALL_MEASUREMENTS = {
             radius: 0.10795,
             diameter: 21.59
         }
 
-        var pinMeasurements = {
+        var PIN_MEASUREMENTS = {
             height: 0.381,
             width: 0.11938,
             betweenPins: 0.3048,
@@ -57,7 +65,7 @@
         }
 
         LaneComputer = function() {
-            var _t = this;
+             _t = this;
             print("LaneComputer constructor");
         };
 
@@ -90,9 +98,9 @@
                     name: 'Bowling Lane',
                     type: 'Box',
                     dimensions: {
-                        x: laneMeasurements.totalLength,
+                        x: LANE_MEASUREMENTS.totalLength,
                         y: 1,
-                        z: laneMeasurements.laneWidth
+                        z: LANE_MEASUREMENTS.laneWidth
                     },
                     color: {
                         red: 90,
@@ -108,8 +116,8 @@
                 return
             },
             setPins: function() {
-                var a = pinMeasurements.halfBetween;
-                var b = laneMeasurements.betweenPins;
+                var a = PIN_MEASUREMENTS.halfBetween;
+                var b = LANE_MEASUREMENTS.betweenPins;
 
                 var x = HEAD_PIN_POSITION.x;
                 var z = HEAD_PIN_POSITION.z;
@@ -176,9 +184,9 @@
                     type: 'Model',
                     modelURL: BOWLING_PIN_URL,
                     dimensions: {
-                        x: ballMeasurements.diameter,
-                        y: ballMeasurements.diameter,
-                        z: ballMeasurements.diameter,
+                        x: BALL_MEASUREMENTS.diameter,
+                        y: BALL_MEASUREMENTS.diameter,
+                        z: BALL_MEASUREMENTS.diameter,
                     },
                     position: BALL_START_POSITION
                 };
@@ -218,7 +226,8 @@
                         x: 10,
                         y: 10,
                         z: 10
-                    }
+                    }.
+                    scriptURL: ROLL_DETECTOR_SCRIPT
                 }
             }
 
@@ -230,9 +239,9 @@
                 type: 'Model',
                 modelURL: BOWLING_PIN_URL,
                 dimensions: {
-                    x: pinMeasurements.width,
-                    y: pinMeasurements.height,
-                    z: pinMeasurements.width
+                    x: PIN_MEASUREMENTS.width,
+                    y: PIN_MEASUREMENTS.height,
+                    z: PIN_MEASUREMENTS.width
                 }
             }
 
