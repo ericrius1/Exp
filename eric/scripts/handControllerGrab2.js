@@ -22,8 +22,8 @@ var LEFT_HAND_CLICK = Controller.findAction("LEFT_HAND_CLICK");
 var leftTriggerAction = LEFT_HAND_CLICK;
 
 var LIFETIME = 10;
-var currentLife = 0;
 var POINTER_CHECK_TIME = 5000;
+var EXTRA_TIME = 5;
 
 var DISTANCE_SCALE_FACTOR = 5;
 
@@ -58,7 +58,7 @@ var DISTANCE_HOLD_THRESHOLD = 0.8;
 var right4Action = 18;
 var left4Action = 17;
 
-var TRACTOR_BEAM_VELOCITY_THRESHOLD = 0.5;
+var MAX_ANGULAR_VELOCITY = 50;
 
 var RIGHT = 1;
 var LEFT = 0;
@@ -133,7 +133,7 @@ controller.prototype.checkPointer = function() {
     var self = this;
     Script.setTimeout(function() {
         var props = Entities.getEntityProperties(self.pointer);
-        var currentLife = LIFETIME + POINTER_CHECK_TIME + currentLife;
+        var currentLife = LIFETIME + EXTRA_TIME + props.age;
         //dimensions are set to .1, .1, .1 when lifetime expires
         Entities.editEntity(self.pointer, {
             lifetime: currentLife
@@ -167,10 +167,10 @@ controller.prototype.grab = function(entityID) {
     this.previousHandPosition = this.getHandPosition();
     this.previousHandRotation = this.getHandRotation();
 
+
     this.actionID = Entities.addAction("spring", this.grabbedEntity, {
         targetPosition: this.initialPosition,
         linearTimeScale: SPRING_TIMESCALE,
-        angularTimeScale: SPRING_TIMESCALE
     });
 
 }
@@ -178,29 +178,37 @@ controller.prototype.grab = function(entityID) {
 controller.prototype.move = function() {
     var entityProps = Entities.getEntityProperties(this.grabbedEntity);
 
-    var handRotation = this.getHandRotation();
-    var handPosition = this.getHandPosition();
+    // var handRotation = this.getHandRotation();
+    var handRotation = Controller.getSpatialControlRawRotation(this.tip);
+    // var handPosition = this.getHandPosition();
+    var handPosition = Controller.getSpatialControlPosition(this.palm);
     var dHandPosition = Vec3.subtract(handPosition, this.previousHandPosition);
     var entityPosition = entityProps.position;
     var avatarToEntityDistance = Vec3.distance(MyAvatar.position, entityPosition);
-    var scaleFactor = avatarToEntityDistance * DISTANCE_SCALE_FACTOR;
+    var scaledDistance = Math.pow(avatarToEntityDistance, 1);
+    var scaleFactor = scaledDistance * DISTANCE_SCALE_FACTOR; // scaleFactor = Math.pow(scaleFactor, 1.5);
     var dHandPosition =  Vec3.multiply(dHandPosition, scaleFactor);
     var newEntityPosition = Vec3.sum(entityPosition, dHandPosition);
 
-    var entityRotation = entityProps.rotation;
-    var dHandRotation = Quat.multiply(handRotation, Quat.inverse(this.previousHandRotation));
-    var newEntityRotation = Quat.multiply(dHandRotation, entityRotation);
+    
+    var transformedAngularVelocity = Controller.getSpatialControlRawAngularVelocity(this.tip);
+    transformedAngularVelocity = Vec3.multiplyQbyV(MyAvatar.orientation, transformedAngularVelocity);
+    var angularVelocityLength = Vec3.length(transformedAngularVelocity);
+    if(angularVelocityLength > MAX_ANGULAR_VELOCITY ){
+      print('TRANSFORMED ANGULAR VELOCITY ' + angularVelocityLength); 
+    } else {
+        Entities.editEntity(this.grabbedEntity, {
+            angularVelocity: transformedAngularVelocity,
+        }); 
+    }
 
-    print("rotation " + JSON.stringify(newEntityRotation))
 
-    Entities.updateAction(this.grabbedEntity, this.actionID, {
-        targetPosition: newEntityPosition,
-        targetRotation: newEntityRotation
-    });
+    // Entities.updateAction(this.grabbedEntity, this.actionID, {
+    //     targetPosition: newEntityPosition,
+    // });
 
     this.previousHandPosition = handPosition;
     this.previousHandRotation = handRotation;
-
 }
 
 controller.prototype.showPointer = function() {

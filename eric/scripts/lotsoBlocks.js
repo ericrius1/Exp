@@ -51,7 +51,7 @@ for (var i = 0; i < NUM_BLOCKS; i++) {
 function cleanup() {
   Entities.deleteEntity(ground);
   boxes.forEach(function(box){
-    Entities.deleteEntity(box);
+    // Entities.deleteEntity(box);
   });
 }
 
