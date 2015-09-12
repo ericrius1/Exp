@@ -1,6 +1,5 @@
 (function() {
-
-		//bowling game scoring in JS
+		//bowling game scoring in JS by @hontas
 		Script.include('https://raw.githubusercontent.com/hontas/bowling-game-kata/master/js/bowlingGame.js');
 
 		var BOWLING_BALL_URL = '';
@@ -12,8 +11,13 @@
 			x: 0,
 			y: 0,
 			x: 0
-		}
+		};
 
+		HEAD_PIN_POSITION = {
+			x: 0,
+			y: 0,
+			x: 0
+		};
 
 		var laneMeasurements = {
 			foulLineToFirstApproachDots: 3.6576,
@@ -36,21 +40,8 @@
 			height: 0.381,
 			width: 0.11938,
 			betweenPins: 0.3048,
-			halfBetween:0.1524
+			halfBetween: 0.1524
 		}
-
-	function Pin() {
-
-	}
-	Pin.prototype = {
-		type: 'Model',
-		modelURL: BOWLING_PIN_URL,
-		dimensions: {
-			x: pinMeasurements.width,
-			y: pinMeasurements.height,
-			z: pinMeasurements.width
-		}
-	}
 
 		LaneComputer = function() {
 			var _t = this;
@@ -60,6 +51,7 @@
 		LaneComputer.prototype = {
 			currentBee: null,
 			buzzSound: null,
+			game: null,
 			preload: function(id) {
 				this.entityID = id;
 				this.initialProperties = Entities.getEntityProperties(id);
@@ -73,6 +65,11 @@
 						x: laneMeasurements.totalLength,
 						y: 1,
 						z: laneMeasurements.laneWidth
+					},
+					color: {
+						red: 90,
+						green: 110,
+						blue: 205
 					}
 				}
 
@@ -80,35 +77,34 @@
 				this.lane = lane;
 				return
 			},
-			spawnPins: function() {
-				var pins = [];
-				var pinProperties = {
-					type: 'Model',
-					modelURL: BOWLING_PIN_URL,
-					dimensions: {
-						x: pinMeasurements.width,
-						y: pinMeasurements.height,
-						z: pinMeasurements.width
-					}
-				}
-
+			setPins: function() {
 				var a = pinMeasurements.halfBetween;
 				var b = laneMeasurements.betweenPins;
 
-				var pin1 = [0,0];
-				var pin2 = [-a,b];
-				var pin3 = [a,b];
-				var pin4 = [-2*a,2*b];
-				var pin5 = [0,2*b];
-				var pin6 = [2*a,2*b];
-				var pin7 =[-3*a,3*b];
-				var pin8 =[-a,3*b];
-				var pin9 =[a,3*b];
-				var pin10 =[3*a,-3b];
-		
+				var x = HEAD_PIN_POSITION.x;
+				var z = HEAD_PIN_POSITION.z;
 
+				var pin1 = [x, z];
+				var pin2 = [x - a, z + b];
+				var pin3 = [x + a, z + b];
+				var pin4 = [x - (2 * a), z + (2 * b)];
+				var pin5 = [x, z + (2 * b)];
+				var pin6 = [x + (2 * a), z + (2 * b)];
+				var pin7 = [x - (3 * a), z + (3 * b)];
+				var pin8 = [x - a, z + (3 * b)];
+				var pin9 = [x + a, z + (3 * b)];
+				var pin10 = [x + (3 * a), z - (3 * b)];
 
-
+				// var pin1 = 0,0];
+				// var pin2 = [-a, b];
+				// var pin3 = [a, b];
+				// var pin4 = [-2 * a, 2 * b];
+				// var pin5 = [0, 2 * b];
+				// var pin6 = [2 * a, 2 * b];
+				// var pin7 = [-3 * a, 3 * b];
+				// var pin8 = [-a, 3 * b];
+				// var pin9 = [a, 3 * b];
+				// var pin10 = [3 * a, -3 * b];
 
 			},
 			spawnBowlingBallRack: function() {
@@ -125,6 +121,7 @@
 					},
 					position: BALL_START_POSITION
 				}
+				Entities.addEntity(ballProperties);
 			},
 			countKnockedOverPins: function() {
 				var knockedOver = 0;
@@ -139,13 +136,31 @@
 
 				return knockedOver
 			},
+			handleEndOfRoll: function() {
+				var pins = this.countKnockedOverPins();
+				this.game.roll(pins);
+			},
 			handleGoingPastFoulLine: function() {
 
 			},
-			resetPins: function() {
+			startBowlingGame: function() {
+				this.game = new BowlingGame();
+			}
+
+			function Pin() {
 
 			}
 
-				return new LaneComputer;
+			Pin.prototype = {
+				type: 'Model',
+				modelURL: BOWLING_PIN_URL,
+				dimensions: {
+					x: pinMeasurements.width,
+					y: pinMeasurements.height,
+					z: pinMeasurements.width
+				}
+			}
+
+			return new LaneComputer;
 
 		})

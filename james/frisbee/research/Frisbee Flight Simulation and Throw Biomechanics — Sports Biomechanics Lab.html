@@ -1,0 +1,1132 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- saved from url=(0143)http://biosport.ucdavis.edu/research-projects/frisbee-flight-simulation-and-throw-biomechanics/frisbee-flight-simulation-and-throw-biomechanics -->
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"><meta id="shimsham-meta" content="chrome-extension://occbnccdhakfaomkhhdkmmknjbghmllm/shimsham.js"><script type="text/javascript" async="" src="./Frisbee Flight Simulation and Throw Biomechanics — Sports Biomechanics Lab_files/ga.js"></script><script>(function main() {
+    // Create enabled event
+    function fireEnabledEvent() {
+        // If gli exists, then we are already present and shouldn't do anything
+        if (!window.gli) {
+            setTimeout(function () {
+                var enabledEvent = document.createEvent("Event");
+                enabledEvent.initEvent("WebGLEnabledEvent", true, true);
+                document.dispatchEvent(enabledEvent);
+            }, 0);
+        } else {
+            //console.log("WebGL Inspector already embedded on the page - disabling extension");
+        }
+    };
+
+    // Grab the path root from the extension
+    document.addEventListener("WebGLInspectorReadyEvent", function (e) {
+        var pathElement = document.getElementById("__webglpathroot");
+        if (window["gliloader"]) {
+            gliloader.pathRoot = pathElement.innerText;
+        } else {
+            // TODO: more?
+            window.gliCssUrl = pathElement.innerText + "gli.all.css";
+        }
+    }, false);
+
+    // Rewrite getContext to snoop for webgl
+    var originalGetContext = HTMLCanvasElement.prototype.getContext;
+    if (!HTMLCanvasElement.prototype.getContextRaw) {
+        HTMLCanvasElement.prototype.getContextRaw = originalGetContext;
+    }
+    HTMLCanvasElement.prototype.getContext = function () {
+        var ignoreCanvas = this.internalInspectorSurface;
+        if (ignoreCanvas) {
+            return originalGetContext.apply(this, arguments);
+        }
+
+        var result = originalGetContext.apply(this, arguments);
+        if (result == null) {
+            return null;
+        }
+
+        var contextNames = ["moz-webgl", "webkit-3d", "experimental-webgl", "webgl", "3d"];
+        var requestingWebGL = contextNames.indexOf(arguments[0]) != -1;
+        if (requestingWebGL) {
+            // Page is requesting a WebGL context!
+            fireEnabledEvent(this);
+
+            // If we are injected, inspect this context
+            if (window.gli) {
+                if (gli.host.inspectContext) {
+                    // TODO: pull options from extension
+                    result = gli.host.inspectContext(this, result);
+                    // NOTE: execute in a timeout so that if the dom is not yet
+                    // loaded this won't error out.
+                    window.setTimeout(function() {
+                        var hostUI = new gli.host.HostUI(result);
+                        result.hostUI = hostUI; // just so we can access it later for debugging
+                    }, 0);
+                }
+            }
+        }
+
+        return result;
+    };
+})();</script><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+    
+
+    
+      <!--<base href="http://biosport.ucdavis.edu/research-projects/frisbee-flight-simulation-and-throw-biomechanics/frisbee-flight-simulation-and-throw-biomechanics">--><base href="."><!--[if lt IE 7]></base><![endif]-->
+    
+
+    <meta name="generator" content="Plone - http://plone.org">
+
+    <link rel="kss-base-url" href="./Frisbee Flight Simulation and Throw Biomechanics — Sports Biomechanics Lab_files/Frisbee Flight Simulation and Throw Biomechanics — Sports Biomechanics Lab.html">
+
+  
+  
+    
+    
+    
+      <style type="text/css">@import url(http://biosport.ucdavis.edu/portal_css/ucdskin/base-cachekey5794.css);</style>
+    
+    
+    
+  
+
+  
+    
+    
+    
+      <style type="text/css" media="all">@import url(http://biosport.ucdavis.edu/portal_css/ucdskin/Quills-cachekey3824.css);</style>
+    
+    
+    
+  
+
+  
+    
+    
+    
+      <style type="text/css" media="screen">@import url(http://biosport.ucdavis.edu/portal_css/ucdskin/resourceplonetruegallery-portlet-cachekey2427.css);</style>
+    
+    
+    
+  
+
+  
+    
+    
+      <link rel="stylesheet" type="text/css" media="screen" href="./Frisbee Flight Simulation and Throw Biomechanics — Sports Biomechanics Lab_files/qcomments-cachekey9721.css" title="PloneComments">
+    
+    
+    
+    
+  
+
+  
+    
+    
+    
+      <style type="text/css" media="all">@import url(http://biosport.ucdavis.edu/portal_css/ucdskin/ploneCustom-cachekey4461.css);</style>
+    
+    
+    
+  
+
+
+  
+  
+    
+    
+      <script type="text/javascript" src="./Frisbee Flight Simulation and Throw Biomechanics — Sports Biomechanics Lab_files/jquery-cachekey6132.js">
+      </script>
+    
+    
+    
+  
+
+  
+    
+    
+      <script type="text/javascript" src="./Frisbee Flight Simulation and Throw Biomechanics — Sports Biomechanics Lab_files/resourcebase2-dom-fp-cachekey5885.js">
+      </script>
+    
+    
+    
+  
+
+  
+    
+    
+      <script type="text/javascript" src="./Frisbee Flight Simulation and Throw Biomechanics — Sports Biomechanics Lab_files/resourceplonetruegallery-portlet-cachekey6808.js">
+      </script>
+    
+    
+    
+  
+
+
+  
+  <link rel="kinetic-stylesheet" type="text/css" href="./Frisbee Flight Simulation and Throw Biomechanics — Sports Biomechanics Lab_files/at-cachekey6873.kss">
+
+
+
+<title>Frisbee Flight Simulation and Throw Biomechanics — Sports Biomechanics Lab</title>
+
+
+    <!-- Internet Explorer CSS Fixes -->
+    <!--[if IE]>
+        <style type="text/css" media="all">@import url(http://biosport.ucdavis.edu/IEFixes.css);</style>
+    <![endif]-->
+
+    
+
+    <link rel="shortcut icon" type="image/x-icon" href="http://biosport.ucdavis.edu/favicon.ico">
+
+
+
+    <link rel="home" href="http://biosport.ucdavis.edu/" title="Front page">
+
+    <link rel="contents" href="http://biosport.ucdavis.edu/sitemap" title="Site Map">
+
+
+
+
+
+
+    <link rel="search" href="http://biosport.ucdavis.edu/search_form" title="Search this site">
+
+
+
+    <!-- Disable IE6 image toolbar -->
+    <meta http-equiv="imagetoolbar" content="no">
+    
+    
+    
+
+    
+    
+
+    
+    
+
+    
+    
+    
+    <link rel="me" type="text/html" href="http://www.google.com/profiles/moorepants">
+
+
+  <style type="text/css">.MathJax_Hover_Frame {border-radius: .25em; -webkit-border-radius: .25em; -moz-border-radius: .25em; -khtml-border-radius: .25em; box-shadow: 0px 0px 15px #83A; -webkit-box-shadow: 0px 0px 15px #83A; -moz-box-shadow: 0px 0px 15px #83A; -khtml-box-shadow: 0px 0px 15px #83A; border: 1px solid #A6D ! important; display: inline-block; position: absolute}
+.MathJax_Hover_Arrow {position: absolute; width: 15px; height: 11px; cursor: pointer}
+</style><style type="text/css">#MathJax_About {position: fixed; left: 50%; width: auto; text-align: center; border: 3px outset; padding: 1em 2em; background-color: #DDDDDD; color: black; cursor: default; font-family: message-box; font-size: 120%; font-style: normal; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; border-radius: 15px; -webkit-border-radius: 15px; -moz-border-radius: 15px; -khtml-border-radius: 15px; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+.MathJax_Menu {position: absolute; background-color: white; color: black; width: auto; padding: 5px 0px; border: 1px solid #CCCCCC; margin: 0; cursor: default; font: menu; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; border-radius: 5px; -webkit-border-radius: 5px; -moz-border-radius: 5px; -khtml-border-radius: 5px; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+.MathJax_MenuItem {padding: 1px 2em; background: transparent}
+.MathJax_MenuArrow {position: absolute; right: .5em; color: #666666}
+.MathJax_MenuActive .MathJax_MenuArrow {color: white}
+.MathJax_MenuArrow.RTL {left: .5em; right: auto}
+.MathJax_MenuCheck {position: absolute; left: .7em}
+.MathJax_MenuCheck.RTL {right: .7em; left: auto}
+.MathJax_MenuRadioCheck {position: absolute; left: .7em}
+.MathJax_MenuRadioCheck.RTL {right: .7em; left: auto}
+.MathJax_MenuLabel {padding: 1px 2em 3px 1.33em; font-style: italic}
+.MathJax_MenuRule {border-top: 1px solid #DDDDDD; margin: 4px 3px}
+.MathJax_MenuDisabled {color: GrayText}
+.MathJax_MenuActive {background-color: #606872; color: white}
+.MathJax_Menu_Close {position: absolute; width: 31px; height: 31px; top: -15px; left: -15px}
+</style><style type="text/css">.MathJax_Preview .MJXc-math {color: inherit!important}
+</style><style type="text/css">#MathJax_Zoom {position: absolute; background-color: #F0F0F0; overflow: auto; display: block; z-index: 301; padding: .5em; border: 1px solid black; margin: 0; font-weight: normal; font-style: normal; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; box-shadow: 5px 5px 15px #AAAAAA; -webkit-box-shadow: 5px 5px 15px #AAAAAA; -moz-box-shadow: 5px 5px 15px #AAAAAA; -khtml-box-shadow: 5px 5px 15px #AAAAAA; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_ZoomOverlay {position: absolute; left: 0; top: 0; z-index: 300; display: inline-block; width: 100%; height: 100%; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+#MathJax_ZoomFrame {position: relative; display: inline-block; height: 0; width: 0}
+#MathJax_ZoomEventTrap {position: absolute; left: 0; top: 0; z-index: 302; display: inline-block; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+</style><style type="text/css">.MathJax_Preview {color: #888}
+#MathJax_Message {position: fixed; left: 1em; bottom: 1.5em; background-color: #E6E6E6; border: 1px solid #959595; margin: 0px; padding: 2px 8px; z-index: 102; color: black; font-size: 80%; width: auto; white-space: nowrap}
+#MathJax_MSIE_Frame {position: absolute; top: 0; left: 0; width: 0px; z-index: 101; border: 0px; margin: 0px; padding: 0px}
+.MathJax_Error {color: #CC0000; font-style: italic}
+</style><style type="text/css">.MJXc-script {font-size: .8em}
+.MJXc-right {-webkit-transform-origin: right; -moz-transform-origin: right; -ms-transform-origin: right; -o-transform-origin: right; transform-origin: right}
+.MJXc-bold {font-weight: bold}
+.MJXc-italic {font-style: italic}
+.MJXc-scr {font-family: MathJax_Script,'Times New Roman',Times,STIXGeneral,serif}
+.MJXc-frak {font-family: MathJax_Fraktur,'Times New Roman',Times,STIXGeneral,serif}
+.MJXc-sf {font-family: MathJax_SansSerif,'Times New Roman',Times,STIXGeneral,serif}
+.MJXc-cal {font-family: MathJax_Caligraphic,'Times New Roman',Times,STIXGeneral,serif}
+.MJXc-mono {font-family: MathJax_Typewriter,'Times New Roman',Times,STIXGeneral,serif}
+.MJXc-largeop {font-size: 150%}
+.MJXc-largeop.MJXc-int {vertical-align: -.2em}
+.MJXc-math {display: inline-block; line-height: 1.2; text-indent: 0; font-family: 'Times New Roman',Times,STIXGeneral,serif; white-space: nowrap; border-collapse: collapse}
+.MJXc-display {display: block; text-align: center; margin: 1em 0}
+.MJXc-math span {display: inline-block}
+.MJXc-box {display: block!important; text-align: center}
+.MJXc-box:after {content: " "}
+.MJXc-rule {display: block!important; margin-top: .1em}
+.MJXc-char {display: block!important}
+.MJXc-mo {margin: 0 .15em}
+.MJXc-mfrac {margin: 0 .125em; vertical-align: .25em}
+.MJXc-denom {display: inline-table!important; width: 100%}
+.MJXc-denom > * {display: table-row!important}
+.MJXc-surd {vertical-align: top}
+.MJXc-surd > * {display: block!important}
+.MJXc-script-box > *  {display: table!important; height: 50%}
+.MJXc-script-box > * > * {display: table-cell!important; vertical-align: top}
+.MJXc-script-box > *:last-child > * {vertical-align: bottom}
+.MJXc-script-box > * > * > * {display: block!important}
+.MJXc-mphantom {visibility: hidden}
+.MJXc-munderover {display: inline-table!important}
+.MJXc-over {display: inline-block!important; text-align: center}
+.MJXc-over > * {display: block!important}
+.MJXc-munderover > * {display: table-row!important}
+.MJXc-mtable {vertical-align: .25em; margin: 0 .125em}
+.MJXc-mtable > * {display: inline-table!important; vertical-align: middle}
+.MJXc-mtr {display: table-row!important}
+.MJXc-mtd {display: table-cell!important; text-align: center; padding: .5em 0 0 .5em}
+.MJXc-mtr > .MJXc-mtd:first-child {padding-left: 0}
+.MJXc-mtr:first-child > .MJXc-mtd {padding-top: 0}
+.MJXc-mlabeledtr {display: table-row!important}
+.MJXc-mlabeledtr > .MJXc-mtd:first-child {padding-left: 0}
+.MJXc-mlabeledtr:first-child > .MJXc-mtd {padding-top: 0}
+.MJXc-merror {background-color: #FFFF88; color: #CC0000; border: 1px solid #CC0000; padding: 1px 3px; font-style: normal; font-size: 90%}
+.MJXc-scale0 {-webkit-transform: scaleX(.0); -moz-transform: scaleX(.0); -ms-transform: scaleX(.0); -o-transform: scaleX(.0); transform: scaleX(.0)}
+.MJXc-scale1 {-webkit-transform: scaleX(.1); -moz-transform: scaleX(.1); -ms-transform: scaleX(.1); -o-transform: scaleX(.1); transform: scaleX(.1)}
+.MJXc-scale2 {-webkit-transform: scaleX(.2); -moz-transform: scaleX(.2); -ms-transform: scaleX(.2); -o-transform: scaleX(.2); transform: scaleX(.2)}
+.MJXc-scale3 {-webkit-transform: scaleX(.3); -moz-transform: scaleX(.3); -ms-transform: scaleX(.3); -o-transform: scaleX(.3); transform: scaleX(.3)}
+.MJXc-scale4 {-webkit-transform: scaleX(.4); -moz-transform: scaleX(.4); -ms-transform: scaleX(.4); -o-transform: scaleX(.4); transform: scaleX(.4)}
+.MJXc-scale5 {-webkit-transform: scaleX(.5); -moz-transform: scaleX(.5); -ms-transform: scaleX(.5); -o-transform: scaleX(.5); transform: scaleX(.5)}
+.MJXc-scale6 {-webkit-transform: scaleX(.6); -moz-transform: scaleX(.6); -ms-transform: scaleX(.6); -o-transform: scaleX(.6); transform: scaleX(.6)}
+.MJXc-scale7 {-webkit-transform: scaleX(.7); -moz-transform: scaleX(.7); -ms-transform: scaleX(.7); -o-transform: scaleX(.7); transform: scaleX(.7)}
+.MJXc-scale8 {-webkit-transform: scaleX(.8); -moz-transform: scaleX(.8); -ms-transform: scaleX(.8); -o-transform: scaleX(.8); transform: scaleX(.8)}
+.MJXc-scale9 {-webkit-transform: scaleX(.9); -moz-transform: scaleX(.9); -ms-transform: scaleX(.9); -o-transform: scaleX(.9); transform: scaleX(.9)}
+.MathJax_CHTML .noError {vertical-align: ; font-size: 90%; text-align: left; color: black; padding: 1px 3px; border: 1px solid}
+</style></head>
+
+  <body class="section-research-projects template-document_view" dir="ltr" data-pinterest-extension-installed="cr1.38.4"><div id="MathJax_Message" style="display: none;"></div>
+    <div id="visual-portal-wrapper">
+
+      <div id="portal-top">
+        <div id="portal-header">
+<p class="hiddenStructure">
+  <a accesskey="2" href="http://biosport.ucdavis.edu/research-projects/frisbee-flight-simulation-and-throw-biomechanics/frisbee-flight-simulation-and-throw-biomechanics#documentContent">Skip to content.</a> |
+
+  <a accesskey="6" href="http://biosport.ucdavis.edu/research-projects/frisbee-flight-simulation-and-throw-biomechanics/frisbee-flight-simulation-and-throw-biomechanics#portlet-navigation-tree">Skip to navigation</a>
+</p>
+
+<div id="portal-searchbox">
+    <form id="livesearch0" action="http://biosport.ucdavis.edu/search">
+
+        <div class="LSBox">
+
+        <label for="searchGadget" class="hiddenStructure">Search Site</label>
+
+        <input name="SearchableText" type="text" size="18" title="Search Site" accesskey="4" class="inputLabel inputLabelActive" id="searchGadget" autocomplete="off">
+
+        <input class="searchButton" type="submit" value="Search">
+    
+        <div class="searchSection">
+            <input id="searchbox_currentfolder_only" class="noborder" type="checkbox" name="path" value="/Plone/research-projects/frisbee-flight-simulation-and-throw-biomechanics">
+            <label for="searchbox_currentfolder_only" style="cursor: pointer">
+                only in current section
+            </label>
+        </div>
+
+        <div class="LSResult" id="LSResult" style=""><div class="LSShadow" id="LSShadow"></div></div>
+        </div>
+    </form>
+
+    <div id="portal-advanced-search" class="hiddenStructure">
+        <a href="http://biosport.ucdavis.edu/search_form" accesskey="5">
+            Advanced Search…
+        </a>
+    </div>
+
+</div>
+
+<a id="portal-logo" accesskey="1" href="http://www.ucdavis.edu/" title="University of California, Davis">
+    <img src="./Frisbee Flight Simulation and Throw Biomechanics — Sports Biomechanics Lab_files/logo.jpg" alt="" title="" height="23" width="553"></a>
+	<div class="dept-name">
+		<table cellspacing="0" cellpadding="0" border="0">
+			<tbody>
+				<tr>
+					<td>
+						<span> </span>
+					</td>
+					<td>
+			        
+			        <span>			
+					<span class="dept-name-text"><a href="http://biosport.ucdavis.edu/">Sports Biomechanics Lab</a> </span>
+					</span>
+					</td>
+					</tr>
+			</tbody>
+		</table>
+	</div>
+
+
+    <h5 class="hiddenStructure">Sections</h5>
+
+    <div id="portal-globalnav">
+
+      <ul id="portal-globalnav-2">
+          <li id="portaltab-index_html" class="plain">
+              <a href="http://biosport.ucdavis.edu/" title="">Home</a></li>
+          <li id="portaltab-research-projects" class="selected">
+              <a href="http://biosport.ucdavis.edu/research-projects" title="List of current and past research projects.">Research Projects</a></li>
+          <li id="portaltab-lab-members" class="plain">
+              <a href="http://biosport.ucdavis.edu/lab-members" title="">Lab Members</a></li>
+          <li id="portaltab-publications" class="plain">
+              <a href="http://biosport.ucdavis.edu/publications" title="">Publications</a></li>
+          <li id="portaltab-lab-meetings" class="plain">
+              <a href="http://biosport.ucdavis.edu/lab-meetings" title="">Lab Meetings</a></li>
+          <li id="portaltab-sponsors" class="plain">
+              <a href="http://biosport.ucdavis.edu/sponsors" title="">Sponsors</a></li>
+          <li id="portaltab-blog" class="plain">
+              <a href="http://biosport.ucdavis.edu/blog" title="A web log for the Sports Biomechanics Lab">Blog</a></li>
+          <li id="portaltab-contact-information" class="plain">
+              <a href="http://biosport.ucdavis.edu/contact-information" title="">Contact Information</a></li>
+      </ul>
+    
+    </div>
+  
+
+
+</div>
+
+
+
+      </div>
+
+      <div class="visualClear" id="clear-space-before-wrapper-table"><!-- --></div>
+
+      <table cellpadding="0" cellspacing="0" id="portal-columns">
+        <tbody>
+          <tr>
+            
+            
+            <td>
+              <table cellpadding="0" cellspacing="0" id="portal-crcols">
+                <tbody>
+                  <tr>
+                    <td colspan="2">
+                      <div id="portal-breadcrumbs">
+
+    
+    <span>
+	<a href="http://biosport.ucdavis.edu/">Sports Biomechanics Lab</a>
+	</span>
+	
+	
+
+    <span class="breadcrumbSeparator">
+        &gt;
+        
+    </span>
+    <span dir="ltr">
+        
+            <a href="http://biosport.ucdavis.edu/research-projects">Research Projects</a>
+            <span class="breadcrumbSeparator">
+                &gt;
+                
+            </span>
+            
+         
+    </span>
+    <span dir="ltr">
+        
+            <a href="http://biosport.ucdavis.edu/research-projects/frisbee-flight-simulation-and-throw-biomechanics">Frisbee Flight Simulation and Throw Biomechanics</a>
+            <span class="breadcrumbSeparator">
+                &gt;
+                
+            </span>
+            
+         
+    </span>
+    <span dir="ltr">
+        
+            
+            
+            <span>Frisbee Flight Simulation and Throw Biomechanics</span>
+         
+    </span>
+
+</div>
+
+<div id="portal-personaltools-wrapper">
+
+<h5 class="hiddenStructure">Personal tools</h5>
+
+<ul id="portal-personaltools" class="visualInline">
+   
+
+    
+        <li>
+            <a href="http://biosport.ucdavis.edu/login_form">Log in</a>
+        </li>
+    
+
+</ul>
+</div>
+
+                    </td>
+                  </tr>
+                  <tr>
+                    
+                    <td id="portal-column-content">
+        
+                      
+                        <div class="">
+        
+                          
+
+
+
+        
+                          <div id="region-content" class="documentContent">
+        
+                            <span id="contentTopLeft"></span>
+                            <span id="contentTopRight"></span>
+                            
+                            <a name="documentContent"></a>
+        
+                            
+
+    <dl class="portalMessage info" id="kssPortalMessage" style="display:none">
+        <dt>Info</dt>
+        <dd></dd>
+    </dl>
+
+
+                            
+                            <div id="viewlet-above-content"></div>
+        
+                            
+                            
+                            <div id="content">
+                              
+                              
+    
+
+        
+
+        <h1 class="documentFirstHeading"> 
+            
+        <span class="" id="parent-fieldname-title">
+            Frisbee Flight Simulation and Throw Biomechanics
+        </span>
+    
+        </h1>
+
+        <div class="documentByLine" id="plone-document-byline">
+
+  
+
+  
+
+  
+
+  
+
+</div>
+
+
+
+
+        <p class="documentDescription">
+            
+        <span class="" id="parent-fieldname-description">
+            
+        </span>
+    
+        </p>
+
+        
+
+
+
+        
+
+        
+        <div class="" id="parent-fieldname-text">
+            <em>Research of Sarah
+Hummel</em>
+<span class="link-external"><a href="http://www.exn.ca/dailyplanet/view.asp?date=11/15/2002">High Flying
+ Frisbee Science</a></span>
+<p>&nbsp;</p>
+<p>Television story about frisbee research at UC Davis, filmed by Discovery 
+Channel of Canada</p>
+<p>
+  Aired November 15, 2002</p>
+<p><span class="link-external"><a href="http://wham-o.com/content/aboutfrisbee.html">Wham-O</a></span> claims 
+       that more frisbees are sold each year than baseballs, basketballs and
+    footballs    combined. Frisbee sports such as Ultimate Frisbee, Disc-Golf, 
+    and Guts have   gained world wide popularity. Ultimate and Disc Golf made
+    their first appearance   as medal sports at the 2001 World Games in Akita,
+    Japan.</p>
+<p>Two brief, somewhat  anecdotal, descriptions of the flight dynamics and 
+     aerodynamics for the informed  layman have been provided by Bloomfield
+   (1999)   and Schuurmans (1990). The  book by Johnson (1975) is a practitioners'
+   guide   including information  on  the history of the Frisbee, Frisbee
+games   and  throwing techniques.</p>
+<p>Until recently scientific, quantitative research on frisbee flight mechanics
+        was relatively  scarce. Stilley (1972) and Mitchell (1999) used wind
+      tunnel studies  to measure the aerodynamic lift and drag forces on
+the    Frisbee     as a function  of angle of attack, the angle between the
+velocity    vector     and the Frisbee  plane. More recently Potts and Crowther&nbsp;
+   (2000) have     also measured pitching and rolling moments. Our recent
+investigations   derived     a dynamic model for Frisbee flight (2000, 2002)
+and studied the  biomechanics      of the Frisbee throwing motion (2001).</p>
+<p> The end goal of our research is to model the flight of the frisbee and 
+       simulate the resulting trajectory for any set of initial release conditions. 
+       How a person might produce these release conditions (with the goal 
+of    someday    being able to throw further) is the aim of the Frisbee biomechanics 
+    study.</p>
+<hr>
+<h2>UC Davis Publications</h2>
+<h4> FRISBEE FLIGHT SIMULATION and THROW BIOMECHANICS</h4>
+<a href="http://biosport.ucdavis.edu/research-projects/frisbee-flight-simulation-and-throw-biomechanics/HummelThesis.pdf"> Master's Thesis, 1.95 MB PDF  File</a>
+<p>&nbsp;</p>
+<hr>
+<h4> FRISBEE FLIGHT SIMULATION</h4>
+<a href="http://biosport.ucdavis.edu/research-projects/frisbee-flight-simulation-and-throw-biomechanics/5thMACS_Frisbee_Simulation.pdf"> 5th MACS Frisbee 
+ Simulation       PDF  File</a>
+<p> <a href="http://biosport.ucdavis.edu/research-projects/frisbee-flight-simulation-and-throw-biomechanics/ADDENDUM_5thMACS.pdf"> ADDENDUM to 5thMACS PDF File</a></p>
+<p> This work focuses on developing a three dimensional mathematical model
+         of frisbee flight including the translational and rotational dynamics
+     of   the disc driven by the aerodynamic forces and moments. Thus, the
+ flight     equations  of motion for the Frisbee are derived. These equations
+ are written    in terms  of 10 aerodynamic coefficients whose magnitudes
+are unknown. These    coefficients  can be estimated using experimental flight
+  data. The experimental    flight data was collected by placing markers
+on   a frisbee and using a 3-D    motion analysis system to track the trajectory
+  of an 18 meter flight. With    known aerodynamic coefficients, the flight
+  trajectory can then be simulated    for any given set of initial conditions.</p>
+<hr>
+<h4> A MUSCULOSKELETAL MODEL FOR BACKHAND FRISBEE THROWS</h4>
+<a href="http://biosport.ucdavis.edu/research-projects/frisbee-flight-simulation-and-throw-biomechanics/8thISCSB_Frisbee_throws.pdf"> 8th ISCSB Frisbee 
+throws     PDF   File</a>
+<p> A kinematic and inverse dynamic analysis has been performed for backhand
+         Frisbee throws. High-speed video cameras were used to acquire joint
+   angle       data of the thrower in actual maximum range throws. A dynamic
+   model consisting       of 7 rigid bodies and 6 degrees of freedom was
+created    with AUTOLEV. Inverse      dynamics techniques were used to determine
+the    joint torques associated    with each degree of freedom. The initial
+flight    conditions of the Frisbee    were determined from the kinematics
+of the  throw  model at the point of  release.    The model can be used in
+the optimization    of muscular dynamics  to obtain   release conditions
+that result in maximum    range.</p>
+<p>&nbsp;</p>
+<hr>
+<h4>IDENTIFICATION OF FRISBEE AERODYNAMIC COEFFICIENTS USING FLIGHT DATA</h4>
+<a href="http://biosport.ucdavis.edu/research-projects/frisbee-flight-simulation-and-throw-biomechanics/ISEA_2002_frisbee_0_151.pdf">ISEA 2002 Frisbee
+Aerodynamics        PDF  File</a>
+<p>Simulation of a complete flight motion requires knowledge not only of
+initial  conditions, but also the dependence of all forces and moments experienced
+         by the Frisbee due to its dynamic motion through the air. The constants
+       relating the linear approximations of these forces and moments to
+angles,        velocities and angular velocities are called <em>aerodynamic
+coefficients</em>.&nbsp;       An approximate flight model requires a minimum
+of ten coefficients denoted        below by the symbol C;</p>
+<p>Lift force: F = (C<sub>lo</sub> + C<sub>la </sub>a)
+         Arv<sup>2</sup>/2</p>
+<p>Drag force:&nbsp; D =[C<sub>do</sub> + C<sub>da</sub>
+        (a - a<sub>o</sub>)<sup>2</sup>]
+         Arv<sup>2</sup>/2</p>
+<p>Rolling moment: L = [C<sub>Lr</sub>r + C<sub>Lp</sub>p] Adrv<sup>2</sup>/2</p>
+<p>Pitching moment: M =[C<sub>Mo</sub> + C<sub>Mq</sub>q + C<sub>Ma</sub>a] Adrv<sup>2</sup>/2</p>
+<p>Spindown moment: N = C<sub>Nr</sub>r Adrv<sup>2</sup>/2</p>
+<p>where&nbsp; F and D are the lift and drag forces; L, M, and N and p, q, 
+        and r the roll, pitch and yaw moments and angular velocities , respectively;
+         a<sub>o</sub> the angle of attack at
+zero    lift;     A and d the Frisbee planform area and diameter, respectively;
+ v  the speed     and r the atmospheric density.</p>
+<p>The Frisbee was marked with three reflective tape markers or emitting
+LEDs  in a triangular configuration on its upper surface. High speed (180
+Hz) video  kinematic data acquisition cameras and standard DLT techniques
+were used  to record the xyz locations of the three markers on the Frisbee
+during multiple  flights between 2 and 20 meters in length. This position
+data, with the dynamic  flight model (Hubbard and Hummel, 2000), allows the
+estimation of the aerodynamic  force and moment coefficients for a Frisbee
+in flight using the following  iterative algorithm;</p>
+<p>1. Guess 12 initial conditions&nbsp; (IC’s for 6 rigid body degrees of 
+        freedom and 6 associated velocities) for each of n experimental flights 
+      and  values for the 10 coefficients. This results in a total of 10 +
+ 12n    unknown  parameters to be estimated. The symbol <strong>p</strong> denotes the
+ vector    of parameters.  <br>
+                2. Simulate (integrate the ODE’s for) each flight given the 
+ parameter      vector  <strong>p</strong>. <br>
+
+                3. Use the simulated state variables to predict the xyz motion
+   of   the   markers.   <br>
+                4. Calculate the residual (defined as the sum of squared
+differences       between   the predicted and measured xyz marker motions
+for all times    over    all flights.   <br>
+                5. Using 82 other simulations calculate both the gradient 
+and   Hessian     of  the residual with respect to <strong>p</strong>. <br>
+                6. Determine a correction to the parameters <strong>p</strong> (both
+ initial     conditions    and coefficients) that reduces the residual using
+ the method     of Hubbard  and  Alaways (1989). <br>
+
+                7. Return to step 2 until the residual is below a desired 
+value.</p>
+<p>We found it necessary to use data from several flights containing trajectory
+         information over a wide range of a to yield accurate coefficient
+estimates.         Our results using short flights agree well with linearizations
+of the    measurements    of Potts and Crowther (2001) verifying that the
+method  is   indeed valid.  In fact, this technique is the only way we know
+to obtain   estimates  of the  coefficients CLr, CLp and CMq, since wind
+tunnel tests   for these  are impractical.</p>
+<hr width="100%">
+<h3>  REFERENCES:</h3>
+<p>Bloomfield, L.A., "The flight of the Frisbee", Sci. Am., April (1999),
+        132.</p>
+<p>Hubbard, M. and L. W. Alaways, Rapid and accurate estimation of release
+         conditions in the javelin throw,&nbsp; J. Biomechanics, 22,(6/7),
+ 583-595,        1989.</p>
+<p>Hubbard, M. and S. A. Hummel, Simulation of Frisbee flight, 5th Conference
+         on Mathematics and Computers in Sports, G. Cohen (Ed.), University
+  of   Technology,    Sidney, Australia, 14-16 June, 2000.</p>
+<p>Hummel, S. A. and M. Hubbard, A musculoskeletal model for backhand    
+ Frisbee throws, 8th International Symposium on Computer Simulation in Biomechanics, 
+        Politecnico di Milano, Milan, Italy, July 5-6, 2001.<br>
+               <br>
+               Hummel, S. A. and M. Hubbard, Identification of Frisbee aerodynamic 
+     coefficients using flight data,   4th International Sports Engineering
+   Conference,   Kyoto, Japan, Sept 3-6,  2002.</p>
+<p>Johnson, S. E. D., <em>Frisbee: A Practitioners Manual and Definitive Treatise</em>, 
+     Workman Publishing Company (1975).</p>
+<p>Mitchell, T.L., The aerodynamic response of airborne discs, MS Thesis,
+         University of Nevada. Las Vegas, 1999.</p>
+<p>Potts, J.R. and W.J. Crowther, The flow over a rotating disc-wing, , RAeS 
+        Aerodynamic Research Conf. Proceedings, London, UK April 2000.</p>
+<p> Schuurmans, M., "Flight of the Frisbee", New Scientist, July 28, 127
+(1727)  (1990), 37-40.</p>
+<p>Stilley G.D. Aerodynamic Analysis of the Self-Suspended Flare, RDTR No. 
+        199, NAD, Crane, IN, USA, 1972.</p>
+<hr>
+<h3>OTHER STUDIES:</h3>
+<p>
+            Curious to know what other types of frisbee related research
+is  going    on??</p>
+Below is a list of past and current projects I am aware of, if
+ you   are  doing   a project,&nbsp; <span class="link-mailto"><a href="https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=sarahanncecilia@hotmail.com" target="_blank">let me  know</a></span>
+<p>  and   I can add you
+ to the list.</p>
+<p>&nbsp;</p>
+<table>
+<tbody>
+<tr>
+<td colspan="3"><strong>Graduate Research:</strong><br></td>
+</tr>
+<tr>
+<td>Jon Potts (2003)<br></td>
+<td>University of Manchester, England<br></td>
+<td><span class="link-external"><a href="http://www.disc-wing.com/">http://www.disc-wing.com</a></span><br></td>
+</tr>
+<tr>
+<td>T.L.Mitchell (1999)<br></td>
+<td>University of Nevada, Las Vegas <br></td>
+<td>The aerodynamics response of airborne
+discs<br></td>
+</tr>
+<tr>
+<td>Philip W. Cotroneo (1980)<br></td>
+<td>California State University, Hayward<br></td>
+<td>Biomechanical and aerodynamical aspects of the backhand
+      <br>
+
+and sidearm frisbee-disc throws for distance<br></td>
+</tr>
+<tr>
+<td colspan="3"><strong>Undergraduate Research:</strong><br></td>
+</tr>
+<tr>
+<td>Brian Danowsky,<br>
+
+      		Babak Cohanim<br>
+      		- Senior Project (2002)<br></td>
+<td>Iowa State University</td>
+<td><span class="link-external"><a href="http://www.public.iastate.edu/~dano/Docs/Final%20Paper%20Brian.pdf">
+			Analysis of a flying disc</a></span></td>
+</tr>
+<tr>
+<td>Sebastian Olsson,<br>
+      		Carina Sjöström, <br>
+      		Martin Solli,<br>
+      		Christoffer Windahl<br>
+      		- Modeling Project (2002)<br></td>
+<td>University of Linköping, Sweden<br></td>
+<td><span class="link-external"><a href="http://www.student.itn.liu.se/~marso786/frisbee.htm">Frisbee Simulator</a></span><br></td>
+</tr>
+<tr>
+<td>Design Class (2002)<br></td>
+<td>Tennessee Tech, Dept of Mech. Eng.<br></td>
+<td>Design of a frisbee thrower<br></td>
+</tr>
+<tr>
+<td>Design Class (2002)<br></td>
+<td>Rensselaer Polytechnic Institute<br></td>
+<td><span class="link-external"><a href="http://www.rpi.edu/~millej5/ied/project.html">Design of a frisbee 
+    thrower</a></span><br></td>
+</tr>
+<tr>
+<td>M.J. Goupell,<br>
+
+          J.R. Schmidt (2001)<br></td>
+<td>Hope College, Dept of Mathematics<br></td>
+<td>Modeling the flight of a flying disc<br></td>
+</tr>
+<tr>
+<td colspan="3"><strong>Miscellaneous:</strong><br></td>
+</tr>
+<tr>
+<td>Theo Pozzy<br></td>
+<td><br></td>
+<td><span class="link-external"><a href="http://home.attbi.com/~tpozzy/prodrives.htm">http://home.attbi.com/~tpozzy/prodrives.htm</a></span><br></td>
+</tr>
+<tr>
+<td>Peter Lissaman<br></td>
+<td>University of Southern California<br></td>
+<td><br></td>
+</tr>
+<tr>
+<td>Alan Adler<br></td>
+<td>Superflight INC.<br></td>
+<td><span class="link-external"><a href="http://www.aerobie.com/aerobie.htm">http://www.aerobie.com/</a></span><span class="link-external"><a href="http://www.aerobie.com/aerobie.htm">aerobie.htm</a></span><br></td>
+</tr>
+<tr>
+<td>Greg Utrecht<br></td>
+<td><br></td>
+<td><span class="link-external"><a href="http://www.geocities.com/gregu10/diskphysics.html">http://www.geocities.com/gregu10/diskphysics.html</a></span><br></td>
+</tr>
+<tr>
+<td><br></td>
+<td>Newton's Apple<br></td>
+<td><span class="link-external"><a href="http://mansfieldct.org/schools/MMS/staff/hand/Flightfrisbee.htm#flightangmom">http://mansfieldct.org/schools/MMS/staff/hand/Flightfrisbee.htm#flightangmom.</a></span></td>
+</tr>
+<tr>
+<td><br></td>
+<td>Exploratorium<br></td>
+<td><span class="link-external"><a href="http://www.exploratorium.edu/sports/ask_us_sports_october.html">http://www.exploratorium.edu/sports/ask_us_sports_october.html</a></span><br></td>
+</tr>
+<tr>
+<td>Louis Bloomfield<br></td>
+<td><br></td>
+<td><span class="link-external"><a href="http://howthingswork.virginia.edu/balls_birdies_frisbees.html">
+http://howthingswork.virginia.edu/balls_birdies_frisbees.html</a></span><br></td>
+</tr>
+<tr>
+<td>Dr. Ralph D Lorenz<br></td>
+<td>University of Arizona<br></td>
+<td><span class="link-external"><a href="http://www.lpl.arizona.edu/~rlorenz/frisbee.html">http://www.lpl.arizona.edu/~rlorenz/frisbee.html </a></span><br></td>
+</tr>
+</tbody>
+</table>
+
+            
+        </div>
+    
+
+        <div class="relatedItems">
+    
+        
+            
+        
+    
+</div>
+    
+        
+
+<div class="visualClear"><!-- --></div>
+<div class="documentActions">
+    
+
+    <h5 class="hiddenStructure">Document Actions</h5>
+
+    <ul>
+    
+        <li id="document-action-sendto">
+            <a href="http://biosport.ucdavis.edu/research-projects/frisbee-flight-simulation-and-throw-biomechanics/frisbee-flight-simulation-and-throw-biomechanics/sendto_form" title="">Send this</a>
+        </li>
+    
+    
+        <li id="document-action-print">
+            <a href="javascript:this.print();" title="">Print this</a>
+        </li>
+    
+
+    </ul>
+    
+
+    
+
+</div>
+
+
+    
+
+                            </div>
+                            
+        
+                            
+                            
+                              
+    
+
+
+
+
+                            
+                            
+        
+                            <span id="contentBottomLeft"></span>
+                            <span id="contentBottomRight"></span>
+        
+                          </div>
+        
+                        </div>
+        
+                      
+                    </td>
+                    
+        
+                    
+                    <td id="portal-column-two">
+                      <div class="visualPadding">
+                        
+                          
+<div id="portletwrapper-706c6f6e652e7269676874636f6c756d6e0a636f6e746578740a2f506c6f6e650a6e657773" class="portletWrapper kssattr-portlethash-706c6f6e652e7269676874636f6c756d6e0a636f6e746578740a2f506c6f6e650a6e657773"><dl class="portlet portletNews" xmlns="http://www.w3.org/1999/xhtml">
+
+    <dt class="portletHeader">
+        <span class="portletTopLeft"></span>
+        <a href="http://biosport.ucdavis.edu/news" class="tile">News</a>
+        <span class="portletTopRight"></span>
+    </dt>
+
+    
+    <dd class="portletItem odd">
+
+        <a href="http://biosport.ucdavis.edu/news/nbc-bay-area-covers-safe-ski-jumps" class="tile" title="This article covers Mont&#39;s work on designing safer ski jumps.">
+            <img alt="" width="16" height="16" src="./Frisbee Flight Simulation and Throw Biomechanics — Sports Biomechanics Lab_files/newsitem_icon.gif" class="icon-News Item">
+            NBC Bay Area covers safe ski jumps
+            <span class="portletItemDetails">Mar 23, 2013</span>
+        </a>
+    </dd>
+    
+    
+    <dd class="portletItem even">
+
+        <a href="http://biosport.ucdavis.edu/news/cbc-news-article-on-luge-death" class="tile" title="Mont&#39;s work on the Vancouver luge accident is covered.">
+            <img alt="" width="16" height="16" src="./Frisbee Flight Simulation and Throw Biomechanics — Sports Biomechanics Lab_files/newsitem_icon.gif" class="icon-News Item">
+            CBC News Article on luge death
+            <span class="portletItemDetails">Mar 23, 2013</span>
+        </a>
+    </dd>
+    
+    
+    <dd class="portletItem odd">
+
+        <a href="http://biosport.ucdavis.edu/news/article-in-lake-tahoe-action" class="tile" title="We gave a talk at the UCD Center for the Environment about our research and this is a short article in Lake Tahoe Action that was written before the talk.">
+            <img alt="" width="16" height="16" src="./Frisbee Flight Simulation and Throw Biomechanics — Sports Biomechanics Lab_files/newsitem_icon.gif" class="icon-News Item">
+            Article in Lake Tahoe Action
+            <span class="portletItemDetails">May 15, 2011</span>
+        </a>
+    </dd>
+    
+
+    <dd class="portletFooter">
+        <span class="portletBottomLeft"></span>
+        <a href="http://biosport.ucdavis.edu/news">
+          More news…
+        </a>
+        <span class="portletBottomRight"></span>
+    </dd>
+    
+</dl>
+</div>
+
+<div id="portletwrapper-706c6f6e652e7269676874636f6c756d6e0a636f6e746578740a2f506c6f6e650a626c6f67726f6c6c" class="portletWrapper kssattr-portlethash-706c6f6e652e7269676874636f6c756d6e0a636f6e746578740a2f506c6f6e650a626c6f67726f6c6c"><dl class="portlet portletfeedmixer">
+
+    <dt class="portletHeader">
+        <span class="portletTopLeft"></span>
+        <span>Blogroll</span>
+        <span class="portletTopRight"></span>
+    </dt>
+
+    
+        <dd class="portletItem odd">
+
+            <a href="http://biosport.ucdavis.edu/blog/2012/11/21/press-via-catherine-hess" title="Press via Catherine Hess">
+                Press via Catherine Hess
+                <span class="portletItemDetails">Nov 21, 2012</span>
+            </a>
+        </dd>
+    
+    
+        <dd class="portletItem even">
+
+            <a href="http://biosport.ucdavis.edu/blog/2012/11/21/david-levinson-on-the-explorer-i-anomaly" title="David Levinson on The Explorer I Anomaly">
+                David Levinson on The Explorer I Anomaly
+                <span class="portletItemDetails">Nov 21, 2012</span>
+            </a>
+        </dd>
+    
+    
+        <dd class="portletItem odd">
+
+            <a href="http://biosport.ucdavis.edu/blog/2012/11/14/to-walk-or-to-run" title="To walk or to run">
+                To walk or to run
+                <span class="portletItemDetails">Nov 14, 2012</span>
+            </a>
+        </dd>
+    
+    
+        <dd class="portletItem even">
+
+            <a href="http://biosport.ucdavis.edu/blog/2012/11/07/my-talk-from-dscc-2012" title="My talk from DSCC 2012">
+                My talk from DSCC 2012
+                <span class="portletItemDetails">Nov 07, 2012</span>
+            </a>
+        </dd>
+    
+    
+        <dd class="portletItem odd">
+
+            <a href="https://gilbertgede.wordpress.com/2012/10/29/google-summer-of-code-mentor-summit-2012/" title="Google Summer of Code, Mentor Summit 2012">
+                Google Summer of Code, Mentor Summit 2012
+                <span class="portletItemDetails">Oct 29, 2012</span>
+            </a>
+        </dd>
+    
+    
+    <dd class="portletFooter">
+      <a href="http://biosport.ucdavis.edu/++contextportlets++plone.rightcolumn/blogroll/full_feed" class="tile">More…</a>
+        <span class="portletBottomLeft"></span>
+        <span class="portletBottomRight"></span>
+    </dd>
+
+</dl>
+</div>
+
+<div id="portletwrapper-706c6f6e652e7269676874636f6c756d6e0a636f6e746578740a2f506c6f6e650a6c6162656c5f6c6f675f696e" class="portletWrapper kssattr-portlethash-706c6f6e652e7269676874636f6c756d6e0a636f6e746578740a2f506c6f6e650a6c6162656c5f6c6f675f696e">
+
+<dl class="portlet portletLogin">
+
+    <dt class="portletHeader">
+        <span class="portletTopLeft"></span>
+        <a href="http://biosport.ucdavis.edu/login_form" class="tile">Log in</a>
+        <span class="portletTopRight"></span>
+    </dt>
+
+    <dd class="portletItem odd">
+        <form action="http://biosport.ucdavis.edu/login_form" id="loginform" method="post">
+
+            <div>
+                <input type="hidden" name="form.submitted" value="1">
+                <input type="hidden" name="came_from" value="http://biosport.ucdavis.edu/research-projects/frisbee-flight-simulation-and-throw-biomechanics/frisbee-flight-simulation-and-throw-biomechanics">
+                <input type="hidden" name="js_enabled" id="js_enabled" value="0">
+                <input type="hidden" name="cookies_enabled" id="cookies_enabled" value="">
+                <input type="hidden" name="login_name" id="login_name" value="">
+                <input type="hidden" name="pwd_empty" id="pwd_empty" value="0">
+            </div>
+
+            <div class="field">
+                <label for="__ac_name">Login Name</label>
+                <br>
+                <input type="text" size="10" alt="Login Name" name="__ac_name" value="" id="__ac_name">
+            </div>
+
+            <div class="field">
+                <label for="__ac_password">Password</label>
+                <br>
+                <input type="password" size="10" alt="Password" name="__ac_password" id="__ac_password">
+            </div>
+
+            <div class="cookiesMessage portalMessage" style="display:none">
+                Cookies are not enabled. You must enable cookies before you
+                can log in.
+            </div>
+
+            <div class="formControls">
+
+                <input class="context" type="submit" name="submit" value="Log in" alt="Log in">
+            </div>
+        </form>
+    </dd>
+
+    <dd class="portletItem even">
+        <a href="http://biosport.ucdavis.edu/mail_password_form" class="tile">
+           <img src="./Frisbee Flight Simulation and Throw Biomechanics — Sports Biomechanics Lab_files/info_icon.gif" alt="" title="" height="16" width="16">
+           Forgot your password?
+        </a>
+    </dd>
+
+    
+</dl>
+
+
+
+
+</div>
+
+
+
+
+                        
+                        &nbsp;
+                      </div>
+                    </td>
+                    
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      
+
+      <div class="visualClear" id="clear-space-before-footer"><!-- --></div>
+      
+      
+
+      
+
+        <ul id="portal-siteactions">
+
+    <li id="siteaction-sitemap"><a href="http://biosport.ucdavis.edu/sitemap" accesskey="3" title="Site Map">Site Map</a></li>
+    <li id="siteaction-accessibility"><a href="http://biosport.ucdavis.edu/accessibility-info" accesskey="0" title="Accessibility">Accessibility</a></li>
+    <li id="siteaction-contact"><a href="http://biosport.ucdavis.edu/contact-info" accesskey="9" title="Contact">Contact</a></li>
+
+</ul>
+
+<div id="portal-footer">
+        <!--removed the default copyright-->
+	<!--<span tal:replace="structure here/ucdploneskin_properties/copyright" />-->
+
+	<br>
+
+	<span il8n:translate="box_last_modified">
+		<b>Last updated: </b>
+	</span>
+	Dec 18, 2009
+</div>
+
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-15966419-2']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+<script type="text/javascript" src="./Frisbee Flight Simulation and Throw Biomechanics — Sports Biomechanics Lab_files/MathJax.js">
+</script>
+
+      
+
+      <div class="visualClear"><!-- --></div>
+    </div>
+<div id="kss-spinner"><img alt="" src="./Frisbee Flight Simulation and Throw Biomechanics — Sports Biomechanics Lab_files/spinner.gif"></div>
+
+
+
+
+<span id="buffer-extension-hover-button" style="display: none;position: absolute;z-index: 8675309;width: 100px;height: 25px;background-image: url(chrome-extension://noojglkidnpfjbincgijbaiedldjfbhh/data/shared/img/buffer-hover-icon@1x.png);background-size: 100px 25px;opacity: 0.9;cursor: pointer;"></span></body></html>
