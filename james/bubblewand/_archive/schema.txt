@@ -1,0 +1,26 @@
+// pick up wand
+// dip in solution ???
+// start hand wave
+	// check if velocity threshold is met
+	// if yes, start bubble creation
+		// velocity * wave duration = bubble size ( to a certain maximum)
+		// spawn a bubble
+			//start spawning another bubble if wave continues
+
+
+-- waving too fast doesn't make good bubbles
+
+bubbles
+- initial momentum in wave direction
+- tiny bit of gravity
+- some rotational velocity
+- chance to pop randomly after a minimum duration of existence
+- wind speed & direction in scene?
+
+
+
+
+random quotes / ideas --
+"The part of the bubble wand game that fascinated me most was the co ordination of holding the wand in one hand whilst maintaining the vessel upright, otherwise the liquid spills out, this took several attempts for all sections of this process to slot into place. Right side/left side of brain usage."
+
+min velocity threshold --> start interval --> while above velocity threshold, spawn bubbles --> stop spawning bubbles below min velocity threshold

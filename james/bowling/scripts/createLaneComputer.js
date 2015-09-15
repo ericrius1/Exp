@@ -20,11 +20,11 @@ var laneComputerModel = 'http://hifi-public.s3.amazonaws.com/james/bowling/model
 var scriptURL = "http://localhost:8080/scripts/laneComputer.js?" + randInt(0, 10000);
 
 //create the wand in front of the avatar
-var center = Vec3.sum(MyAvatar.position, Vec3.multiply(3, Quat.getFront(Camera.getOrientation())));
+var center = Vec3.sum(MyAvatar.position, Vec3.multiply(1, Quat.getFront(Camera.getOrientation())));
 
-var wand = Entities.addEntity({
-    type: "Model",
-    modelURL: laneComputerModel,
+var laneComputer = Entities.addEntity({
+    type: "Box",
+  //  modelURL: laneComputerModel,
     position: center,
     dimensions: {
         x: 1,
@@ -32,11 +32,12 @@ var wand = Entities.addEntity({
         z: 1
     },
     collisionsWillMove: false,
-    script: scriptURL
+    script: scriptURL,
+    visible:false
 });
 
 function cleanup() {
-    Entities.deleteEntity(wand);
+    Entities.deleteEntity(laneComputer);
 }
 
 
