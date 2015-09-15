@@ -44,14 +44,39 @@
 
         },
 
-        //while held
 
-        this.setAngularVelocity: function() {
 
-            Entities.editEntity(_t.entityID)
-            angularVelocity: Controller.getSpatialControlRawAngularVelocity(hands.leftHand.tip),
+        this.correctFlightTrajectory:function(dt){
 
-        }
+            var vectorT;
+            var vectorV;
+
+
+            //vectorV = velocity
+
+            var zAxis = {
+                x:0,
+                y:0,
+                z:1
+            }
+
+            var normalT=Vec3.normalize(vectorT);
+            var normalV=Vec3.normalize(vectorV)
+
+            var dotTV = Vec3.dot(normalT,normalV);
+
+            var alpha = Math.acos(dotTV);
+            var axis = Vec3.cross(normalT,normalV)
+
+            var angleAxis = Quat.angleAxis(alpha,axis)
+        },
+
+        // this.setAngularVelocity: function() {
+
+        //     Entities.editEntity(_t.entityID)
+        //     angularVelocity: Controller.getSpatialControlRawAngularVelocity(hands.leftHand.tip),
+
+        // }
 
             this.collisionWithEntity: function(myID, otherID, collision) {
             var objectType = getEntityCustomData('jbp_object_type', otherID);
