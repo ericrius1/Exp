@@ -61,14 +61,14 @@
             }
 
             var normalT=Vec3.normalize(vectorT);
-            var normalV=Vec3.normalize(vectorV)
+            var normalV=Vec3.normalize(vectorV);
 
             var dotTV = Vec3.dot(normalT,normalV);
 
             var alpha = Math.acos(dotTV);
-            var axis = Vec3.cross(normalT,normalV)
+            var axis = Vec3.cross(normalT,normalV);
 
-            var angleAxis = Quat.angleAxis(alpha,axis)
+            var angleAxis = Quat.angleAxis(alpha,axis);
         },
 
         // this.setAngularVelocity: function() {
