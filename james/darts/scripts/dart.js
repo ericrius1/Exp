@@ -26,7 +26,7 @@
 
     Dart.prototype = {
         properties: null,
-        this.preload: function(entityID) {
+        preload: function(entityID) {
             //  print('bubble preload')
             _t.entityID = entityID;
             properties = Entities.getEntityProperties(entityID);
@@ -38,15 +38,13 @@
             // Script.update.connect(_t.internalUpdate);
         },
 
-        this.internalUpdate: function() {
+        update: function() {
             // we want the position at unload but for some reason it keeps getting set to 0,0,0 -- so i just exclude that location.  sorry origin bubbles.
             _t.properties = Entities.getEntityProperties(_t.entityID)
 
         },
 
-
-
-        this.correctFlightTrajectory:function(dt){
+        correctFlightTrajectory: function(dt) {
 
             var vectorT;
             var vectorV;
@@ -55,20 +53,20 @@
             //vectorV = velocity
 
             var zAxis = {
-                x:0,
-                y:0,
-                z:1
+                x: 0,
+                y: 0,
+                z: 1
             }
 
-            var normalT=Vec3.normalize(vectorT);
-            var normalV=Vec3.normalize(vectorV);
+            var normalT = Vec3.normalize(vectorT);
+            var normalV = Vec3.normalize(vectorV);
 
-            var dotTV = Vec3.dot(normalT,normalV);
+            var dotTV = Vec3.dot(normalT, normalV);
 
             var alpha = Math.acos(dotTV);
-            var axis = Vec3.cross(normalT,normalV);
+            var axis = Vec3.cross(normalT, normalV);
 
-            var angleAxis = Quat.angleAxis(alpha,axis);
+            var angleAxis = Quat.angleAxis(alpha, axis);
         },
 
         // this.setAngularVelocity: function() {
@@ -78,7 +76,7 @@
 
         // }
 
-            this.collisionWithEntity: function(myID, otherID, collision) {
+        collisionWithEntity: function(myID, otherID, collision) {
             var objectType = getEntityCustomData('jbp_object_type', otherID);
             if (objectType === 'dartBoard') {
                 print('a dart hit the board');
@@ -100,8 +98,8 @@
 
         },
 
-        this.unload: function(entityID) {
-            //Script.update.disconnect(this.internalUpdate);
+        unload: function(entityID) {
+            Script.update.disconnect(this.update);
 
         }
     }

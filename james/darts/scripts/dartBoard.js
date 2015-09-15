@@ -13,7 +13,6 @@
     // Script.include("../../utilities.js");
     // Script.include("../../libraries/utils.js");
 
-
     Script.include("https://raw.githubusercontent.com/highfidelity/hifi/master/examples/utilities.js");
     Script.include("https://raw.githubusercontent.com/highfidelity/hifi/master/examples/libraries/utils.js");
 
@@ -26,7 +25,7 @@
 
     DartBoard.prototype = {
         properties: null,
-        this.preload: function(entityID) {
+        preload: function(entityID) {
             //  print('bubble preload')
             _t.entityID = entityID;
             properties = Entities.getEntityProperties(entityID);
@@ -38,15 +37,15 @@
             // Script.update.connect(_t.internalUpdate);
         },
 
-        this.internalUpdate: function() {
+        internalUpdate: function() {
             // we want the position at unload but for some reason it keeps getting set to 0,0,0 -- so i just exclude that location.  sorry origin bubbles.
             _t.properties = Entities.getEntityProperties(_t.entityID)
 
         },
 
-        this.collisionWithEntity: function(myID, otherID, collision) {},
+        collisionWithEntity: function(myID, otherID, collision) {},
 
-        this.unload: function(entityID) {
+        unload: function(entityID) {
             Script.update.disconnect(this.internalUpdate);
 
         }
