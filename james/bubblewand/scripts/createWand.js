@@ -1,6 +1,7 @@
 //  createWand.js
 //  part of bubblewand
 //
+//  Script Type: Entity Spawner
 //  Created by James B. Pollack @imgntn -- 09/03/2015
 //  Copyright 2015 High Fidelity, Inc.
 //
@@ -10,8 +11,8 @@
 
 
 
-// Script.include("../../utilities.js");
-// Script.include("../../libraries/utils.js");
+Script.include("../../utilities.js");
+Script.include("../../libraries/utils.js");
 
 Script.include("http://hifi-public.s3.amazonaws.com/scripts/utilities.js");
 Script.include("http://hifi-public.s3.amazonaws.com/scripts/libraries/utils.js");
