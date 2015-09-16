@@ -12,14 +12,11 @@
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 
 (function() {
-    // Script.include("../../utilities.js");
-    // Script.include("../../libraries/utils.js");
-
-Script.include("http://hifi-public.s3.amazonaws.com/scripts/utilities.js");
-Script.include("http://hifi-public.s3.amazonaws.com/scripts/libraries/utils.js");
+    Script.include("https://raw.githubusercontent.com/highfidelity/hifi/master/examples/utilities.js");
+    Script.include("https://raw.githubusercontent.com/highfidelity/hifi/master/examples/libraries/utils.js");
 
     var POP_SOUNDS = [
-        SoundCache.getSound("http://hifi-public.s3.amazonaws.com/james/bubblewand/sounds/pop0.wav") ,
+        SoundCache.getSound("http://hifi-public.s3.amazonaws.com/james/bubblewand/sounds/pop0.wav"),
         SoundCache.getSound("http://hifi-public.s3.amazonaws.com/james/bubblewand/sounds/pop1.wav"),
         SoundCache.getSound("http://hifi-public.s3.amazonaws.com/james/bubblewand/sounds/pop2.wav"),
         SoundCache.getSound("http://hifi-public.s3.amazonaws.com/james/bubblewand/sounds/pop3.wav")
@@ -31,30 +28,26 @@ Script.include("http://hifi-public.s3.amazonaws.com/scripts/libraries/utils.js")
         blue: 255,
     }
 
-    var _t = this;
-
     var properties;
     var checkPositionInterval;
     this.preload = function(entityID) {
         //  print('bubble preload')
-        _t.entityID = entityID;
-        properties = Entities.getEntityProperties(entityID);
-        // _t.loadShader(entityID);
-        Script.update.connect(_t.internalUpdate);
-    };
+        // var _t = this;
+        // _t.entityID = entityID;
+        // properties = Entities.getEntityProperties(entityID);
+        // checkPositionInterval = Script.setInterval(function() {
+        //     properties = Entities.getEntityProperties(entityID);
+        //   //  print('properties AT CHECK::' + JSON.stringify(properties));
+        // }, 200);
 
-    this.internalUpdate = function() {
-        // we want the position at unload but for some reason it keeps getting set to 0,0,0 -- so i just exclude that location.  sorry origin bubbles.
-        var tmpProperties = Entities.getEntityProperties(_t.entityID);
-        if (tmpProperties.position.x !== 0 && tmpProperties.position.y !== 0 && tmpProperties.position.z !== 0) {
-            properties = tmpProperties;
-        }
-    }
+        // _t.loadShader(entityID);
+    };
 
     this.loadShader = function(entityID) {
         setEntityUserData(entityID, {
             "ProceduralEntity": {
-                "shaderUrl": "http://hifi-public.s3.amazonaws.com/james/bubblewand/shaders/quora.fs",
+                "shaderUrl": "http://localhost:8080/shaders/bubble.fs?" + randInt(0, 10000),
+                // "shaderUrl": "https://s3.amazonaws.com/Oculus/shadertoys/quora.fs?"+ randInt(0, 10000),       
             }
         })
     };
@@ -66,20 +59,29 @@ Script.include("http://hifi-public.s3.amazonaws.com/scripts/libraries/utils.js")
 
     this.collisionWithEntity = function(myID, otherID, collision) {
         //Entities.deleteEntity(myID);
+        // Entities.deleteEntity(otherID);
     };
 
-    this.unload = function(entityID) {
-        Script.update.disconnect(this.internalUpdate);
-        var position = properties.position;
-        _t.endOfBubble(position);
-        //  print('UNLOAD PROPS' + JSON.stringify(position));
+    // this.beforeUnload = function(entityID) {
+    //     print('BEFORE UNLOAD:' + entityID);
+    //     var properties = Entities.getEntityProperties(entityID);
+    //     var position = properties.position;
+    //     print('BEFOREUNLOAD PROPS' + JSON.stringify(position));
 
+    // };
+
+    this.unload = function(entityID) {
+        // Script.clearInterval(checkPositionInterval);
+        // var position = properties.position;
+        // this.endOfBubble(position);
+        var properties = Entities.getEntityProperties(entityID)
+        var position = properties.position;
+        //print('UNLOAD PROPS' + JSON.stringify(position));
     };
 
     this.endOfBubble = function(position) {
-
-        this.createBurstParticles(position);
         this.burstBubbleSound(position);
+        this.createBurstParticles(position);
     }
 
     this.burstBubbleSound = function(position) {
@@ -111,7 +113,7 @@ Script.include("http://hifi-public.s3.amazonaws.com/scripts/libraries/utils.js")
             animationSettings: animationSettings,
             animationIsPlaying: true,
             position: position,
-            lifetime: 0.2,
+            lifetime: 1.0,
             dimensions: {
                 x: 1,
                 y: 1,
@@ -119,25 +121,22 @@ Script.include("http://hifi-public.s3.amazonaws.com/scripts/libraries/utils.js")
             },
             emitVelocity: {
                 x: 0,
-                y: 0,
+                y: -1,
                 z: 0
             },
             velocitySpread: {
-                x: 0.45,
-                y: 0.45,
-                z: 0.45
+                x: 1,
+                y: 0,
+                z: 1
             },
             emitAcceleration: {
                 x: 0,
-                y: -0.1,
+                y: -1,
                 z: 0
             },
-            alphaStart: 1.0,
-            alpha: 1,
-            alphaFinish: 0.0,
             textures: "https://raw.githubusercontent.com/ericrius1/SantasLair/santa/assets/smokeparticle.png",
             color: BUBBLE_PARTICLE_COLOR,
-            lifespan: 0.2,
+            lifespan: 1.0,
             visible: true,
             locked: false
         });

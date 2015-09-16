@@ -11,19 +11,24 @@
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 
+'use strict'
 function convertRange(value, r1, r2) {
     return (value - r1[0]) * (r2[1] - r2[0]) / (r1[1] - r1[0]) + r2[0];
 }
 
 (function() {
-    Script.include("https://raw.githubusercontent.com/highfidelity/hifi/master/examples/utilities.js");
-    Script.include("https://raw.githubusercontent.com/highfidelity/hifi/master/examples/libraries/utils.js");
+
+    Script.include("http://hifi-public.s3.amazonaws.com/scripts/utilities.js");
+    Script.include("http://hifi-public.s3.amazonaws.com/scripts/libraries/utils.js");
+
+    // Script.include("../../utilities.js");
+    // Script.include("../../libraries/utils.js");
+
 
     var bubbleModel = "http://hifi-public.s3.amazonaws.com/james/bubblewand/models/bubble/bubble.fbx";
-    var popSound = SoundCache.getSound("http://hifi-public.s3.amazonaws.com/james/bubblewand/sounds/pop.wav");
     var bubbleScript = 'http://hifi-public.s3.amazonaws.com/james/bubblewand/scripts/bubble.js?' + randInt(1, 10000);
-    //for local testing
-   // var bubbleScript = 'http://localhost:8080/scripts/bubble.js?' + randInt(1, 10000);
+
+    // var bubbleScript = 'http://localhost:8080/bubble.js?' + randInt(1, 10000); //for local testing
 
     var POP_SOUNDS = [
         SoundCache.getSound("http://hifi-public.s3.amazonaws.com/james/bubblewand/sounds/pop0.wav"),
@@ -112,7 +117,7 @@ function convertRange(value, r1, r2) {
 
     var BUBBLE_GRAVITY = {
         x: 0,
-        y: -0.05,
+        y: -0.1,
         z: 0
     }
 
@@ -128,6 +133,9 @@ function convertRange(value, r1, r2) {
         // print('PRELOAD')
         this.entityID = entityID;
         this.properties = Entities.getEntityProperties(this.entityID);
+        BubbleWand.originalProperties = this.properties;
+        BubbleWand.init();
+        print('initial position' + JSON.stringify(BubbleWand.originalProperties.position));
     }
 
     this.unload = function(entityID) {
@@ -151,144 +159,204 @@ function convertRange(value, r1, r2) {
 
     var BubbleWand = {
         bubbles: [],
+        timeSinceMoved: 0,
+        resetAtTime: 2,
         currentBubble: null,
-        update: function() {
-            BubbleWand.internalUpdate();
+        atOriginalLocation: true,
+        update: function(dt) {
+            BubbleWand.internalUpdate(dt);
         },
-        internalUpdate: function() {
+        internalUpdate: function(dt) {
+
+
+
             var _t = this;
+
+
+            var GRAB_USER_DATA_KEY = "grabKey";
+            var defaultGrabData = {
+                activated: false,
+                avatarId: null
+            };
+
+            var grabData = getEntityCustomData(GRAB_USER_DATA_KEY, entityID, defaultGrabData);
+            if (grabData.activated && grabData.avatarId == MyAvatar.sessionUUID) {
+
+                // remember we're being grabbed so we can detect being released
+                _t.beingGrabbed = true;
+
+                // print out that we're being grabbed
+                print("I'm being grabbed...");
+
+            } else if (_t.beingGrabbed) {
+
+                // if we are not being grabbed, and we previously were, then we were just released, remember that
+                // and print out a message
+                _t.beingGrabbed = false;
+                print("I'm was released...");
+            }
             //get the current position of the wand
-            var properties = Entities.getEntityProperties(wandEntity.entityID);
-            var wandPosition = properties.position;
-            //if the wand is in the gust detector, activate mouth mode and change the overlay color
-            var hitTargetWithWand = findSphereSphereHit(wandPosition, HAND_SIZE / 2, getGustDetectorPosition(), TARGET_SIZE / 2)
+           //  var properties = Entities.getEntityProperties(wandEntity.entityID);
+           //  var wandPosition = properties.position;
+           //  //if the wand is in the gust detector, activate mouth mode and change the overlay color
+           //  var hitTargetWithWand = findSphereSphereHit(wandPosition, HAND_SIZE / 2, getGustDetectorPosition(), TARGET_SIZE / 2)
 
-            var velocity = Vec3.subtract(wandPosition, BubbleWand.lastPosition)
-            var velocityStrength = Vec3.length(velocity) * 100;
+           //  var velocity = Vec3.subtract(wandPosition, _t.lastPosition)
 
-            var mouthMode;
+           // // print('VELOCITY:'+JSON.stringify(velocity))
+           //  var velocityStrength = Vec3.length(velocity) * 100;
 
-            if (hitTargetWithWand) {
-                mouthMode = true;
-            } else {
-                mouthMode = false;
-            }
+           //  var upVector = Quat.getUp(properties.rotation);
+           //  var frontVector = Quat.getFront(properties.rotation);
+           //  var upOffset = Vec3.multiply(upVector, 0.2);
+           //  var wandTipPosition = Vec3.sum(wandPosition, upOffset);
+           //  _t.wandTipPosition = wandTipPosition;
+
+           //  var mouthMode;
+
+           //  if (hitTargetWithWand) {
+           //      mouthMode = true;
+           //  } else {
+           //      mouthMode = false;
+           //  }
+           //  //print('velocityStrength'+velocityStrength)
+
+
+           //  //we want to reset the object to its original position if its been a while since it has moved
+           //  // print('wand position ' + JSON.stringify(wandPosition))
+           //  // print('last position ' + JSON.stringify(_t.lastPosition))
+           //  // print('at original location? ' + _t.atOriginalLocation)
+
+           //  if (velocityStrength < 0.01) {
+           //      velocityStrength = 0
+           //  }
+           //  var isMoving;
+           //  if (velocityStrength === 0) {
+           //      isMoving = false;
+           //  } else {
+           //      isMoving = true;
+           //  }
+
+
+           //  if (isMoving === true) {
+           //      // print('MOVING')
+           //      // print('velocityStrength ' + velocityStrength)
+
+           //      _t.timeSinceMoved = 0;
+           //      _t.atOriginalLocation = false;
+           //  } else {
+           //      _t.timeSinceMoved = _t.timeSinceMoved + dt;
+           //  }
+
+           //  if (isMoving === false && _t.atOriginalLocation === false) {
+           //      if (_t.timeSinceMoved > _t.resetAtTime) {
+           //          _t.timeSinceMoved = 0;
+           //          _t.returnToOriginalLocation();
+
+           //      }
+           //  }
 
 
 
-            //debug overlays for mouth mode
-            if (overlays) {
-                var leftHandPos = MyAvatar.getLeftPalmPosition();
-                var rightHandPos = MyAvatar.getRightPalmPosition();
+           //  //debug overlays for mouth mode
+           //  if (overlays) {
+           //      var leftHandPos = MyAvatar.getLeftPalmPosition();
+           //      var rightHandPos = MyAvatar.getRightPalmPosition();
 
-                Overlays.editOverlay(leftHand, {
-                    position: leftHandPos
-                });
-                Overlays.editOverlay(rightHand, {
-                    position: rightHandPos
-                });
-            }
+           //      Overlays.editOverlay(leftHand, {
+           //          position: leftHandPos
+           //      });
+           //      Overlays.editOverlay(rightHand, {
+           //          position: rightHandPos
+           //      });
+           //  }
 
-            if (mouthMode === true && overlays === true) {
-                Overlays.editOverlay(gustZoneOverlay, {
-                    position: getGustDetectorPosition(),
-                    color: TARGET_COLOR_HIT
-                })
-            } else if (overlays) {
-                Overlays.editOverlay(gustZoneOverlay, {
-                    position: getGustDetectorPosition(),
-                    color: TARGET_COLOR
-                })
-            }
+           //  if (mouthMode === true && overlays === true) {
+           //      Overlays.editOverlay(gustZoneOverlay, {
+           //          position: getGustDetectorPosition(),
+           //          color: TARGET_COLOR_HIT
+           //      })
+           //  } else if (overlays) {
+           //      Overlays.editOverlay(gustZoneOverlay, {
+           //          position: getGustDetectorPosition(),
+           //          color: TARGET_COLOR
+           //      })
+           //  }
 
-            var volumeLevel = MyAvatar.audioAverageLoudness;
-            //volume numbers are pretty large, so lets scale them down. 
-            var convertedVolume = convertRange(volumeLevel, [0, 5000], [0, 10]);
+           //  var volumeLevel = MyAvatar.audioAverageLoudness;
+           //  //volume numbers are pretty large, so lets scale them down. 
+           //  var convertedVolume = convertRange(volumeLevel, [0, 5000], [0, 10]);
 
-            // default is 'wave mode', where waving the object around grows the bubbles
+           //  // default is 'wave mode', where waving the object around grows the bubbles
 
-            //store the last position of the wand for velocity calculations
-            _t.lastPosition = wandPosition;
+           //  //store the last position of the wand for velocity calculations
+           //  _t.lastPosition = wandPosition;
 
-            // velocity numbers are pretty small, so lets make them a bit bigger
-            var velocityStrength = Vec3.length(velocity) * 100;
 
-            if (velocityStrength > 10) {
-                velocityStrength = 10
-            }
 
-            //actually grow the bubble
-            var dimensions = Entities.getEntityProperties(_t.currentBubble).dimensions;
-            var avatarFront = Quat.getFront(MyAvatar.orientation);
-            var forwardOffset = Vec3.multiply(avatarFront, 0.1);
+           //  if (velocityStrength > 10) {
+           //      velocityStrength = 10
+           //  }
 
-            if (velocityStrength > 1 || convertedVolume > 1) {
+           //  //actually grow the bubble
+           //  var dimensions = Entities.getEntityProperties(_t.currentBubble).dimensions;
+           //  var avatarFront = Quat.getFront(MyAvatar.orientation);
+           //  var forwardOffset = Vec3.multiply(avatarFront, 0.1);
 
-                //add some variation in bubble sizes
-                var bubbleSize = randInt(1, 5);
-                bubbleSize = bubbleSize / 10;
+           //  if (velocityStrength > 1 || convertedVolume > 1) {
 
-                //release the bubble if its dimensions are bigger than the bubble size
-                if (dimensions.x > bubbleSize) {
-                    //bubbles pop after existing for a bit -- so set a random lifetime
-                    var lifetime = randInt(3, 8);
+           //      //add some variation in bubble sizes
+           //      var bubbleSize = randInt(1, 5);
+           //      bubbleSize = bubbleSize / 50;
 
-                    // var angularVelocity = Controller.getSpatialControlRawAngularVelocity(hands.leftHand.tip);
+           //      //release the bubble if its dimensions are bigger than the bubble size
+           //      if (dimensions.x > bubbleSize) {
+           //          //bubbles pop after existing for a bit -- so set a random lifetime
+           //          var lifetime = randInt(3, 8);
 
-                    Entities.editEntity(_t.currentBubble, {
-                        // collisionsWillMove:true,
-                        // ignoreForCollisions:false,
-                        velocity: mouthMode ? avatarFront : velocity,
-                        //  angularVelocity: Controller.getSpatialControlRawAngularVelocity(hands.leftHand.tip),
-                        lifetime: lifetime
-                    });
+           //          // var angularVelocity = Controller.getSpatialControlRawAngularVelocity(hands.leftHand.tip);
 
-                    _t.lastBubble = _t.currentBubble;
-                    //release the bubble -- when we create a new bubble, it will carry on and this update loop will affect the new bubble
-                    BubbleWand.spawnBubble();
+           //          Entities.editEntity(_t.currentBubble, {
+           //              // collisionsWillMove:true,
+           //              // ignoreForCollisions:false,
+           //              velocity: mouthMode ? avatarFront : velocity,
+           //              //  angularVelocity: Controller.getSpatialControlRawAngularVelocity(hands.leftHand.tip),
+           //              lifetime: lifetime
+           //          });
 
-                    return
-                } else {
-                    if (mouthMode) {
-                        dimensions.x += 0.015 * convertedVolume;
-                        dimensions.y += 0.015 * convertedVolume;
-                        dimensions.z += 0.015 * convertedVolume;
+           //          _t.lastBubble = _t.currentBubble;
+           //          //release the bubble -- when we create a new bubble, it will carry on and this update loop will affect the new bubble
+           //          BubbleWand.spawnBubble();
 
-                    } else {
-                        dimensions.x += 0.015 * velocityStrength;
-                        dimensions.y += 0.015 * velocityStrength;
-                        dimensions.z += 0.015 * velocityStrength;
-                    }
+           //          return
+           //      } else {
+           //          if (mouthMode) {
+           //              dimensions.x += 0.005 * convertedVolume;
+           //              dimensions.y += 0.005 * convertedVolume;
+           //              dimensions.z += 0.005 * convertedVolume;
 
-                }
-            } else {
-                if (dimensions.x >= 0.02) {
-                    dimensions.x -= 0.001;
-                    dimensions.y -= 0.001;
-                    dimensions.z -= 0.001;
-                }
+           //          } else {
+           //              dimensions.x += 0.005 * velocityStrength;
+           //              dimensions.y += 0.005 * velocityStrength;
+           //              dimensions.z += 0.005 * velocityStrength;
+           //          }
 
-            }
+           //      }
+           //  } else {
+           //      if (dimensions.x >= 0.02) {
+           //          dimensions.x -= 0.001;
+           //          dimensions.y -= 0.001;
+           //          dimensions.z -= 0.001;
+           //      }
 
-            //update the bubble to stay with the wand tip
-            Entities.editEntity(_t.currentBubble, {
-                position: _t.wandTipPosition,
-                dimensions: dimensions
-            });
+           //  }
 
-        },
-        checkForEntitiesNearBubble: function() {
-            var _t = this;
-            var arrayFound = Entities.findEntities(_t.wandTipPosition, 1);
-            var foundLength = arrayFound.length;
-            print('found length:::' + foundLength);
-        },
-        enableCollisionsForBubble: function(bubble) {
-            print('enable bubble collisions:' + bubble)
-            Entities.editEntity(bubble, {
-                collisionsWillMove: true,
-                ignoreForCollisions: false,
-            })
+           //  //update the bubble to stay with the wand tip
+           //  Entities.editEntity(_t.currentBubble, {
+           //      position: _t.wandTipPosition,
+           //      dimensions: dimensions
+           //  });
+
         },
         spawnBubble: function() {
             var _t = this;
@@ -299,15 +367,12 @@ function convertRange(value, r1, r2) {
             var wandPosition = properties.position;
             var upVector = Quat.getUp(properties.rotation);
             var frontVector = Quat.getFront(properties.rotation);
-            var upOffset = Vec3.multiply(upVector, 0.4);
-            // var forwardOffset = Vec3.multiply(frontVector, 0.1);
-            // var offsetVector = Vec3.sum(upOffset, forwardOffset);
-            // var wandTipPosition = Vec3.sum(wandPosition, offsetVector);
+            var upOffset = Vec3.multiply(upVector, 0.2);
             var wandTipPosition = Vec3.sum(wandPosition, upOffset);
             _t.wandTipPosition = wandTipPosition;
 
             //store the position of the tip on spawn for use in velocity calculations
-            _t.lastPosition = wandTipPosition;
+            _t.lastPosition = wandPosition;
 
             //create a bubble at the wand tip
             _t.currentBubble = Entities.addEntity({
@@ -319,25 +384,38 @@ function convertRange(value, r1, r2) {
                     y: 0.01,
                     z: 0.01
                 },
-                collisionsWillMove: false, //true
-                ignoreForCollisions: true, //false
+                collisionsWillMove: true, //true
+                ignoreForCollisions: false, //false
                 gravity: BUBBLE_GRAVITY,
                 collisionSoundURL: POP_SOUNDS[randInt(0, 4)],
                 shapeType: "sphere",
                 script: bubbleScript,
             });
 
+            //print('spawnbubble position' + JSON.stringify(wandTipPosition));
+
             //add this bubble to an array of bubbles so we can keep track of them
             _t.bubbles.push(_t.currentBubble)
 
         },
+        returnToOriginalLocation: function() {
+            var _t = this;
+            _t.atOriginalLocation = true;
+            Script.update.disconnect(BubbleWand.update)
+            Entities.deleteEntity(_t.currentBubble);
+            Entities.editEntity(wandEntity.entityID, _t.originalProperties)
+            _t.spawnBubble();
+            Script.update.connect(BubbleWand.update);
+
+        },
         init: function() {
+            var _t = this;
             this.spawnBubble();
             Script.update.connect(BubbleWand.update);
 
         }
     }
 
-    BubbleWand.init();
+
 
 })
